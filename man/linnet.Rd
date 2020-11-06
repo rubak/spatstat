@@ -8,7 +8,7 @@
   a network of line segments.
 }
 \usage{
-linnet(vertices, m, edges, sparse=FALSE)
+linnet(vertices, m, edges, sparse=FALSE, warn=TRUE)
 }
 \arguments{
   \item{vertices}{
@@ -31,6 +31,10 @@ linnet(vertices, m, edges, sparse=FALSE)
     Optional. Logical value indicating whether to use a
     sparse matrix representation of the network. See Details.
   }
+  \item{warn}{
+    Logical value indicating whether to issue a warning if the resulting
+    network is not connected.
+  }
 }
 \details{
   An object of class \code{"linnet"} represents a network of
@@ -50,22 +54,31 @@ linnet(vertices, m, edges, sparse=FALSE)
   and the network adjacency matrix \code{m} will be stored as a
   sparse matrix. This saves a lot of time and memory when creating the
   linear network.
+
+  If the argument \code{edges} is given, then it will also determine
+  the \emph{ordering} of the line segments when they are stored or extracted.
+  For example, \code{edges[i,]} corresponds to \code{as.psp(L)[i]}.
 }
 \value{
   Object of class \code{"linnet"} representing the linear network.
 }
 \author{
   Ang Qi Wei \email{aqw07398@hotmail.com} and
-  Adrian Baddeley \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian 
 }
 \seealso{
-  \code{\link{simplenet}} for an example of a linear network.
+  \code{\link[spatstat.data]{simplenet}} for an example of a linear network.
 
   \code{\link[spatstat:methods.linnet]{methods.linnet}} for
   methods applicable to \code{linnet} objects.
 
-  \code{\link{delaunayNetwork}}.
+  Special tools: \code{\link{thinNetwork}},
+  \code{\link{insertVertices}},
+  \code{\link{joinVertices}}, 
+  \code{\link{connected.linnet}}, \code{\link{lixellate}}.
+  
+  \code{\link{delaunayNetwork}} for the Delaunay triangulation
+  as a network.
   
   \code{\link{ppp}},
   \code{\link{psp}}.

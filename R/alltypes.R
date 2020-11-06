@@ -1,7 +1,7 @@
 #
 #      alltypes.R
 #
-#   $Revision: 1.30 $   $Date: 2014/11/10 05:27:18 $
+#   $Revision: 1.37 $   $Date: 2019/03/18 09:22:24 $
 #
 #
                                   
@@ -72,52 +72,61 @@ alltypes <- function(X, fun="K", ...,
 # determine array dimensions and margin labels
   witch <-
     if(nmarks == 0)
-      matrix(1, nrow=1, ncol=1, dimnames=list("",""))
+      matrix(1L, nrow=1L, ncol=1L, dimnames=list("",""))
     else if (nmarks == 1) 
-      matrix(1, nrow=1, ncol=1, dimnames=list(marklabels, marklabels))
+      matrix(1L, nrow=1L, ncol=1L, dimnames=list(marklabels, marklabels))
     else if(indices.expected != 2)
-      matrix(1:nmarks, nrow=nmarks, ncol=1,
+      matrix(1L:nmarks, nrow=nmarks, ncol=1L,
              dimnames=list(marklabels, ""))
     else 
-      matrix(1:(nmarks^2),ncol=nmarks,nrow=nmarks, byrow=TRUE,
+      matrix(1L:(nmarks^2),ncol=nmarks,nrow=nmarks, byrow=TRUE,
              dimnames=list(marklabels, marklabels))
 
   # ------------ start computing -------------------------------  
   # if computing envelopes, first generate simulated patterns
   # using undocumented feature of envelope()
   if(envelope && reuse) {
-    L <- do.call("envelope",
+    L <- do.call(spatstat::envelope,
                  resolve.defaults(
                                   list(X, fun=estimator),
                                   list(internal=list(eject="patterns")),
                                   list(...),
+				  switch(1L+indices.expected,
+                                          NULL,
+                                          list(i=ma[1L]),
+                                          list(i=ma[1L], j=ma[2L]),
+                                          NULL),
                                   list(verbose=verb)))
     intern <- attr(L, "internal")
-  } else intern <- NULL
+  } else intern <- L <- NULL
 
   # compute function array and build up 'fasp' object
   fns  <- list()
   k   <- 0
 
-  for(i in 1:nrow(witch)) {
+  maxerr.action <- if(verb) "warn" else "null"
+  
+  for(i in 1L:nrow(witch)) {
     Y <- if(apply.to.split) ppsplit[[i]] else X
-    for(j in 1:ncol(witch)) {
+    for(j in 1L:ncol(witch)) {
       if(verb) cat("i =",i,"j =",j,"\n")
       currentfv <- 
         if(!envelope) 
-          switch(1+indices.expected,
+          switch(1L+indices.expected,
                  estimator(Y, ...),
                  estimator(Y, i=ma[i], ...),
                  estimator(Y, i=ma[i], j=ma[j], ...))
         else
-          do.call("envelope",
+          do.call(spatstat::envelope,
                   resolve.defaults(
                                    list(Y, estimator),
                                    list(simulate=L, internal=intern),
                                    list(verbose=FALSE),
                                    list(...),
-                                   list(Yname=dataname),
-                                   switch(1+indices.expected,
+                                   list(Yname=dataname,
+                                        silent=TRUE,
+                                        maxerr.action=maxerr.action),
+                                   switch(1L+indices.expected,
                                           NULL,
                                           list(i=ma[i]),
                                           list(i=ma[i], j=ma[j]),
@@ -125,6 +134,16 @@ alltypes <- function(X, fun="K", ...,
       k <- k+1
       fns[[k]] <- as.fv(currentfv)
     }
+  }
+
+  einfo <- lapply(fns, attr, which="einfo")
+  gaveup <- sapply(lapply(einfo, getElement, name="gaveup"), isTRUE)
+  if(any(gaveup)) {
+    ng <- sum(gaveup)
+    warning(paste(ng, "out of", length(fns), "envelopes",
+                  ngettext(ng, "was", "were"),
+                  "not computed, due to errors in evaluating",
+                  "the summary functions for simulated patterns"))
   }
 
   # wrap up into 'fasp' object

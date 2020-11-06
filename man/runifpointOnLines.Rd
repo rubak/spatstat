@@ -7,7 +7,7 @@
   line segments.
 }
 \usage{
-runifpointOnLines(n, L, nsim=1)
+runifpointOnLines(n, L, nsim=1, drop=TRUE)
 }
 \arguments{
   \item{n}{Number of points to generate.}
@@ -15,6 +15,11 @@ runifpointOnLines(n, L, nsim=1)
     on which the points should lie.
   }
   \item{nsim}{Number of simulated realisations to be generated.}
+  \item{drop}{
+    Logical. If \code{nsim=1} and \code{drop=TRUE} (the default), the
+    result will be a point pattern, rather than a list 
+    containing a point pattern.
+  }
 }
 \details{
   This command generates a point pattern consisting of \code{n}
@@ -53,11 +58,8 @@ runifpointOnLines(n, L, nsim=1)
   plot(Y, add=TRUE)
   Z <- runifpointOnLines(c(5,5), X)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{datagen}

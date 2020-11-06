@@ -24,6 +24,11 @@
     omitted and \code{X} may be
     a list with two components \code{x} and \code{y},
     or a matrix with two columns.
+    Alternatively \code{X} can be
+    a three-dimensional point pattern (class \code{"pp3"}),
+    a higher-dimensional point pattern (class \code{"ppx"}),
+    a point pattern on a linear network (class \code{"lpp"}),
+    or a spatial pattern of line segments (class \code{"psp"}).
   }
   \item{\dots}{
     Ignored by \code{nndist.ppp}
@@ -74,9 +79,17 @@
   The function \code{nndist} is generic, with
   a method for point patterns (objects of class \code{"ppp"}),
   and a default method for coordinate vectors.
-  There is also a method for line segment patterns, \code{\link{nndist.psp}}.
 
-  The method for point patterns expects a single
+  There are also methods for line segment patterns,
+  \code{\link{nndist.psp}},
+  three-dimensional point patterns, \code{\link{nndist.pp3}},
+  higher-dimensional point patterns, \code{\link{nndist.ppx}}
+  and point patterns on a linear network,
+  \code{\link{nndist.lpp}};
+  these are described in their own help files.
+  Type \code{methods(nndist)} to see all available methods.
+
+  The method for planar point patterns \code{nndist.ppp} expects a single
   point pattern argument \code{X} and returns the vector of its
   nearest neighbour distances.
 
@@ -128,7 +141,8 @@
 
   To find the minimum distance from \emph{any} point of type \code{i}
   to the nearest point of type \code{j}, for all combinations of \code{i} and
-  \code{j}, use the \R function \code{\link[stats]{aggregate}} as
+  \code{j}, use \code{\link{minnndist}},
+  or the \R function \code{\link[stats]{aggregate}} as
   suggested in the Examples.
 }
 \section{Warnings}{
@@ -138,10 +152,14 @@
 }
 \seealso{
   \code{\link{nndist.psp}},
+  \code{\link{nndist.pp3}},
+  \code{\link{nndist.ppx}},
+  \code{\link{nndist.lpp}},
   \code{\link{pairdist}},
   \code{\link{Gest}},
   \code{\link{nnwhich}},
-  \code{\link{nncross}}.
+  \code{\link{nncross}},
+  \code{\link{minnndist}}, \code{\link{maxnndist}}.
 }
 \examples{
    data(cells)
@@ -159,29 +177,28 @@
    d <- nndist(x, y)
 
    # Stienen diagram
-   plot(cells \%mark\% (nndist(cells)/2), markscale=1)
+   plot(cells \%mark\% nndist(cells), markscale=1)
 
    # distance to nearest neighbour of each type
    nnda <- nndist(ants, by=marks(ants)) 
    head(nnda)
    # For nest number 1, the nearest Cataglyphis nest is 87.32125 units away
 
-   # Use of 'aggregate':
    # minimum distance between each pair of types
-   aggregate(nnda, by=list(from=marks(ants)), min)
-   # Always a symmetric matrix
+   minnndist(ants, by=marks(ants))
 
-   # mean nearest neighbour distances
+   # Use of 'aggregate':
+   # _minimum_ distance between each pair of types
+   aggregate(nnda, by=list(from=marks(ants)), min)
+   # _mean_ nearest neighbour distances
    aggregate(nnda, by=list(from=marks(ants)), mean)
    # The mean distance from a Messor nest to
-   # the nearest other Messor nest is 59.02549 units
+   # the nearest Cataglyphis nest is 59.02549 units
 }
 \author{Pavel Grabarnik
   \email{pavel.grabar@issp.serpukhov.su}
   and
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian.
 }
 \keyword{spatial}
 \keyword{math}

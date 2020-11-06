@@ -2,7 +2,7 @@
 #
 #   rmhcontrol.R
 #
-#   $Revision: 1.25 $  $Date: 2014/10/24 00:22:30 $
+#   $Revision: 1.35 $  $Date: 2019/12/31 04:56:58 $
 #
 #
 
@@ -21,15 +21,16 @@ rmhcontrol.list <- function(...) {
   argz <- list(...)
   nama <- names(argz)
   if(length(argz) == 1 && !any(nzchar(nama)))
-    do.call("rmhcontrol.default", argz[[1]])
+    do.call(rmhcontrol.default, argz[[1]])
   else
-    do.call.matched("rmhcontrol.default", argz)
+    do.call.matched(rmhcontrol.default, argz)
 }
 
 rmhcontrol.default <- function(..., p=0.9, q=0.5, nrep=5e5,
                         expand=NULL, periodic=NULL, ptypes=NULL,
                         x.cond=NULL, fixall=FALSE, nverb=0,
-                        nsave=NULL, nburn=nsave, track=FALSE)
+                        nsave=NULL, nburn=nsave, track=FALSE,
+                        pstage=c("block", "start"))
 {
   argh <- list(...)
   nargh <- length(argh)
@@ -63,13 +64,24 @@ rmhcontrol.default <- function(..., p=0.9, q=0.5, nrep=5e5,
   if(!is.null(periodic) && (!is.logical(periodic) || length(periodic) != 1))
     stop(paste(sQuote("periodic"), "should be a logical value or NULL"))
   if(saving <- !is.null(nsave)) {
-    if(!is.numeric(nsave) || length(nsave) != 1
-       || nsave < 0 || nsave >= nrep)
-      stop("nsave should be an integer < nrep")
-    if(is.null(nburn)) nburn <- min(nsave, nrep-nsave)
-    if(!is.null(nburn)) stopifnot(nburn + nsave <= nrep)
+    nsave <- as.integer(as.vector(nsave))
+    if(length(nsave) == 1L) {
+      if(nsave <= 0)
+        stop("nsave should be a positive integer")
+      stopifnot(nsave < nrep)
+    } else {
+      stopifnot(all(nsave > 0))
+      stopifnot(sum(nsave) <= nrep)
+    }
+    if(missing(nburn) || is.null(nburn)) {
+      nburn <- min(nsave[1], nrep-sum(nsave))
+    } else {
+      check.1.integer(nburn)
+      stopifnot(nburn + sum(nsave) <= nrep)
+    }
   }
   stopifnot(is.logical(track))
+  pstage <- match.arg(pstage) 
 
 #################################################################
 # Conditioning on point configuration
@@ -100,7 +112,7 @@ rmhcontrol.default <- function(..., p=0.9, q=0.5, nrep=5e5,
   if(condtype == "Palm" && n.cond == 0) {
     warning(paste("Ignored empty configuration x.cond;",
                   "conditional (Palm) simulation given an empty point pattern",
-                  "is equivalent to unconditional simulation"))
+                  "is equivalent to unconditional simulation"), call.=FALSE)
     condtype <- "none"
     x.cond <- NULL
     n.cond <- NULL
@@ -118,7 +130,7 @@ rmhcontrol.default <- function(..., p=0.9, q=0.5, nrep=5e5,
   
 # Warn about silly combination
   if(fixall && p < 1)
-	warning("fixall = TRUE conflicts with p < 1. Ignored.\n")
+	warning("fixall = TRUE conflicts with p < 1. Ignored.", call.=FALSE)
 
 ###############################################################  
 # `expand' determines expansion of the simulation window
@@ -131,7 +143,7 @@ rmhcontrol.default <- function(..., p=0.9, q=0.5, nrep=5e5,
   if(fixing != "none") {
     if(expand$force.exp)
       stop(paste("When conditioning on the number of points,",
-                 "no expansion may be done.\n"), call.=FALSE)
+                 "no expansion may be done."), call.=FALSE)
     # no expansion
     expand <- .no.expansion
   }
@@ -149,7 +161,7 @@ rmhcontrol.default <- function(..., p=0.9, q=0.5, nrep=5e5,
               condtype=condtype,
               x.cond=x.cond,
               saving=saving, nsave=nsave, nburn=nburn,
-              track=track)
+              track=track, pstage=pstage)
   class(out) <- c("rmhcontrol", class(out))
   return(out)
 }
@@ -157,33 +169,47 @@ rmhcontrol.default <- function(..., p=0.9, q=0.5, nrep=5e5,
 print.rmhcontrol <- function(x, ...) {
   verifyclass(x, "rmhcontrol")
 
-  cat("Metropolis-Hastings algorithm control parameters\n")
-  cat(paste("Probability of shift proposal: p =", x$p, "\n"))
+  splat("Metropolis-Hastings algorithm control parameters")
+  splat("Probability of shift proposal: p =", x$p)
   if(x$fixing == "none") {
-    cat(paste("Conditional probability of death proposal: q =", x$q, "\n"))
+    splat("Conditional probability of death proposal: q =", x$q)
     if(!is.null(x$ptypes)) {
-      cat("Birth proposal probabilities for each type of point:\n")
+      splat("Birth proposal probabilities for each type of point:")
       print(x$ptypes)
     }
   }
   switch(x$fixing,
          none={},
-         n.total=cat("The total number of points is fixed\n"),
-         n.each.type=cat("The number of points of each type is fixed\n"))
+         n.total=splat("The total number of points is fixed"),
+         n.each.type=splat("The number of points of each type is fixed"))
   switch(x$condtype,
          none={},
          window={
-           cat(paste("Conditional simulation given the",
-                     "configuration in a subwindow\n"))
+           splat("Conditional simulation given the",
+                 "configuration in a subwindow")
            print(x$x.cond$window)
          },
          Palm={
-           cat("Conditional simulation of Palm type\n")
+           splat("Conditional simulation of Palm type")
          })
-  cat(paste("Number of M-H iterations: nrep =", x$nrep, "\n"))
-  if(x$saving) 
-    cat(paste("Save point pattern every", x$nsave, "iterations",
-              "after a burn-in of", x$nburn, "iterations\n"))
+  splat("Number of M-H iterations: nrep =", x$nrep)
+  if(x$saving) {
+    nsave <- x$nsave
+    len <- length(nsave)
+    howmany <- if(len == 1L) nsave else
+               if(len < 5L) commasep(nsave) else
+               paste(paste(nsave[1:5], collapse=", "), "[...]")
+    splat("After a burn-in of", x$nburn, "iterations,",
+          "save point pattern after every", howmany, "iterations.")
+  }
+  pstage <- x$pstage %orifnull% "start"
+  hdr <- "Generate random proposal points:"
+  switch(pstage,
+         start = splat(hdr, "at start of simulations."),
+         block = splat(hdr,
+                       "before each block of",
+                       if(length(x$nsave) == 1L) x$nsave else "",
+                       "iterations."))
   cat(paste("Track proposal type and acceptance/rejection?",
             if(x$track) "yes" else "no", "\n"))
   if(x$nverb > 0)
@@ -198,6 +224,7 @@ print.rmhcontrol <- function(x, ...) {
   if(is.null(x$periodic)) cat("Not yet determined.\n") else 
   if(x$periodic) cat("Yes.\n") else cat("No.\n")
   #
+  
   return(invisible(NULL))
 }
 
@@ -207,7 +234,7 @@ default.rmhcontrol <- function(model, w=NULL) {
 }
 
 update.rmhcontrol <- function(object, ...) {
-  do.call.matched("rmhcontrol.default",
+  do.call.matched(rmhcontrol.default,
                   resolve.defaults(list(...), as.list(object),
                                    .StripNull=TRUE))
 }

@@ -3,13 +3,13 @@
 #
 # Convert a factor to a matrix of dummy variables, etc.
 #
-#  $Revision: 1.4 $  $Date: 2013/04/25 06:37:43 $
+#  $Revision: 1.5 $  $Date: 2016/02/11 10:17:12 $
 #
 
 dummify <- function(x) {
   if(is.matrix(x) || is.data.frame(x)) {
     x <- as.data.frame(x)
-    y <- do.call("data.frame", lapply(x, dummify))
+    y <- do.call(data.frame, lapply(x, dummify))
     return(as.matrix(y))
   }
   # x is 1-dimensional
@@ -24,9 +24,9 @@ dummify <- function(x) {
     # convert to dummy variables
     nx <- length(x)
     lev <- levels(x)
-    y <- matrix(0, nrow=nx, ncol=length(lev))
+    y <- matrix(0L, nrow=nx, ncol=length(lev))
     colnames(y) <- lev
-    y[cbind(seq_len(nx), as.integer(x))] <- 1
+    y[cbind(seq_len(nx), as.integer(x))] <- 1L
     return(y)
   }
   # convert to numeric

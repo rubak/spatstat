@@ -5,6 +5,8 @@
 \alias{as.linnet.linnet}
 \alias{as.owin.linnet}
 \alias{as.psp.linnet}
+\alias{nsegments.linnet}
+\alias{nvertices.linnet}
 \alias{pixellate.linnet}
 \alias{print.linnet}
 \alias{summary.linnet}
@@ -21,19 +23,23 @@
   These are methods for the class \code{"linnet"} of linear networks.
 }
 \usage{
-as.linnet(X, ...)
+as.linnet(X, \dots)
 
-\method{as.linnet}{linnet}(X, ..., sparse)
+\method{as.linnet}{linnet}(X, \dots, sparse, maxsize=30000)
 
-\method{as.owin}{linnet}(W, ...)
+\method{as.owin}{linnet}(W, \dots)
 
-\method{as.psp}{linnet}(x, ..., fatal=TRUE)
+\method{as.psp}{linnet}(x, \dots, fatal=TRUE)
 
-\method{print}{linnet}(x, ...)
+\method{nsegments}{linnet}(x)
 
-\method{pixellate}{linnet}(x, ...)
+\method{nvertices}{linnet}(x, \dots)
 
-\method{summary}{linnet}(object, ...)
+\method{pixellate}{linnet}(x, \dots)
+
+\method{print}{linnet}(x, \dots)
+
+\method{summary}{linnet}(object, \dots)
 
 \method{unitname}{linnet}(x)
 
@@ -45,7 +51,7 @@ vertexdegree(x)
 
 \method{volume}{linnet}(x)
 
-\method{Window}{linnet}(X, ...)
+\method{Window}{linnet}(X, \dots)
 }
 \arguments{
   \item{x,X,object,w,W}{
@@ -69,6 +75,11 @@ vertexdegree(x)
     representation, as explained in \code{\link{linnet}}.
     Default is to keep the same representation as in \code{X}.
   }
+  \item{maxsize}{
+    Maximum permitted number of network vertices
+    (to prevent a system crash due to lack of memory)
+    when creating a network with \code{sparse=FALSE}.
+  }
 }
 \details{
   The function \code{as.linnet} is generic.
@@ -76,13 +87,17 @@ vertexdegree(x)
   into an object of class \code{"linnet"}.
   The method \code{as.linnet.lpp} extracts the linear network
   information from an \code{lpp} object.
-
+  The method \code{as.linnet.linnet} converts a linear network
+  into another linear network with the required format.
+  
   The other functions are methods for the generic commands
   \code{\link{as.owin}},
   \code{\link{as.psp}},
+  \code{\link{nsegments}},
+  \code{\link{nvertices}},
   \code{\link{pixellate}},
-  \code{\link{print}},
-  \code{\link{summary}},
+  \code{\link[base]{print}},
+  \code{\link[base]{summary}},
   \code{\link{unitname}},
   \code{\link{unitname<-}},
   \code{\link{vertices}},
@@ -96,10 +111,12 @@ vertexdegree(x)
   
   The method \code{as.psp.linnet} extracts the
   lines of the linear network as a line segment pattern (object of class
-  \code{"psp"}).
+  \code{"psp"}) while \code{nsegments.linnet} simply counts the number
+  of line segments.
 
   The method \code{vertices.linnet} extracts the vertices (nodes)
-  of the linear network. The function \code{vertexdegree} calculates
+  of the linear network and \code{nvertices.linnet} simply counts the
+  vertices. The function \code{vertexdegree} calculates 
   the topological degree of each vertex (the number of lines
   emanating from that vertex) and returns these values as an integer
   vector.
@@ -114,16 +131,38 @@ vertexdegree(x)
   generic function.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
 }
 \seealso{
-  \code{\link{linnet}}
+  \code{\link{linnet}}.
+
+  Generic functions:
+  \code{\link{as.owin}},
+  \code{\link{as.psp}},
+  \code{\link{nsegments}},
+  \code{\link{nvertices}},
+  \code{\link{pixellate}},
+  \code{\link{print}},
+  \code{\link{summary}},
+  \code{\link{unitname}},
+  \code{\link{unitname<-}},
+  \code{\link{vertices}},
+  \code{\link{volume}}
+  and \code{\link{Window}}.
+
+  Special tools: \code{\link{thinNetwork}},
+  \code{\link{insertVertices}},
+  \code{\link{joinVertices}},
+  \code{\link{connected.linnet}}.
+  
+  \code{\link{lixellate}} for dividing segments into shorter segments.
 }
 \examples{
   simplenet
   summary(simplenet)
+  nsegments(simplenet)
+  nvertices(simplenet)
+  pixellate(simplenet)
   volume(simplenet)
   unitname(simplenet) <- c("cubit", "cubits")
   Window(simplenet)

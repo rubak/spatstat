@@ -1,7 +1,7 @@
 #
 #   hybrid.family.R
 #
-#    $Revision: 1.7 $	$Date: 2014/05/21 03:27:15 $
+#    $Revision: 1.13 $	$Date: 2018/03/15 08:47:20 $
 #
 #    Hybrid interactions
 #
@@ -45,7 +45,7 @@ hybrid.family <-
          # extract the component interactions 
          interlist <- inter$par
          # check that they are all pairwise interactions
-         families <- unlist(lapply(interlist, function(x) { x$family$name }))
+         families <- unlist(lapply(interlist, interactionfamilyname))
          if(!separate && !all(families == "pairwise")) {
            warning(paste("Cannot compute the resultant function;",
                          "not all components are pairwise interactions;",
@@ -84,25 +84,25 @@ hybrid.family <-
          if(separate) {
            if(plotit) {
              main0 <- "Pairwise interaction components"
-             do.call("plot", resolve.defaults(list(results),
+             do.call(plot, resolve.defaults(list(results),
                                               list(...),
                                               list(main=main0)))
            }
            return(invisible(results))
          }
          # multiply together to obtain resultant pairwise interaction
-         ans <- results[[1]]
+         ans <- results[[1L]]
          if(ninter >= 2) {
            for(i in 2:ninter) {
              Fi <- results[[i]]
              ans <- eval.fv(ans * Fi)
            }
            copyover <- c("ylab", "yexp", "labl", "desc", "fname")
-           attributes(ans)[copyover] <- attributes(results[[1]])[copyover]
+           attributes(ans)[copyover] <- attributes(results[[1L]])[copyover]
          }
          main0 <- "Resultant pairwise interaction"
          if(plotit)
-           do.call("plot", resolve.defaults(list(ans),
+           do.call(plot, resolve.defaults(list(ans),
                                             list(...),
                                             list(main=main0)))
          return(invisible(ans))
@@ -122,7 +122,7 @@ hybrid.family <-
              if(ncol(VI) > 1 && is.null(colnames(VI))) # make up names
                colnames(VI) <- paste("Interaction", seq(ncol(VI)), sep=".")
              # prefix label with name of i-th component 
-             colnames(VI) <- paste(nameI, dimnames(VI)[[2]], sep=".")
+             colnames(VI) <- paste(nameI, dimnames(VI)[[2L]], sep=".")
              # handle IsOffset
              offI <- attr(VI, "IsOffset")
              if(is.null(offI))
@@ -137,26 +137,36 @@ hybrid.family <-
            attr(V, "IsOffset") <- IsOffset
          return(V)
        },
-       delta2 = function(X, inte, correction, ...) {
+       delta2 = function(X, inte, correction, ..., sparseOK=FALSE) {
          ## Sufficient statistic for second order conditional intensity
          result <- NULL
+         deltaInf <- FALSE
          interlist <- inte$par
          for(ii in interlist) {
            v <- NULL
            ## look for 'delta2' in component interaction 'ii'
            if(!is.null(delta2 <- ii$delta2) && is.function(delta2)) 
-             v <- delta2(X, ii, correction)
+             v <- delta2(X, ii, correction, sparseOK=sparseOK)
            ## look for 'delta2' in family of component 'ii'
            if(is.null(v) &&
               !is.null(delta2 <- ii$family$delta2) &&
               is.function(delta2))
-             v <- delta2(X, ii, correction)
+             v <- delta2(X, ii, correction, sparseOK=sparseOK)
            if(is.null(v)) {
              ## no special algorithm available: generic algorithm needed
              return(NULL)
            }
-           result <- abind(result, v, along=3)
+           if(is.null(result)) {
+             result <- v
+           } else if(inherits(v, c("sparse3Darray", "sparseMatrix"))) {
+             result <- bind.sparse3Darray(result, v, along=3)
+           } else {
+             result <- abind::abind(as.array(result), v, along=3)
+           }
+           deltaInf <- deltaInf | (attr(v, "deltaInf") %orifnull% FALSE)
          }
+         if(length(dim(deltaInf)))
+           attr(result, "deltaInf") <- deltaInf
          return(result)
        },
        suffstat = NULL

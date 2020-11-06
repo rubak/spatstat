@@ -1,31 +1,55 @@
-#
-# deldir.R
-#
-# Interface to deldir package
-#
-#  $Revision: 1.26 $ $Date: 2015/05/16 05:41:57 $
-#
+#'
+#' deldir.R
+#'
+#' Interface to deldir package
+#'
+#'  $Revision: 1.34 $ $Date: 2020/06/14 10:34:23 $
+#'
 
-.spst.triEnv <- new.env()
+#' ..............................................
+#' Internal options 
+#'      deldir suggests spatstat (!!!)
+#'      so we must save options here, not in spatstat.options
+  .spst.triEnv <- new.env()
+  assign("use.trigraf",  TRUE, envir=.spst.triEnv)
+  assign("use.trigrafS", TRUE, envir=.spst.triEnv)
+  assign("debug.delaunay", FALSE, envir=.spst.triEnv)
+#' for testing purposes only
+  spatstat.deldir.setopt <- function(use.trigrafS=TRUE,
+                                     use.trigraf=TRUE,
+                                     debug.delaunay=FALSE) {
+    assign("use.trigrafS", use.trigrafS, envir=.spst.triEnv)
+    assign("use.trigraf",  use.trigraf, envir=.spst.triEnv)
+    assign("debug.delaunay", debug.delaunay, envir=.spst.triEnv)
+    return(invisible(NULL))
+  }
+#'..............................................
 
-assign("use.trigraf",  TRUE, envir=.spst.triEnv)
-assign("use.trigrafS", TRUE, envir=.spst.triEnv)
-assign("debug.delaunay", FALSE, envir=.spst.triEnv)
 
-dirichlet <- function(X) {
-  stopifnot(is.ppp(X))
-  X <- unique(X, rule="deldir", warn=TRUE)
-  w <- X$window
-  dd <- safedeldir(X)
-  if(is.null(dd)) return(NULL)
-  pp <- lapply(tile.list(dd), function(z) { owin(poly=z[c("x","y")]) })
-  if(length(pp) == npoints(X))
-    names(pp) <- seq_len(npoints(X))
-  dir <- tess(tiles=pp, window=as.rectangle(w))
-  if(w$type != "rectangle")
-    dir <- intersect.tess(dir, w)
-  return(dir)
-}
+dirichlet <- local({
+
+  dirichlet <- function(X) {
+    stopifnot(is.ppp(X))
+    X <- unique(X, rule="deldir", warn=TRUE)
+    nX <- npoints(X)
+    w <- X$window
+    if(nX == 0) return(NULL)
+    if(nX == 1) return(as.tess(w))
+    dd <- safedeldir(X)
+    if(is.null(dd)) return(NULL)
+    pp <- lapply(tile.list(dd), df2poly)
+    if(length(pp) == npoints(X))
+      names(pp) <- seq_len(npoints(X))
+    dir <- tess(tiles=pp, window=as.rectangle(w))
+    if(w$type != "rectangle")
+      dir <- intersect.tess(dir, w)
+    return(dir)
+  }
+
+  df2poly <- function(z) { owin(poly=z[c("x","y")]) }
+  
+  dirichlet
+})
 
 delaunay <- function(X) {
   stopifnot(is.ppp(X))
@@ -35,8 +59,8 @@ delaunay <- function(X) {
   w <- X$window
   dd <- safedeldir(X)
   if(is.null(dd)) return(NULL)
-  a <- dd$delsgs[,5]
-  b <- dd$delsgs[,6]
+  a <- dd$delsgs[,5L]
+  b <- dd$delsgs[,6L]
   use.trigraf  <- get("use.trigraf", envir=.spst.triEnv)
   use.trigrafS <- get("use.trigrafS", envir=.spst.triEnv)
   debug.delaunay <- get("debug.delaunay", envir=.spst.triEnv)
@@ -62,11 +86,12 @@ delaunay <- function(X) {
             ie = as.integer(a),
             je = as.integer(b),
             ntmax = as.integer(ntmax),
-            nt = as.integer(integer(1)),
+            nt = as.integer(integer(1L)),
             it = as.integer(integer(ne)),
             jt = as.integer(integer(ne)),
             kt = as.integer(integer(ne)),
-            status = as.integer(integer(1)))
+            status = as.integer(integer(1L)),
+            PACKAGE = "spatstat")
     if(z$status != 0)
       stop("Internal error: overflow in trigrafS")
     tlist <- with(z, cbind(it, jt, kt)[1:nt, ])
@@ -80,11 +105,12 @@ delaunay <- function(X) {
             ie = as.integer(a),
             je = as.integer(b),
             ntmax = as.integer(ntmax),
-            nt = as.integer(integer(1)),
+            nt = as.integer(integer(1L)),
             it = as.integer(integer(ntmax)),
             jt = as.integer(integer(ntmax)),
             kt = as.integer(integer(ntmax)),
-            status = as.integer(integer(1)))
+            status = as.integer(integer(1L)),
+            PACKAGE = "spatstat")
     if(z$status != 0)
       stop("Internal error: overflow in trigraf")
     tlist <- with(z, cbind(it, jt, kt)[1:nt, ])
@@ -93,7 +119,7 @@ delaunay <- function(X) {
     for(i in seq_len(nX)) {
       # find all Delaunay neighbours of i 
       jj <- c(b[a==i], a[b==i])
-      jj <- sort(unique(jj))
+      jj <- sortunique(jj)
       # select those with a higher index than i
       jj <- jj[jj > i]
       # find pairs of neighbours which are Delaunay neighbours
@@ -117,45 +143,45 @@ delaunay <- function(X) {
   # Assemble coordinates of triangles
   x <- X$x
   y <- X$y
-  xtri <- matrix(x[tlist], nrow(tlist), 3)
-  ytri <- matrix(y[tlist], nrow(tlist), 3)
+  xtri <- matrix(x[tlist], nrow(tlist), 3L)
+  ytri <- matrix(y[tlist], nrow(tlist), 3L)
   # ensure triangle vertices are in anticlockwise order
   ztri <- ytri - min(y)
-  dx <- cbind(xtri[,2]-xtri[,1], xtri[,3]-xtri[,2], xtri[,1]-xtri[,3])
-  zm <- cbind(ztri[,1]+ztri[,2], ztri[,2]+ztri[,3], ztri[,3]+ztri[,1])
-  negareas <- apply(dx * zm, 1, sum)
+  dx <- cbind(xtri[,2L]-xtri[,1L], xtri[,3L]-xtri[,2L], xtri[,1L]-xtri[,3L])
+  zm <- cbind(ztri[,1L]+ztri[,2L], ztri[,2L]+ztri[,3L], ztri[,3L]+ztri[,1L])
+  negareas <- apply(dx * zm, 1L, sum)
   clockwise <- (negareas > 0)
   #
   if(any(clockwise)) {
     xc <- xtri[clockwise, , drop=FALSE]
     yc <- ytri[clockwise, , drop=FALSE]
     tc <- tlist[clockwise, , drop=FALSE]
-    xtri[clockwise,]  <- xc[,c(1,3,2)]
-    ytri[clockwise,]  <- yc[,c(1,3,2)]
-    tlist[clockwise,] <- tc[, c(1,3,2)]
+    xtri[clockwise,]  <- xc[,c(1L,3L,2L)]
+    ytri[clockwise,]  <- yc[,c(1L,3L,2L)]
+    tlist[clockwise,] <- tc[, c(1L,3L,2L)]
   }
   # At this point, triangle vertices are listed in anticlockwise order.
   # The same directed edge (i, j) cannot appear twice.
   # To weed out invalid triangles, check for such duplication
-  triedges <- rbind(tlist[, c(1,2)],
-                    tlist[, c(2,3)],
-                    tlist[, c(3,1)])
+  triedges <- rbind(tlist[, c(1L,2L)],
+                    tlist[, c(2L,3L)],
+                    tlist[, c(3L,1L)])
   if(any(bad <- duplicated(triedges))) {
     badedges <- unique(triedges[bad, , drop=FALSE])
     ntri <- nrow(tlist)
     triid <- rep.int(seq_len(ntri), 3)
     illegal <- rep.int(FALSE, ntri)
     for(j in seq_len(nrow(badedges))) {
-      from <- badedges[j, 1]
-      to   <- badedges[j, 2]
+      from <- badedges[j, 1L]
+      to   <- badedges[j, 2L]
       if(debug.delaunay)
         cat(paste("Suspect edge from vertex", from, "to vertex", to, "\n"))
       # find all triangles sharing this edge in this orientation
-      sustri <- triid[(triedges[,1] == from) & (triedges[,2] == to)]
+      sustri <- triid[(triedges[,1L] == from) & (triedges[,2L] == to)]
       if(debug.delaunay)
         cat(paste("\tInvestigating triangles", commasep(sustri), "\n"))
       # list all vertices associated with the suspect triangles
-      susvert <- sort(unique(as.vector(tlist[sustri, ])))
+      susvert <- sortunique(as.vector(tlist[sustri, ]))
       if(debug.delaunay)
         cat(paste("\tInvestigating vertices", commasep(susvert), "\n"))
       xsusvert <- x[susvert]
@@ -220,9 +246,10 @@ delaunayDistance <- function(X) {
           adj = as.integer(adj),
           dpath = as.integer(integer(nY * nY)),
           tol = as.integer(0),
-          niter = as.integer(integer(1)), 
-          status = as.integer(integer(1)))
-  if (z$status == -1)
+          niter = as.integer(integer(1L)), 
+          status = as.integer(integer(1L)),
+          PACKAGE = "spatstat")
+  if (z$status == -1L)
     warning(paste("graph connectivity algorithm did not converge after", 
                   z$niter, "iterations", "on", nY, "vertices and", 
                   sum(adj) - nY, "edges"))
@@ -298,20 +325,6 @@ dirichletAreas <- function(X) {
   return(oldw)
 }
 
-delaunayNetwork <- function(X) {
-  stopifnot(is.ppp(X))
-  X <- unique(X, rule="deldir")
-  nX <- npoints(X)
-  if(nX == 0) return(NULL)
-  if(nX == 1) return(linnet(X, !diag(TRUE)))
-  if(nX == 2) return(linnet(X, !diag(c(TRUE,TRUE))))
-  dd <- safedeldir(X)
-  if(is.null(dd)) 
-    return(NULL)
-  joins <- as.matrix(dd$delsgs[, 5:6])
-  return(linnet(X, edges=joins))
-}
-
 dirichletEdges <- function(X) {
   stopifnot(is.ppp(X))
   X <- unique(X, rule="deldir")
@@ -325,31 +338,30 @@ dirichletEdges <- function(X) {
   return(as.psp(dd$dirsgs[,1:4], window=W))
 }
 
-dirichletNetwork <- function(X, ...) as.linnet(dirichletEdges(X), ...)
 
 ## deprecated older names
 
-delaunay.distance <- function(...) {
-  .Deprecated("delaunayDistance", package="spatstat")
-  delaunayDistance(...)
-}
+# delaunay.distance <- function(...) {
+#   .Deprecated("delaunayDistance", package="spatstat")
+#   delaunayDistance(...)
+# }
 
-delaunay.network <- function(...) {
-  .Deprecated("delaunayNetwork", package="spatstat")
-  delaunayNetwork(...)
-}
+# delaunay.network <- function(...) {
+#   .Deprecated("delaunayNetwork", package="spatstat")
+#   delaunayNetwork(...)
+# }
 
-dirichlet.edges <- function(...) {
-  .Deprecated("dirichletEdges", package="spatstat")
-  dirichletEdges(...)
-}
+# dirichlet.edges <- function(...) {
+#   .Deprecated("dirichletEdges", package="spatstat")
+#   dirichletEdges(...)
+# }
 
-dirichlet.network <- function(...) {
-  .Deprecated("dirichletNetwork", package="spatstat")
-  dirichletNetwork(...)
-}
+# dirichlet.network <- function(...) {
+#   .Deprecated("dirichletNetwork", package="spatstat")
+#   dirichletNetwork(...)
+# }
 
-dirichlet.vertices <- function(...) {
-  .Deprecated("dirichletVertices", package="spatstat")
-  dirichletVertices(...)
-}
+# dirichlet.vertices <- function(...) {
+#   .Deprecated("dirichletVertices", package="spatstat")
+#   dirichletVertices(...)
+# }

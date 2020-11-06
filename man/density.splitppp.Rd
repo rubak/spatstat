@@ -8,9 +8,9 @@
   or each of the point patterns in a list.
 }
 \usage{
-  \method{density}{splitppp}(x, \dots, se=FALSE)
+  \method{density}{splitppp}(x, \dots, weights=NULL, se=FALSE)
 
-  \method{density}{ppplist}(x, \dots, se=FALSE)
+  \method{density}{ppplist}(x, \dots, weights=NULL, se=FALSE)
 }
 \arguments{
   \item{x}{
@@ -22,6 +22,9 @@
   \item{\dots}{
     Arguments passed to \code{\link{density.ppp}} to control
     the smoothing, pixel resolution, edge correction etc.
+  }
+  \item{weights}{
+    Numerical weights for the points. See Details.
   }
   \item{se}{
     Logical value indicating whether to compute standard errors as well.
@@ -60,6 +63,21 @@
 
   If \code{se=TRUE}, the result is a list with two elements named
   \code{estimate} and \code{SE}, each of the format described above.
+
+  The argument \code{weights} specifies numerical case weights
+  for the data points.
+  Normally it should be a list, with the same length as
+  \code{x}. The entry \code{weights[[i]]} will determine the
+  case weights for the pattern \code{x[[i]]}, and may be given in
+  any format acceptable to \code{\link{density.ppp}}.
+  For example, \code{weights[[i]]} can be
+  a numeric vector of length equal to \code{npoints(x[[i]])},
+  a single numeric value, a numeric matrix,
+  a pixel image (object of class \code{"im"}),
+  or an \code{expression}.
+
+  For convenience, \code{weights} can also be a single \code{expression}
+  or a single pixel image (object of class \code{"im"}). 
 }
 \seealso{
   \code{\link{ppp.object}},
@@ -69,11 +87,8 @@
   Z <- density(split(amacrine), 0.05)
   plot(Z)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{methods}

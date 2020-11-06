@@ -3,7 +3,7 @@
 #
 #   computes simulation envelopes 
 #
-#   $Revision: 2.78 $  $Date: 2015/10/05 05:50:48 $
+#   $Revision: 2.107 $  $Date: 2019/12/14 01:58:20 $
 #
 
 envelope <- function(Y, fun, ...) {
@@ -47,6 +47,7 @@ simulrecipe <- function(type, expr, envir, csr, pois=csr, constraints="") {
 
 envelope.ppp <-
   function(Y, fun=Kest, nsim=99, nrank=1, ...,
+           funargs=list(), funYargs=funargs,
            simulate=NULL, fix.n=FALSE, fix.marks=FALSE,
            verbose=TRUE, clipdata=TRUE, 
            transform=NULL, global=FALSE, ginterval=NULL, use.theory=NULL,
@@ -54,7 +55,9 @@ envelope.ppp <-
            scale=NULL, clamp=FALSE, 
            savefuns=FALSE, savepatterns=FALSE, nsim2=nsim,
            VARIANCE=FALSE, nSD=2,
-           Yname=NULL, maxnerr=nsim, do.pwrong=FALSE,
+           Yname=NULL,
+           maxnerr=nsim, rejectNA=FALSE, silent=FALSE,
+           do.pwrong=FALSE,
            envir.simul=NULL) {
   cl <- short.deparse(sys.call())
   if(is.null(Yname)) Yname <- short.deparse(substitute(Y))
@@ -106,6 +109,7 @@ envelope.ppp <-
           A %mark% Ymarx[j, , drop=FALSE]
         })
       }
+    dont.complain.about(Yintens, Ywin)
     # evaluate in THIS environment
     simrecipe <- simulrecipe(type = "csr",
                              expr = simexpr,
@@ -124,6 +128,8 @@ envelope.ppp <-
     Ymarx <- marks(Y)
     # expression that will be evaluated
     simexpr <- expression(runifpoint(nY, Ywin) %mark% Ymarx)
+    # suppress warnings from code checkers
+    dont.complain.about(nY, Ywin, Ymarx)
     # simulation constraints (explanatory string)
     constraints <- if(ismulti) "with fixed number of points of each type" else
                    "with fixed number of points and fixed marks"
@@ -162,6 +168,7 @@ envelope.ppp <-
         A %mark% Ymarx[j, ,drop=FALSE]
       })
     }
+    dont.complain.about(nY, Ywin)
     # evaluate in THIS environment
     simrecipe <- simulrecipe(type = "csr",
                              expr = simexpr,
@@ -172,19 +179,22 @@ envelope.ppp <-
   }
   
   envelopeEngine(X=X, fun=fun, simul=simrecipe,
-                 nsim=nsim, nrank=nrank, ..., 
+                 nsim=nsim, nrank=nrank, ...,
+                 funargs=funargs, funYargs=funYargs,
                  verbose=verbose, clipdata=clipdata,
                  transform=transform,
                  global=global, ginterval=ginterval, use.theory=use.theory,
                  alternative=alternative, scale=scale, clamp=clamp,
                  savefuns=savefuns, savepatterns=savepatterns, nsim2=nsim2,
                  VARIANCE=VARIANCE, nSD=nSD,
-                 Yname=Yname, maxnerr=maxnerr, cl=cl,
-                 envir.user=envir.user, do.pwrong=do.pwrong)
+                 Yname=Yname,
+                 maxnerr=maxnerr, rejectNA=rejectNA, silent=silent,
+                 cl=cl, envir.user=envir.user, do.pwrong=do.pwrong)
 }
 
 envelope.ppm <- 
   function(Y, fun=Kest, nsim=99, nrank=1, ..., 
+           funargs=list(), funYargs=funargs,
            simulate=NULL, fix.n=FALSE, fix.marks=FALSE,
            verbose=TRUE, clipdata=TRUE, 
            start=NULL,
@@ -194,7 +204,9 @@ envelope.ppm <-
            scale=NULL, clamp=FALSE, 
            savefuns=FALSE, savepatterns=FALSE, nsim2=nsim,
            VARIANCE=FALSE, nSD=2,
-           Yname=NULL, maxnerr=nsim, do.pwrong=FALSE,
+           Yname=NULL,
+           maxnerr=nsim, rejectNA=FALSE, silent=FALSE,
+           do.pwrong=FALSE,
            envir.simul=NULL) {
   cl <- short.deparse(sys.call())
   if(is.null(Yname)) Yname <- short.deparse(substitute(Y))
@@ -232,6 +244,7 @@ envelope.ppm <-
     rmhinfolist <- rmh(rmodel, rstart, rcontr, preponly=TRUE, verbose=FALSE)
     # expression that will be evaluated
     simexpr <- expression(rmhEngine(rmhinfolist, verbose=FALSE))
+    dont.complain.about(rmhinfolist)
     # evaluate in THIS environment
     simrecipe <- simulrecipe(type  = type,
                              expr  = simexpr,
@@ -245,26 +258,30 @@ envelope.ppm <-
     # Processing is deferred to envelopeEngine
     simrecipe <- simulate
   }
-  envelopeEngine(X=X, fun=fun, simul=simrecipe,
-                 nsim=nsim, nrank=nrank, ..., 
+  envelopeEngine(X=X, fun=fun, simul=simrecipe, 
+                 nsim=nsim, nrank=nrank, ...,
+                 funargs=funargs, funYargs=funYargs,
                  verbose=verbose, clipdata=clipdata,
                  transform=transform,
                  global=global, ginterval=ginterval, use.theory=use.theory,
                  alternative=alternative, scale=scale, clamp=clamp, 
                  savefuns=savefuns, savepatterns=savepatterns, nsim2=nsim2,
                  VARIANCE=VARIANCE, nSD=nSD,
-                 Yname=Yname, maxnerr=maxnerr, cl=cl,
-                 envir.user=envir.user, do.pwrong=do.pwrong)
+                 Yname=Yname,
+                 maxnerr=maxnerr, rejectNA=rejectNA, silent=silent,
+                 cl=cl, envir.user=envir.user, do.pwrong=do.pwrong)
 }
 
 envelope.kppm <-
   function(Y, fun=Kest, nsim=99, nrank=1, ..., 
+           funargs=list(), funYargs=funargs,
            simulate=NULL, verbose=TRUE, clipdata=TRUE, 
            transform=NULL, global=FALSE, ginterval=NULL, use.theory=NULL,
            alternative=c("two.sided", "less", "greater"),
            scale=NULL, clamp=FALSE,
            savefuns=FALSE, savepatterns=FALSE, nsim2=nsim,
-           VARIANCE=FALSE, nSD=2, Yname=NULL, maxnerr=nsim,
+           VARIANCE=FALSE, nSD=2, Yname=NULL, 
+           maxnerr=nsim, rejectNA=FALSE, silent=FALSE,
            do.pwrong=FALSE, envir.simul=NULL)
 {
   cl <- short.deparse(sys.call())
@@ -281,7 +298,8 @@ envelope.kppm <-
     # will be generated using simulate.kppm
     kmodel <- Y
     # expression that will be evaluated
-    simexpr <- expression(simulate(kmodel)[[1]])
+    simexpr <- expression(simulate(kmodel)[[1L]])
+    dont.complain.about(kmodel)
     # evaluate in THIS environment
     simrecipe <- simulrecipe(type = "kppm",
                              expr = simexpr,
@@ -294,16 +312,18 @@ envelope.kppm <-
     # Processing is deferred to envelopeEngine
     simrecipe <- simulate
   }
-  envelopeEngine(X=X, fun=fun, simul=simrecipe,
-                 nsim=nsim, nrank=nrank, ..., 
+  envelopeEngine(X=X, fun=fun, simul=simrecipe, 
+                 nsim=nsim, nrank=nrank, ...,
+                 funargs=funargs, funYargs=funYargs,
                  verbose=verbose, clipdata=clipdata,
                  transform=transform,
                  global=global, ginterval=ginterval, use.theory=use.theory,
                  alternative=alternative, scale=scale, clamp=clamp,
                  savefuns=savefuns, savepatterns=savepatterns, nsim2=nsim2,
                  VARIANCE=VARIANCE, nSD=nSD,
-                 Yname=Yname, maxnerr=maxnerr, cl=cl,
-                 envir.user=envir.user, do.pwrong=do.pwrong)
+                 Yname=Yname, 
+                 maxnerr=maxnerr, rejectNA=rejectNA, silent=silent,
+                 cl=cl, envir.user=envir.user, do.pwrong=do.pwrong)
 
 }
 
@@ -317,7 +337,7 @@ envelope.kppm <-
 
 envelopeEngine <-
   function(X, fun, simul,
-           nsim=99, nrank=1, ..., 
+           nsim=99, nrank=1, ..., funargs=list(), funYargs=funargs,
            verbose=TRUE, clipdata=TRUE, 
            transform=NULL, global=FALSE, ginterval=NULL, use.theory=NULL,
            alternative=c("two.sided", "less", "greater"),
@@ -327,14 +347,31 @@ envelopeEngine <-
            weights=NULL,
            nsim2=nsim,
            VARIANCE=FALSE, nSD=2,
-           Yname=NULL, maxnerr=nsim, internal=NULL, cl=NULL,
+           Yname=NULL,
+           maxnerr=nsim,
+           rejectNA=FALSE,
+           silent=FALSE,
+           maxerr.action=c("fatal", "warn", "null"),
+           internal=NULL, cl=NULL,
            envir.user=envir.user,
            expected.arg="r",
-           do.pwrong=FALSE) {
+           do.pwrong=FALSE,
+           foreignclass=NULL,
+           collectrubbish=FALSE)
+{
   #
   envir.here <- sys.frame(sys.nframe())
 
   alternative <- match.arg(alternative)
+  maxerr.action <- match.arg(maxerr.action)  
+
+  foreignclass <- as.character(foreignclass)
+  if(length(foreignclass) != 0 && clipdata) {
+    warning(paste("Ignoring clipdata=TRUE:",
+                  "I don't know how to clip objects of class",
+                  sQuote(paste(foreignclass, collapse=","))))
+    clipdata <- FALSE
+  }
   
   # ----------------------------------------------------------
   # Determine Simulation
@@ -344,6 +381,7 @@ envelopeEngine <-
   Xclass <- if(is.ppp(X)) "ppp" else
             if(is.pp3(X)) "pp3" else
             if(is.ppx(X)) "ppx" else
+            if(inherits(X, foreignclass)) foreignclass else
             stop("Unrecognised class of point pattern")
   Xobjectname <- paste("point pattern of class", sQuote(Xclass))
 
@@ -384,7 +422,7 @@ envelopeEngine <-
     # simulation is specified by argument `simulate' to envelope()
     simulate <- simul
     # which should be an expression, or a list of point patterns,
-    # or an envelope object.
+    # or an envelope object, or a function to be applied to the data
     csr <- FALSE
     # override
     if(!is.null(icsr <- internal$csr)) csr <- icsr
@@ -402,29 +440,36 @@ envelopeEngine <-
                    "any saved point patterns."))
     }
     if(is.expression(simulate)) {
-      # The user-supplied expression 'simulate' will be evaluated repeatedly
+      ## The user-supplied expression 'simulate' will be evaluated repeatedly
       simtype <- "expr"
       simexpr <- simulate
       envir <- envir.user
+    } else if(is.function(simulate)) {
+      ## User-supplied function 'simulate' will be repeatedly evaluated on X
+      simtype <- "func"
+      simexpr <- expression(simulate(X))
+      envir <- envir.here
     } else if(is.list(simulate) &&
-              (   (is.ppp(X) && all(unlist(lapply(simulate, is.ppp))))
-               || (is.pp3(X) && all(unlist(lapply(simulate, is.pp3))))
-               || (is.ppx(X) && all(unlist(lapply(simulate, is.ppx)))))) {
+              all(sapply(simulate, inherits, what=Xclass))) {
       # The user-supplied list of point patterns will be used
       simtype <- "list"
       SimDataList <- simulate
       # expression that will be evaluated
-      simexpr <- expression(SimDataList[[i]])
+      simexpr <- expression(SimDataList[[i+nerr]])
+      dont.complain.about(SimDataList)
       envir <- envir.here
       # ensure that `i' is defined
-      i <- 1
+      i <- 1L
+      nerr <- 0L
+      maxnerr <- min(length(SimDataList)-nsim, maxnerr)
       # any messages?
       if(!is.null(mess <- attr(simulate, "internal"))) {
         # determine whether these point patterns are realisations of CSR
         csr <- !is.null(mc <- mess$csr) && mc
       }
     } else stop(paste(sQuote("simulate"),
-                      "should be an expression, or a list of point patterns"))
+                      "should be an expression,",
+                      "or a list of point patterns of the same kind as X"))
   }
   # -------------------------------------------------------------------
   # Determine clipping window
@@ -441,6 +486,8 @@ envelopeEngine <-
              kppm=stop(paste("Internal error: simulate.kppm did not return an",
                Xobjectname)),
              expr=stop(paste("Evaluating the expression", sQuote("simulate"),
+               "did not yield an", Xobjectname)),
+             func=stop(paste("Evaluating the function", sQuote("simulate"),
                "did not yield an", Xobjectname)),
              list=stop(paste("Internal error: list entry was not an",
                Xobjectname)),
@@ -511,11 +558,18 @@ envelopeEngine <-
   funX <- do.call(fun,
                   resolve.defaults(list(Xarg),
                                    list(...),
+                                   funYargs,
                                    corrx))
                                      
   if(!inherits(funX, "fv"))
     stop(paste("The function", fname,
                "must return an object of class", sQuote("fv")))
+
+  ## catch 'conservation' parameters
+  conserveargs <- attr(funX, "conserve")
+  if(!is.null(conserveargs) && !any(c("conserve", "...") %in% fargs))
+    stop(paste("In this usage, the function", fname,
+               "should have an argument named 'conserve' or '...'"))
 
   ## warn about 'dangerous' arguments
   if(!is.null(dang <- attr(funX, "dangerous")) &&
@@ -586,6 +640,7 @@ envelopeEngine <-
                           "model"),
                         kppm = "simulated realisations of fitted cluster model",
                         expr = "simulations by evaluating expression",
+                        func = "simulations by evaluating function",
                         list = "point patterns from list",
                         "simulated realisations")
       if(!is.null(constraints) && nzchar(constraints))
@@ -615,6 +670,10 @@ envelopeEngine <-
                },
                expr={
                  stop(paste("Evaluating the expression", sQuote("simulate"),
+                            "did not yield an", Xobjectname))
+               },
+               func={
+                 stop(paste("Evaluating the function", sQuote("simulate"),
                             "did not yield an", Xobjectname))
                },
                list={
@@ -653,6 +712,8 @@ envelopeEngine <-
                         VARIANCE=VARIANCE,
                         nSD=nSD,
                         alternative=alternative,
+                        scale=scale,
+                        clamp=clamp,
                         use.weights=use.weights,
                         do.pwrong=do.pwrong)
 
@@ -669,6 +730,7 @@ envelopeEngine <-
                         "model"),
                       kppm = "simulated realisations of fitted cluster model",
                       expr = "simulations by evaluating expression",
+                      func = "simulations by evaluating function",
                       list = "point patterns from list",
                       "simulated patterns")
     if(!is.null(constraints) && nzchar(constraints))
@@ -697,21 +759,27 @@ envelopeEngine <-
   } else
   stop(paste("Don't know how to infer values of", commasep(expected.arg)))
     
-  # arguments for function
+  # arguments for function when applied to simulated patterns
   funargs <-
-    resolve.defaults(inferred.r.args,
+    resolve.defaults(funargs,
+                     inferred.r.args,
                      list(...),
+                     conserveargs,
                      if(usecorrection) list(correction="best") else NULL)
+
+  # reject simulated pattern if function values are all NA (etc)
+  rejectNA <- isTRUE(rejectNA)
   
   # start simulation loop
   nerr <- 0
+  gaveup <- FALSE
   if(verbose) pstate <- list()
   for(i in 1:Nsim) {
-    ok <- FALSE
-    # safely generate a random pattern and apply function
-    while(!ok) {
+    ## safely generate a random pattern and apply function
+    success <- FALSE
+    while(!success && !gaveup) {
       Xsim <- eval(simexpr, envir=envir)
-      # check valid point pattern
+      ## check valid point pattern
       if(!inherits(Xsim, Xclass))
         switch(simtype,
                csr=stop(paste("Internal error:", Xobjectname, "not generated")),
@@ -721,6 +789,8 @@ envelopeEngine <-
                  "simulate.kppm did not return an",
                  Xobjectname)),
                expr=stop(paste("Evaluating the expression", sQuote("simulate"),
+                 "did not yield an", Xobjectname)),
+               func=stop(paste("Evaluating the function", sQuote("simulate"),
                  "did not yield an", Xobjectname)),
                list=stop(paste("Internal error: list entry was not an",
                  Xobjectname)),
@@ -734,25 +804,52 @@ envelopeEngine <-
         wti <- weightfun(Xsim)
         if(!is.numeric(wti))
           stop("weightfun did not return a numeric value")
-        if(length(wti) != 1)
+        if(length(wti) != 1L)
           stop("weightfun should return a single numeric value")
         weights[i] <- wti
       }
-      # apply function safely
-      funXsim <- try(do.call(fun, append(list(Xsim), funargs)))
+      ## apply function safely
+      funXsim <- try(do.call(fun, c(list(Xsim), funargs)), silent=silent)
 
-      ok <- !inherits(funXsim, "try-error")
-      
-      if(!ok) {
-        nerr <- nerr + 1
-        if(nerr > maxnerr)
-          stop("Exceeded maximum number of errors")
-        cat("[retrying]\n")
-      } 
+      success <-
+        !inherits(funXsim, "try-error") &&
+        inherits(funXsim, "fv") &&
+        (!rejectNA || any(is.finite(funXsim[[valname]])))
+
+      if(!success) {
+        #' error in computing summary function
+        nerr <- nerr + 1L 
+        if(nerr > maxnerr) {
+          gaveup <- TRUE
+          errtype <- if(rejectNA) "fatal errors or NA function values"
+          if(simtype == "list") {
+            whinge <- paste("Exceeded maximum possible number of errors",
+                          "when evaluating summary function:",
+                          length(SimDataList), "patterns provided,",
+                          nsim, "patterns required,",
+                          nerr, ngettext(nerr, "pattern", "pattern"),
+                          "rejected due to", errtype)
+          } else {
+            whinge <- paste("Exceeded maximum permissible number of",
+                            errtype,
+                            paren(paste("maxnerr =", maxnerr)),
+                            "when evaluating summary function",
+                            "for simulated point patterns")
+          }
+          switch(maxerr.action,
+                 fatal = stop(whinge, call.=FALSE),
+                 warn  = warning(whinge, call.=FALSE),
+                 null  = {})
+        } else if(!silent) cat("[retrying]\n")
+      }
+
+      #' ..... end of while(!success) ................
     }
-
-    # sanity checks
-    if(i == 1) {
+    
+    if(gaveup) break; # exit loop now
+    
+    ## sanity checks
+    if(i == 1L) {
       if(!inherits(funXsim, "fv"))
         stop(paste("When applied to a simulated pattern, the function",
                    fname, "did not return an object of class",
@@ -799,6 +896,12 @@ envelopeEngine <-
     simvals[ , i] <- funXsim[[valname]]
     if(verbose)
       pstate <- progressreport(i, Nsim, state=pstate)
+    
+    if(collectrubbish) {
+      rm(Xsim)
+      rm(funXsim)
+      gc()
+    }
   }
   ##  end simulation loop
   
@@ -810,28 +913,30 @@ envelopeEngine <-
   # ...........................................................
   # save functions and/or patterns if so commanded
 
-  if(savefuns) {
-    alldata <- cbind(rvals, simvals)
-    simnames <- paste("sim", 1:Nsim, sep="")
-    colnames(alldata) <- c("r", simnames)
-    alldata <- as.data.frame(alldata)
-    SimFuns <- fv(alldata,
-                  argu="r",
-                  ylab=attr(funX, "ylab"),
-                  valu="sim1",
-                  fmla= deparse(. ~ r),
-                  alim=attr(funX, "alim"),
-                  labl=names(alldata),
-                  desc=c("distance argument r",
-                    paste("Simulation ", 1:Nsim, sep="")),
-                  fname=attr(funX, "fname"),
-                  yexp=attr(funX, "yexp"),
-                  unitname=unitname(funX))
-    fvnames(SimFuns, ".") <- simnames
-  } 
-  if(savepatterns)
-    SimPats <- if(simtype == "list") SimDataList else Caughtpatterns
-
+  if(!gaveup) {
+    if(savefuns) {
+      alldata <- cbind(rvals, simvals)
+      simnames <- paste("sim", 1:Nsim, sep="")
+      colnames(alldata) <- c("r", simnames)
+      alldata <- as.data.frame(alldata)
+      SimFuns <- fv(alldata,
+                    argu="r",
+                    ylab=attr(funX, "ylab"),
+                    valu="sim1",
+                    fmla= deparse(. ~ r),
+                    alim=attr(funX, "alim"),
+                    labl=names(alldata),
+                    desc=c("distance argument r",
+                           paste("Simulation ", 1:Nsim, sep="")),
+                    fname=attr(funX, "fname"),
+                    yexp=attr(funX, "yexp"),
+                    unitname=unitname(funX))
+      fvnames(SimFuns, ".") <- simnames
+    } 
+    if(savepatterns)
+      SimPats <- if(simtype == "list") SimDataList else Caughtpatterns
+  }
+  
   ######### COMPUTE ENVELOPES #######################
 
   etype <- if(global) "global" else if(VARIANCE) "variance" else "pointwise"
@@ -849,27 +954,30 @@ envelopeEngine <-
                             csr=csr, use.theory=use.theory,
                             nrank=nrank, ginterval=ginterval, nSD=nSD,
                             Yname=Yname, do.pwrong=do.pwrong,
-                            weights=weights)
+                            weights=weights, gaveup=gaveup)
 
-  # tack on envelope information
-  attr(result, "einfo") <- envelopeInfo
+  ## tack on envelope information
+  attr(result, "einfo") <- resolve.defaults(envelopeInfo,
+                                            attr(result, "einfo"))
 
-  # tack on functions and/or patterns if so commanded   
-  if(savefuns)
-    attr(result, "simfuns") <- SimFuns
-  if(savepatterns) {
-    attr(result, "simpatterns") <- SimPats
-    attr(result, "datapattern") <- X
+  if(!gaveup) {
+    ## tack on functions and/or patterns if so commanded   
+    if(savefuns)
+      attr(result, "simfuns") <- SimFuns
+    if(savepatterns) {
+      attr(result, "simpatterns") <- SimPats
+      attr(result, "datapattern") <- X
+    }
+    ## undocumented - tack on values of some other quantity
+    if(savevalues) {
+      attr(result, "simvalues") <- SavedValues
+      attr(result, "datavalue") <- saveresultof(X)
+    }
   }
-  # save function weights 
+
+  ## save function weights 
   if(use.weights)
     attr(result, "weights") <- weights
-
-  # undocumented - tack on values of some other quantity
-  if(savevalues) {
-    attr(result, "simvalues") <- SavedValues
-    attr(result, "datavalue") <- saveresultof(X)
-  }
   return(result)
 }
 
@@ -917,6 +1025,7 @@ print.envelope <- function(x, ...) {
                "model"),
              kppm="simulations of fitted cluster model",
              expr="evaluations of user-supplied expression",
+             func="evaluations of user-supplied function",
              list="point pattern datasets in user-supplied list",
              funs="columns of user-supplied data")
     } else "simulations of fitted model"
@@ -926,10 +1035,21 @@ print.envelope <- function(x, ...) {
   splat("Obtained from", nsim, descrip)
   #
   if(waxlyrical('extras')) {
-    if(!is.null(e$dual) && e$dual) 
-      splat("Theoretical (i.e. null) mean value of", fname,
-            "estimated from a separate set of",
-            e$nsim2, "simulations")
+    dual <- isTRUE(e$dual)
+    usetheory <- isTRUE(e$use.theory)
+    hownull <- if(usetheory) {
+                 "(known exactly)"
+               } else if(dual) {
+                 paste("(estimated from a separate set of",
+                       e$nsim2, "simulations)")
+               } else NULL
+    formodel <- if(csr) "for CSR" else NULL
+    if(g) {
+      splat("Envelope based on maximum deviation of", fname,
+            "from null value", formodel, hownull)
+    } else if(dual) {
+      splat("Null value of", fname, formodel, hownull)
+    }
     if(!is.null(attr(x, "simfuns"))) 
       splat("(All simulated function values are stored)")
     if(!is.null(attr(x, "simpatterns"))) 
@@ -985,6 +1105,7 @@ summary.envelope <- function(object, ...) {
                "model"),
              kppm="simulations of fitted cluster model",
              expr="evaluations of user-supplied expression",
+             func="evaluations of user-supplied function",
              list="point pattern datasets in user-supplied list",
              funs="columns of user-supplied data",
              "simulated point patterns")
@@ -1021,8 +1142,8 @@ summary.envelope <- function(object, ...) {
           e$nSD, "sample standard deviations")
   } else {
     # critical envelopes
-    lo.ord <- if(nr == 1) "minimum" else paste(ordinal(nr), "smallest")
-    hi.ord <- if(nr == 1) "maximum" else paste(ordinal(nr), "largest")
+    lo.ord <- if(nr == 1L) "minimum" else paste(ordinal(nr), "smallest")
+    hi.ord <- if(nr == 1L) "maximum" else paste(ordinal(nr), "largest")
     if(g) 
       splat(switch(alternative,
                    two.sided = "Envelopes",
@@ -1065,8 +1186,6 @@ summary.envelope <- function(object, ...) {
 # theory = funX[["theo"]]
 # observed = fX
 
-envelope.matrix <- local({
-
 envelope.matrix <- function(Y, ...,
                             rvals=NULL, observed=NULL, theory=NULL, 
                             funX=NULL,
@@ -1082,7 +1201,8 @@ envelope.matrix <- function(Y, ...,
                             Yname=NULL,
                             do.pwrong=FALSE,
                             weights=NULL,
-                            precomputed=NULL) {
+                            precomputed=NULL,
+                            gaveup=FALSE) {
   if(is.null(Yname))
     Yname <- short.deparse(substitute(Y))
 
@@ -1097,23 +1217,21 @@ envelope.matrix <- function(Y, ...,
   cheat <- !is.null(precomputed)
 
   if(is.null(rvals) && is.null(observed) && !is.null(funX)) {
-    # assume funX is summary function for observed data
+    ## assume funX is summary function for observed data
     rvals <- with(funX, .x)
     observed <- with(funX, .y)
-    theory <-
-      if(use.theory && "theo" %in% names(funX)) with(funX, theo) else NULL
+    theory <- if(use.theory) (theory %orifnull% funX[["theo"]]) else NULL
+    if(check) stopifnot(nrow(funX) == nrow(Y)) 
   } else if(check) {
-    # validate vectors of data
+    ## validate vectors of data
     if(is.null(rvals)) stop("rvals must be supplied")
     if(is.null(observed)) stop("observed must be supplied")
-    if(!is.null(Y)) stopifnot(length(rvals) == nrow(Y))
+    stopifnot(length(rvals) == nrow(Y))
     stopifnot(length(observed) == length(rvals))
   }
 
-  if(use.theory) {
-    use.theory <- !is.null(theory)
-    if(use.theory && check) stopifnot(length(theory) == length(rvals))
-  }
+  use.theory <- use.theory && !is.null(theory)
+  if(use.theory && check) stopifnot(length(theory) == length(rvals))
 
   simvals <- Y
   fX <- observed
@@ -1125,41 +1243,54 @@ envelope.matrix <- function(Y, ...,
               fname="f")
 
   fname <- atr$fname
+
+  NAvector <- rep(NA_real_, length(rvals))
   
   if(!cheat) {
-    # ................   standard calculation .....................
-    # validate weights
-    if(use.weights) 
+    ## ................   standard calculation .....................
+    ## validate weights
+    if(use.weights && !gaveup) 
       check.nvector(weights, ncol(simvals), 
                     things="simulated functions", naok=TRUE)
 
-    # determine numbers of columns used
-      Ncol <- ncol(simvals)
-      if(Ncol < 2)
-        stop("Need at least 2 columns of function values")
-      
-      if(is.null(jsim) && !is.null(nsim)) {
-        # usual case - 'nsim' determines 'jsim'
-        if(nsim > Ncol)
-          stop(paste(nsim, "simulations are not available; only",
-                     Ncol, "columns provided"))
+    ## determine numbers of columns used
+    Ncol <- if(!gaveup) ncol(simvals) else Inf
+    if(Ncol < 2)
+      stop("Need at least 2 columns of function values")
+
+    ## all columns are used unless 'nsim' or 'jsim' given.
+    if(!(is.null(nsim) && is.null(jsim))) {
+      if(is.null(jsim)) {
         jsim <- 1:nsim
-        if(!is.null(nsim2)) {
-          # 'nsim2' determines 'jsim.mean'
-          if(nsim + nsim2 > Ncol)
-            stop(paste(nsim, "+", nsim2, "=", nsim+nsim2, 
-                       "simulations are not available; only",
-                       Ncol, "columns provided"))
-          jsim.mean <- nsim + 1:nsim2
-        }
-      }
+      } else if(is.null(nsim)) {
+        nsim <- length(jsim)
+      } else stopifnot(length(jsim) == nsim)
+      if(nsim > Ncol)
+        stop(paste(nsim, "simulations are not available; only",
+                   Ncol, "columns provided"))
+    }
+    
+    ## nsim2 or jsim.mean may be given, and imply dual calculation
+    if(!(is.null(nsim2) && is.null(jsim.mean))) {
+      if(is.null(jsim.mean)) {
+        jsim.mean <- setdiff(seq_len(Ncol), jsim)[1:nsim2]
+      } else if(is.null(nsim2)) {
+        nsim2 <- length(jsim.mean)
+      } else stopifnot(length(jsim.mean) == nsim2)
+      if(nsim + nsim2 > Ncol)
+        stop(paste(nsim, "+", nsim2, "=", nsim+nsim2, 
+                   "simulations are not available; only",
+                   Ncol, "columns provided"))
+      if(length(intersect(jsim, jsim.mean)))
+        warning("Internal warning: Indices in jsim and jsim.mean overlap")
+    }
       
-      restrict.columns <- !is.null(jsim)
-      dual <- !is.null(jsim.mean)
+    restrict.columns <- !is.null(jsim)
+    dual <- !is.null(jsim.mean)
 
   } else {
-    # ................ precomputed values ..................
-    # validate weights
+    ## ................ precomputed values ..................
+    ## validate weights
     if(use.weights) 
       check.nvector(weights, nsim,
                     things="simulations", naok=TRUE)
@@ -1168,11 +1299,14 @@ envelope.matrix <- function(Y, ...,
   }
 
   shadenames <- NULL
+  nsim.mean <- NULL
   
   switch(type,
          pointwise = {
-           # ....... POINTWISE ENVELOPES ...............................
-           if(cheat) {
+           ## ....... POINTWISE ENVELOPES ...............................
+           if(gaveup) {
+             lo <- hi <- NAvector
+           } else if(cheat) {
              stopifnot(checkfields(precomputed, c("lo", "hi")))
              lo <- precomputed$lo
              hi <- precomputed$hi
@@ -1183,32 +1317,31 @@ envelope.matrix <- function(Y, ...,
                if(use.weights) weights <- weights[jsim]
              }
              nsim <- ncol(simvals)
-             nsim.mean <- NULL
-             if(nrank == 1) {
-               lohi <- apply(simvals, 1, range)
+             if(nrank == 1L) {
+               lohi <- apply(simvals, 1L, range)
              } else {
-               lohi <- apply(simvals, 1,
+               lohi <- apply(simvals, 1L,
 #                             function(x, n) { sort(x)[n] },
                              orderstats,
-                             n=c(nrank, nsim-nrank+1))
+                             k=c(nrank, nsim-nrank+1L))
              }
-             lo <- lohi[1,]
-             hi <- lohi[2,]
+             lo <- lohi[1L,]
+             hi <- lohi[2L,]
            }
            lo.name <- "lower pointwise envelope of %s from simulations"
            hi.name <- "upper pointwise envelope of %s from simulations"
            ##
-           switch(alternative,
-                  two.sided = { },
-                  less = {
-                    hi <- rep.int(Inf, length(hi))
-                    hi.name <- "infinite upper limit"
-                  },
-                  greater = {
-                    lo <- rep.int(-Inf, length(lo))
-                    lo.name <- "infinite upper limit"
-                  })
-           #
+           if(!gaveup)
+             switch(alternative,
+                    two.sided = { },
+                    less = {
+                      hi <- rep.int(Inf, length(hi))
+                      hi.name <- "infinite upper limit"
+                    },
+                    greater = {
+                      lo <- rep.int(-Inf, length(lo))
+                      lo.name <- "infinite lower limit"
+                    })
            if(use.theory) {
              results <- data.frame(r=rvals,
                                    obs=fX,
@@ -1216,9 +1349,10 @@ envelope.matrix <- function(Y, ...,
                                    lo=lo,
                                    hi=hi)
            } else {
-             m <- if(cheat) precomputed$mmean else 
-                  if(!use.weights) apply(simvals, 1, mean, na.rm=TRUE) else
-                  apply(simvals, 1, weighted.mean, w=weights, na.rm=TRUE)
+             m <- if(gaveup) NAvector else
+                  if(cheat) precomputed$mmean else 
+                  if(!use.weights) apply(simvals, 1L, mean, na.rm=TRUE) else
+                  apply(simvals, 1L, weighted.mean, w=weights, na.rm=TRUE)
              results <- data.frame(r=rvals,
                                    obs=fX,
                                    mmean=m,
@@ -1227,27 +1361,31 @@ envelope.matrix <- function(Y, ...,
            }
            shadenames <- c("lo", "hi")
            if(do.pwrong) {
-             # estimate the p-value for the 'wrong test'
-             if(cheat) {
+             ## estimate the p-value for the 'wrong test'
+             if(gaveup) {
+               pwrong <- NA_real_
+             } else if(cheat) {
                pwrong <- precomputed$pwrong
                do.pwrong <- !is.null(pwrong) && !badprobability(pwrong, FALSE)
              } else {
                dataranks <- t(apply(simvals, 1, rank, ties.method="random"))
                upper.signif <- (dataranks <= nrank)
-               lower.signif <- (dataranks >= nsim-nrank+1)
+               lower.signif <- (dataranks >= nsim-nrank+1L)
                is.signif <- switch(alternative,
                                    less = lower.signif,
                                    greater = upper.signif,
                                    two.sided = lower.signif | upper.signif)
-               is.signif.somewhere <- apply(is.signif, 2, any)
+               is.signif.somewhere <- matcolany(is.signif)
                pwrong <- sum(is.signif.somewhere)/nsim
              }
            }
          },
          global = {
-           # ..... SIMULTANEOUS ENVELOPES ..........................
-           if(cheat) {
-             # ... use precomputed values ..
+           ## ..... SIMULTANEOUS ENVELOPES ..........................
+           if(gaveup) {
+             lo <- hi <- reference <- NAvector
+           } else if(cheat) {
+             ## ... use precomputed values ..
              stopifnot(checkfields(precomputed, c("lo", "hi")))
              lo <- precomputed$lo
              hi <- precomputed$hi
@@ -1257,12 +1395,11 @@ envelope.matrix <- function(Y, ...,
                stopifnot(checkfields(precomputed, "mmean"))
                reference <- precomputed$mmean
              }
-             nsim.mean <- NULL
              domain <- rep.int(TRUE, length(rvals))
            } else {
-             # ... normal case: compute envelopes from simulations
+             ## ... normal case: compute envelopes from simulations
              if(!is.null(ginterval)) {
-               domain <- (rvals >= ginterval[1]) & (rvals <= ginterval[2])
+               domain <- (rvals >= ginterval[1L]) & (rvals <= ginterval[2L])
                funX <- funX[domain, ]
                simvals <- simvals[domain, ]
              } else domain <- rep.int(TRUE, length(rvals))
@@ -1273,15 +1410,14 @@ envelope.matrix <- function(Y, ...,
                  simvals <- simvals[, jsim]
                  if(use.weights) weights <- weights[jsim]
                }
-               nsim.mean <- NULL
              } else if(dual) {
                # Estimate the mean from one set of columns
                # Form envelopes from another set of columns
                simvals.mean <- simvals[, jsim.mean]
                # mmean <-
                reference <- 
-                 if(!use.weights) apply(simvals.mean, 1, mean, na.rm=TRUE) else
-                 apply(simvals.mean, 1, weighted.mean, w=weights[jsim.mean],
+                 if(!use.weights) apply(simvals.mean, 1L, mean, na.rm=TRUE) else
+                 apply(simvals.mean, 1L, weighted.mean, w=weights[jsim.mean],
                        na.rm=TRUE)
                nsim.mean <- ncol(simvals.mean)
                # retain only columns used for envelope
@@ -1294,13 +1430,12 @@ envelope.matrix <- function(Y, ...,
                }
                # mmean <-
                reference <- 
-                 if(!use.weights) apply(simvals.mean, 1, mean, na.rm=TRUE) else
-                 apply(simvals.mean, 1, weighted.mean, w=weights, na.rm=TRUE)
-               nsim.mean <- NULL
+                 if(!use.weights) apply(simvals, 1L, mean, na.rm=TRUE) else
+                 apply(simvals, 1L, weighted.mean, w=weights, na.rm=TRUE)
              }
              nsim <- ncol(simvals)
              # compute deviations
-             deviations <- sweep(simvals, 1, reference)
+             deviations <- sweep(simvals, 1L, reference)
              deviations <-
                switch(alternative,
                       two.sided = abs(deviations),
@@ -1327,12 +1462,12 @@ envelope.matrix <- function(Y, ...,
                            call.=FALSE)
                  sc[bad] <- 1
                }
-               deviations <- sweep(deviations, 1, sc, "/")
+               deviations <- sweep(deviations, 1L, sc, "/")
              }
              ## compute max (scaled) deviations
-             suprema <- apply(deviations, 2, max, na.rm=TRUE)
+             suprema <- apply(deviations, 2L, max, na.rm=TRUE)
              # ranked deviations
-             dmax <- sort(suprema)[nsim-nrank+1]
+             dmax <- sort(suprema)[nsim-nrank+1L]
              # simultaneous bands
              lo <- reference - sc * dmax
              hi <- reference + sc * dmax
@@ -1341,16 +1476,17 @@ envelope.matrix <- function(Y, ...,
            lo.name <- "lower critical boundary for %s"
            hi.name <- "upper critical boundary for %s"
 
-           switch(alternative,
-                  two.sided = { },
-                  less = {
-                    hi <- rep.int(Inf, length(hi))
-                    hi.name <- "infinite upper boundary"
-                  },
-                  greater = {
-                    lo <- rep.int(-Inf, length(lo))
-                    lo.name <- "infinite lower boundary"
-                  })
+           if(!gaveup)
+             switch(alternative,
+                    two.sided = { },
+                    less = {
+                      hi <- rep.int(Inf, length(hi))
+                      hi.name <- "infinite upper boundary"
+                    },
+                    greater = {
+                      lo <- rep.int(-Inf, length(lo))
+                      lo.name <- "infinite lower boundary"
+                    })
 
            if(use.theory)
              results <- data.frame(r=rvals[domain],
@@ -1370,14 +1506,16 @@ envelope.matrix <- function(Y, ...,
                            "it is not relevant to global envelopes"))
          },
          variance={
-           # ....... POINTWISE MEAN, VARIANCE etc ......................
-           if(cheat) {
+           ## ....... POINTWISE MEAN, VARIANCE etc ......................
+           if(gaveup) {
+             Ef <- varf <- NAvector
+           } else if(cheat) {
              # .... use precomputed values ....
              stopifnot(checkfields(precomputed, c("Ef", "varf")))
              Ef   <- precomputed$Ef
              varf <- precomputed$varf
            } else {
-             # .... normal case: compute from simulations
+             ## .... normal case: compute from simulations
              simvals[is.infinite(simvals)] <- NA
              if(restrict.columns) {
                simvals <- simvals[, jsim]
@@ -1385,44 +1523,48 @@ envelope.matrix <- function(Y, ...,
              }
              nsim <- ncol(simvals)
              if(!use.weights) {
-               Ef   <- apply(simvals, 1, mean, na.rm=TRUE)
-               varf <- apply(simvals, 1, var,  na.rm=TRUE)
+               Ef   <- apply(simvals, 1L, mean, na.rm=TRUE)
+               varf <- apply(simvals, 1L, var,  na.rm=TRUE)
              } else {
-               Ef   <- apply(simvals, 1, weighted.mean, w=weights, na.rm=TRUE)
-               varf <- apply(simvals, 1, weighted.var,  w=weights, na.rm=TRUE)
+               Ef   <- apply(simvals, 1L, weighted.mean, w=weights, na.rm=TRUE)
+               varf <- apply(simvals, 1L, weighted.var,  w=weights, na.rm=TRUE)
              }
            }
-           nsim.mean <- NULL
-           # derived quantities
-           sd <- sqrt(varf)
-           stdres <- (fX-Ef)/sd
-           stdres[!is.finite(stdres)] <- NA
-           # critical limits
-           lo <- Ef - nSD * sd
-           hi <- Ef + nSD * sd
+           if(gaveup) {
+             sd <- stdres <- lo <- hi <- loCI <- hiCI <- NAvector
+           } else {
+             ## derived quantities
+             sd <- sqrt(varf)
+             stdres <- (fX-Ef)/sd
+             stdres[!is.finite(stdres)] <- NA
+             ## critical limits
+             lo <- Ef - nSD * sd
+             hi <- Ef + nSD * sd
+             ## confidence interval 
+             loCI <- Ef - nSD * sd/sqrt(nsim)
+             hiCI <- Ef + nSD * sd/sqrt(nsim)
+           }
            lo.name <- paste("lower", nSD, "sigma critical limit for %s")
            hi.name <- paste("upper", nSD, "sigma critical limit for %s")
-           # confidence interval 
-           loCI <- Ef - nSD * sd/sqrt(nsim)
-           hiCI <- Ef + nSD * sd/sqrt(nsim)
            loCI.name <- paste("lower", nSD, "sigma confidence bound",
                               "for mean of simulated %s")
            hiCI.name <- paste("upper", nSD, "sigma confidence bound",
-                              "for mean of simulated %s")
+                                "for mean of simulated %s")
            ##
-           switch(alternative,
-                  two.sided = { },
-                  less = {
-                    hi <- hiCI <- rep.int(Inf, length(hi))
-                    hi.name <- "infinite upper boundary"
-                    hiCI.name <- "infinite upper confidence limit"
-                  },
-                  greater = {
-                    lo <- loCI <- rep.int(-Inf, length(lo))
-                    lo.name <- "infinite lower boundary"
-                    loCI.name <- "infinite lower confidence limit"
-                  })
-           # put together
+           if(!gaveup)
+             switch(alternative,
+                    two.sided = { },
+                    less = {
+                      hi <- hiCI <- rep.int(Inf, length(hi))
+                      hi.name <- "infinite upper boundary"
+                      hiCI.name <- "infinite upper confidence limit"
+                    },
+                    greater = {
+                      lo <- loCI <- rep.int(-Inf, length(lo))
+                      lo.name <- "infinite lower boundary"
+                      loCI.name <- "infinite lower confidence limit"
+                    })
+           ## put together
            if(use.theory) {
              results <- data.frame(r=rvals,
                                    obs=fX,
@@ -1436,10 +1578,12 @@ envelope.matrix <- function(Y, ...,
                                      stdres=stdres,
                                      loCI=loCI,
                                      hiCI=hiCI)
-             loCIlabel <- if(alternative == "greater") "-infinity" else
-                         makefvlabel(NULL, NULL, fname, "loCI")
-             hiCIlabel <- if(alternative == "less") "infinity" else 
-                         makefvlabel(NULL, NULL, fname, "hiCI")
+             loCIlabel <-
+               if(alternative == "greater" && !gaveup) "-infinity" else
+               makefvlabel(NULL, NULL, fname, "loCI")
+             hiCIlabel <-
+               if(alternative == "less" && !gaveup) "infinity" else 
+               makefvlabel(NULL, NULL, fname, "hiCI")
              mslabl <- c(makefvlabel(NULL, "bar", fname),
                          makefvlabel("var", "hat", fname),
                          makefvlabel("res", "hat", fname),
@@ -1464,10 +1608,12 @@ envelope.matrix <- function(Y, ...,
                                      stdres=stdres,
                                      loCI=loCI,
                                      hiCI=hiCI)
-             loCIlabel <- if(alternative == "greater") "-infinity" else
-                         makefvlabel(NULL, NULL, fname, "loCI")
-             hiCIlabel <- if(alternative == "less") "infinity" else 
-                         makefvlabel(NULL, NULL, fname, "hiCI")
+             loCIlabel <-
+               if(alternative == "greater" && !gaveup) "-infinity" else
+               makefvlabel(NULL, NULL, fname, "loCI")
+             hiCIlabel <-
+               if(alternative == "less" && !gaveup) "infinity" else 
+               makefvlabel(NULL, NULL, fname, "hiCI")
              mslabl <- c(makefvlabel("var", "hat", fname),
                          makefvlabel("res", "hat", fname),
                          makefvlabel("stdres", "hat", fname),
@@ -1480,8 +1626,10 @@ envelope.matrix <- function(Y, ...,
                          loCI.name, hiCI.name)
            }
            if(do.pwrong) {
-             # estimate the p-value for the 'wrong test'
-             if(cheat) {
+             ## estimate the p-value for the 'wrong test'
+             if(gaveup) {
+               pwrong <- NA_real_
+             } else if(cheat) {
                pwrong <- precomputed$pwrong
                do.pwrong <- !is.null(pwrong) && !badprobability(pwrong, FALSE)
              } else {
@@ -1491,7 +1639,8 @@ envelope.matrix <- function(Y, ...,
                                    less = lower.signif,
                                    greater = upper.signif,
                                    two.sided = lower.signif | upper.signif)
-               is.signif.somewhere <- apply(is.signif, 2, any)
+#               is.signif.somewhere <- apply(is.signif, 2, any)
+               is.signif.somewhere <- matcolany(is.signif)
                pwrong <- sum(is.signif.somewhere)/nsim
              }
            }
@@ -1511,9 +1660,9 @@ envelope.matrix <- function(Y, ...,
                       "sample mean of %s from simulations")
   }
 
-  lolabl <- if(alternative == "greater") "-infinity" else
+  lolabl <- if(alternative == "greater" && !gaveup) "-infinity" else
              makefvlabel(NULL, "hat", fname, "lo")
-  hilabl <- if(alternative == "less") "infinity" else
+  hilabl <- if(alternative == "less"&& !gaveup) "infinity" else
              makefvlabel(NULL, "hat", fname, "hi")
 
   result <- fv(results,
@@ -1569,12 +1718,14 @@ envelope.matrix <- function(Y, ...,
                                 nsim2 = nsim.mean,
                                 Yname = Yname,
                                 do.pwrong=do.pwrong,
-                                use.weights=use.weights)
+                                use.weights=use.weights,
+                                gaveup = gaveup)
 
   # tack on saved functions
-  if(savefuns) {
-    alldata <- cbind(rvals, simvals)
-    simnames <- paste("sim", 1:nsim, sep="")
+  if(savefuns && !gaveup) {
+    nSim <- ncol(Y)
+    alldata <- cbind(rvals, Y)
+    simnames <- paste("sim", 1:nSim, sep="")
     colnames(alldata) <- c("r", simnames)
     alldata <- as.data.frame(alldata)
     SimFuns <- fv(alldata,
@@ -1585,7 +1736,7 @@ envelope.matrix <- function(Y, ...,
                   alim=atr$alim,
                   labl=names(alldata),
                   desc=c("distance argument r",
-                          paste("Simulation ", 1:nsim, sep="")),
+                          paste("Simulation ", 1:nSim, sep="")),
                   unitname=unitname(funX))
     fvnames(SimFuns, ".") <- simnames
     attr(result, "simfuns") <- SimFuns
@@ -1596,12 +1747,6 @@ envelope.matrix <- function(Y, ...,
     attr(result, "weights") <- weights
   return(result)
 }
-
-  orderstats <- function(x, n) { sort(x)[n] }
-
-  envelope.matrix
-  
-})
 
 envelope.envelope <- function(Y, fun=NULL, ...,
                               transform=NULL, global=FALSE, VARIANCE=FALSE) {
@@ -1663,11 +1808,11 @@ envelope.envelope <- function(Y, fun=NULL, ...,
                                             weights=wt),
                                        .StripNull=TRUE))
   } else {
-    # compute new envelope with existing simulated functions
+    #' compute new envelope with existing simulated functions
     if(is.null(sf)) 
       stop(paste("Y does not contain a", dQuote("simfuns"), "attribute",
                  "(it was not generated with savefuns=TRUE)"))
-
+    
     if(!is.null(transform)) {
       # Apply transformation to Y and sf
       stopifnot(is.expression(transform))
@@ -1679,6 +1824,24 @@ envelope.envelope <- function(Y, fun=NULL, ...,
       sf <- eval(cc)
     }
 
+    #' catch discrepancy between domains of observed and simulated functions
+    if(nrow(sf) != nrow(Y)) {
+      rrsim <- sf[[fvnames(sf, ".x")]]
+      rrobs <- Y[[fvnames(Y, ".x")]]
+      ra <- intersect.ranges(range(rrsim), range(rrobs))
+      delta <- min(mean(diff(rrsim)), mean(diff(rrobs)))/2
+      oksim <- (rrsim >= ra[1] - delta) & (rrsim <= ra[2] + delta)
+      okobs <- (rrobs >= ra[1] - delta) & (rrobs <= ra[2] + delta)
+      if(sum(oksim) != sum(okobs))
+        stop("Internal error: Unable to reconcile the domains",
+             "of the observed and simulated functions", call.=FALSE)
+      if(mean(abs(rrsim[oksim] - rrobs[okobs])) > delta)
+        stop("Internal error: Unable to reconcile the r values",
+             "of the observed and simulated functions", call.=FALSE)
+      sf <- sf[oksim, ,drop=FALSE]
+      Y  <- Y[okobs,  ,drop=FALSE]
+    }
+    
     # extract simulated function values
     df <- as.data.frame(sf)
     rname <- fvnames(sf, ".x")
@@ -1704,8 +1867,9 @@ envelope.envelope <- function(Y, fun=NULL, ...,
     dnames <- dnames[dnames %in% fvnames(result, ".")]
     # expand "."
     ud <- as.call(lapply(c("cbind", dnames), as.name))
+    dont.complain.about(ud)
     expandtransform <- eval(substitute(substitute(tr, list(.=ud)),
-                                       list(tr=transform[[1]])))
+                                       list(tr=transform[[1L]])))
     # compute new labels 
     attr(result, "fname") <- attr(Yorig, "fname")
     mathlabl <- as.character(fvlegend(result, expandtransform))
@@ -1732,7 +1896,7 @@ pool.envelope <- local({
 
   pool.envelope <- function(..., savefuns=FALSE, savepatterns=FALSE) {
     Yname <- short.deparse(sys.call())
-    if(nchar(Yname) > 60) Yname <- paste(substr(Yname, 1, 40), "[..]")
+    if(nchar(Yname) > 60) Yname <- paste(substr(Yname, 1L, 40L), "[..]")
     Elist <- unname(list(...))
     nE <-  length(Elist)
     if(nE == 0) return(NULL)
@@ -1750,7 +1914,7 @@ pool.envelope <- local({
     }
     ## Only one envelope?
     if(nE == 1)
-      return(Elist[[1]])
+      return(Elist[[1L]])
     ## envelopes must be compatible
     ok <- do.call(compatible, Elist)
     if(!ok)
@@ -1796,7 +1960,7 @@ pool.envelope <- local({
       }
       ## Simulated functions must be the same function
       fnames <- unique(lapply(SFlist, attr, which="fname"))
-      if(length(fnames) > 1) {
+      if(length(fnames) > 1L) {
         fnames <- unlist(lapply(fnames, flatfname))
         stop(paste("Envelope objects contain values",
                    "of different functions:",
@@ -1804,7 +1968,7 @@ pool.envelope <- local({
       }
       ## vectors of r values must be identical
       rlist <- lapply(SFlist, getrvals)
-      rvals <- rlist[[1]]
+      rvals <- rlist[[1L]]
       samer <- unlist(lapply(rlist, identical, y=rvals))
       if(!all(samer))
         stop(paste("Simulated function values are not compatible",
@@ -1816,7 +1980,7 @@ pool.envelope <- local({
     ## compute pooled envelope
     switch(type,
            pointwise = {
-             result <- envelope(SFmatrix, funX=Elist[[1]],
+             result <- envelope(SFmatrix, funX=Elist[[1L]],
                                 type=type, alternative=alternative,
                                 clamp=clamp,
                                 csr=csr, use.theory=use.theory,
@@ -1827,10 +1991,10 @@ pool.envelope <- local({
              simfunmatrix <- if(is.null(ginterval)) SFmatrix else {
                ## savefuns have not yet been clipped to ginterval
                ## while envelope data have been clipped.
-               domain <- (rvals >= ginterval[1]) & (rvals <= ginterval[2])
+               domain <- (rvals >= ginterval[1L]) & (rvals <= ginterval[2L])
                SFmatrix[domain, , drop=FALSE]
              }
-             result <- envelope(simfunmatrix, funX=Elist[[1]],
+             result <- envelope(simfunmatrix, funX=Elist[[1L]],
                                 type=type, alternative=alternative,
                                 scale=scale, clamp=clamp,
                                 csr=csr, use.theory=use.theory,
@@ -1854,19 +2018,20 @@ pool.envelope <- local({
                weightlist <- lapply(Elist, attr, which="weights")
                w.mean <- unlist(lapply(weightlist, sum))
                d.mean <- sum(w.mean)
-               ssw <- unlist(lapply(weightlist, function(x) {sum((x/sum(x))^2)}))
+               ssw <- unlist(lapply(weightlist, meansqfrac))
+               ##  meansqfrac :  function(x) {sum((x/sum(x))^2)}))
                w.var  <- w.mean * (1 - ssw)
                d.var <-  d.mean * (1 - sum(ssw))
              }
-             poolmmean <- as.numeric(mmeans %*% matrix(w.mean/d.mean, ncol=1))
-             within <- vars %*% matrix(w.var, ncol=1)
-             between <- ((mmeans - poolmmean[])^2) %*% matrix(w.mean, ncol=1)
+             poolmmean <- as.numeric(mmeans %*% matrix(w.mean/d.mean, ncol=1L))
+             within <- vars %*% matrix(w.var, ncol=1L)
+             between <- ((mmeans - poolmmean[])^2) %*% matrix(w.mean, ncol=1L)
              poolvar <- as.numeric((within + between)/d.var)
              ## feed precomputed data to envelope.matrix
              pc <- list(Ef=poolmmean[],
                         varf=poolvar[])
              nsim <- sum(nsims)
-             result <- envelope.matrix(NULL, funX=Elist[[1]],
+             result <- envelope.matrix(NULL, funX=Elist[[1L]],
                                        type=type, alternative=alternative,
                                        csr=csr, Yname=Yname,
                                        weights=weights,
@@ -1877,7 +2042,7 @@ pool.envelope <- local({
   
     ## Copy envelope info that is not handled by envelope.matrix
     copyacross <- c("Yname", "csr.theo", "use.theory", "simtype", "constraints")
-    attr(result, "einfo")[copyacross] <- attr(Elist[[1]], "einfo")[copyacross]
+    attr(result, "einfo")[copyacross] <- attr(Elist[[1L]], "einfo")[copyacross]
   
     ## ..............saved patterns .....................
     if(savepatterns) {
@@ -1903,7 +2068,7 @@ pool.envelope <- local({
       simnames <- paste0("sim", 1:Nsim)
       colnames(alldata) <- c("r", simnames)
       alldata <- as.data.frame(alldata)
-      SFtemplate <- SFlist[[1]]
+      SFtemplate <- SFlist[[1L]]
       SimFuns <- fv(alldata,
                     argu="r",
                     ylab=attr(SFtemplate, "ylab"),
@@ -1921,12 +2086,12 @@ pool.envelope <- local({
     } 
   
     dotnames   <- lapply(Elist, fvnames, a=".")
-    dn <- dotnames[[1]]
+    dn <- dotnames[[1L]]
     if(all(unlist(lapply(dotnames, identical, y=dn))))
       fvnames(result, ".") <- dn
     
     shadenames <- lapply(Elist, fvnames, a=".s")
-    sh <- shadenames[[1]]
+    sh <- shadenames[[1L]]
     if(all(unlist(lapply(shadenames, identical, y=sh))))
       fvnames(result, ".s") <- sh
   
@@ -1936,7 +2101,9 @@ pool.envelope <- local({
   getrvals <- function(z) { as.matrix(z)[, fvnames(z, ".x")] }
   
   getdotvals <- function(z) { as.matrix(z)[, fvnames(z, "."), drop=FALSE] }
-  
+
+  meansqfrac <- function(x) {sum((x/sum(x))^2)} 
+
   pool.envelope
 })
 
@@ -1946,12 +2113,12 @@ pool.envelope <- local({
 resolveEinfo <- function(x, what, fallback, warn, atomic=TRUE) {
   if(atomic) {
     y <- unique(unlist(lapply(x, getElement, name=what)))
-    if(length(y) == 1)
+    if(length(y) == 1L)
       return(y)
   } else {
     y <- unique(lapply(x, getElement, name=what))
-    if(length(y) == 1)
-      return(y[[1]])
+    if(length(y) == 1L)
+      return(y[[1L]])
   }
   if(missing(warn))
     warn <- paste("Envelopes were generated using different values",
@@ -1962,3 +2129,11 @@ resolveEinfo <- function(x, what, fallback, warn, atomic=TRUE) {
   return(fallback)
 }
 
+as.data.frame.envelope <- function(x, ..., simfuns=FALSE) {
+  if(simfuns && !is.null(sf <- attr(x, "simfuns"))) {
+    # tack on the simulated functions as well
+    y <- as.data.frame(bind.fv(x, sf, clip=TRUE))
+    return(y)
+  } 
+  NextMethod("as.data.frame")
+}

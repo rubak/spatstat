@@ -57,13 +57,8 @@ panel.histogram(x, ...)
 \value{
   Null.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{pairs.im}},
@@ -71,10 +66,14 @@ panel.histogram(x, ...)
   \code{\link{panel.smooth}}
 }
 \examples{
+  pairs(bei.extra,
+        panel      = panel.contour,
+        diag.panel = panel.histogram)
   with(bei.extra,
-         pairs(grad, elev,
-               panel      = panel.contour,
-               diag.panel = panel.histogram))
+        pairs(grad, elev, 
+              panel      = panel.image,
+              diag.panel = panel.histogram))
+  pairs(marks(finpines), panel=panel.contour, diag.panel=panel.histogram)
 }
 \keyword{spatial}
 \keyword{hplot}

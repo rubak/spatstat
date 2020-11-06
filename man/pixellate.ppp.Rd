@@ -1,4 +1,4 @@
-\name{pixellate.ppp} %DontDeclareMethods
+\name{pixellate.ppp} 
 \alias{pixellate.ppp}
 \alias{as.im.ppp}
 \title{Convert Point Pattern to Pixel Image}
@@ -8,7 +8,9 @@
   either 0 or 1.
 }
 \usage{
-\method{pixellate}{ppp}(x, W=NULL, \dots, weights = NULL, padzero=FALSE)
+\method{pixellate}{ppp}(x, W=NULL, \dots, weights = NULL,
+                        padzero=FALSE, fractional=FALSE, preserve=FALSE,
+                        DivideByPixelArea=FALSE, savemap=FALSE)
 
 \method{as.im}{ppp}(X, \dots)
 }
@@ -20,8 +22,21 @@
     the pixel raster.
   }
   \item{weights}{Optional vector of weights associated with the points.}
-  \item{padzero}{Logical flag indicating whether to set pixel values
+  \item{padzero}{
+    Logical value indicating whether to set pixel values
     to zero outside the window. 
+  }
+  \item{fractional,preserve}{
+    Logical values determining the type of discretisation.
+    See Details.
+  }
+  \item{DivideByPixelArea}{
+    Logical value, indicating whether the resulting pixel values
+    should be divided by the pixel area.
+  }
+  \item{savemap}{
+    Logical value, indicating whether to save information
+    about the discretised coordinates of the points of \code{x}.
   }
 }
 \details{
@@ -66,6 +81,32 @@
   spatial domain as the window of the point pattern \code{x}. If
   \code{zeropad=TRUE} then the resulting pixel image has a rectangular
   domain; pixels outside the original window are assigned the value zero.
+
+  The discretisation procedure is controlled by the arguments
+  \code{fractional} and \code{preserve}.
+  \itemize{
+    \item 
+    The argument \code{fractional} specifies how data points are mapped to
+    pixels. If \code{fractional=FALSE} (the default),
+    each data point is allocated to the nearest pixel centre.
+    If \code{fractional=TRUE}, each data point is allocated
+    with fractional weight to four pixel centres
+    (the corners of a rectangle containing the data
+    point).
+    \item
+    The argument \code{preserve} specifies what to do with pixels
+    lying near the boundary of the window, if the window is not a rectangle.
+    If \code{preserve=FALSE} (the default), any contributions
+    that are attributed to pixel centres lying outside the window
+    are reset to zero. If \code{preserve=TRUE}, any such contributions
+    are shifted to the nearest pixel lying inside the window, so that
+    the total mass is preserved.
+  }
+
+  If \code{savemap=TRUE} then the result has an attribute
+  \code{"map"} which is a 2-column matrix containing the row and column
+  indices of the discretised positions of the points of \code{x}
+  in the pixel grid.
 }
 \value{
   A pixel image (object of class \code{"im"}).
@@ -76,14 +117,11 @@
   \code{\link{density.ppp}}, \code{\link{Smooth.ppp}}.
 }
 \examples{
-  data(humberside)
   plot(pixellate(humberside))
+  plot(pixellate(humberside, fractional=TRUE))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{manip}

@@ -66,7 +66,7 @@ Hybrid(...)
   Baddeley, A., Turner, R., Mateu, J. and Bevan, A. (2013)
   Hybrids of Gibbs point process models and their implementation.
   \emph{Journal of Statistical Software} \bold{55}:11, 1--43.
-  \url{http://www.jstatsoft.org/v55/i11/}
+  \url{https://www.jstatsoft.org/v55/i11/}
 }
 \seealso{
   \code{\link{ppm}}
@@ -91,11 +91,8 @@ Hybrid(...)
   plot(fitin(fit2))
   plot(fitin(fit2), separate=TRUE, mar.panel=rep(4,4))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{models}

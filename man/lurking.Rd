@@ -1,23 +1,50 @@
 \name{lurking}
 \alias{lurking}               
-\title{Lurking variable plot}
+\alias{lurking.ppp}               
+\alias{lurking.ppm}               
+\title{Lurking Variable Plot}
 \description{
   Plot spatial point process residuals against a covariate
 }
 \usage{
-lurking(object, covariate, type="eem",
+lurking(object, \dots)
+
+\method{lurking}{ppm}(object, covariate,
+                    type="eem",
                     cumulative=TRUE,
+                    \dots,
+                    plot.it = TRUE,
+                    plot.sd = is.poisson(object),
                     clipwindow=default.clipwindow(object),
-                    rv,
-                    plot.sd,
+                    rv = NULL,
                     envelope=FALSE, nsim=39, nrank=1,
-                    plot.it=TRUE,
                     typename,
                     covname,
-                    oldstyle=FALSE, check=TRUE,
-                    \dots,
+                    oldstyle=FALSE,
+                    check=TRUE,
+                    verbose=TRUE,
+                    nx=128,
                     splineargs=list(spar=0.5),
-                    verbose=TRUE)
+                    internal=NULL) 
+
+\method{lurking}{ppp}(object, covariate,
+                    type="eem",
+                    cumulative=TRUE,
+                    \dots,
+                    plot.it = TRUE,
+                    plot.sd = is.poisson(object),
+                    clipwindow=default.clipwindow(object),
+                    rv = NULL,
+                    envelope=FALSE, nsim=39, nrank=1,
+                    typename,
+                    covname,
+                    oldstyle=FALSE,
+                    check=TRUE,
+                    verbose=TRUE,
+                    nx=128,
+                    splineargs=list(spar=0.5),
+                    internal=NULL) 
+
 }
 \arguments{
   \item{object}{
@@ -44,6 +71,22 @@ lurking(object, covariate, type="eem",
     of this sum, a marginal density of the smoothed residual field
     (\code{cumulative=FALSE}).
    }
+  \item{\dots}{
+    Arguments passed to \code{\link{plot.default}}
+    and \code{\link{lines}} to control the plot behaviour.
+  }
+  \item{plot.it}{
+    Logical value indicating whether 
+    plots should be shown. If \code{plot.it=FALSE}, only
+    the computed coordinates for the plots are returned.
+    See \emph{Value}.
+  }
+  \item{plot.sd}{
+    Logical value indicating whether 
+    error bounds should be added to plot.
+    The default is \code{TRUE} for Poisson models and
+    \code{FALSE} for non-Poisson models. See Details.
+  }
   \item{clipwindow}{
     If not \code{NULL} this argument indicates that residuals shall
     only be computed inside a subregion of the window containing the
@@ -55,12 +98,6 @@ lurking(object, covariate, type="eem",
     If this argument is present, the point process residuals will not be
     calculated from the fitted model \code{object},
     but will instead be taken directly from \code{rv}. 
-  }
-  \item{plot.sd}{
-    Logical value indicating whether 
-    error bounds should be added to plot.
-    The default is \code{TRUE} for Poisson models and
-    \code{FALSE} for non-Poisson models. See Details.
   }
   \item{envelope}{
     Logical value indicating whether to compute simulation envelopes
@@ -77,12 +114,6 @@ lurking(object, covariate, type="eem",
     Integer. Rank of the envelope value amongst the \code{nsim} simulated
     values. A rank of 1 means that the minimum and maximum
     simulated values will be used.
-  }
-  \item{plot.it}{
-    Logical value indicating whether 
-    plots should be shown. If \code{plot.it=FALSE}, only
-    the computed coordinates for the plots are returned.
-    See \emph{Value}.
   }
   \item{typename}{
     Usually absent. 
@@ -102,21 +133,27 @@ lurking(object, covariate, type="eem",
     Logical flag indicating whether the integrity of the data structure
     in \code{object} should be checked.
   }
-  \item{\dots}{
-    Arguments passed to \code{\link{plot.default}}
-    and \code{\link{lines}} to control the plot behaviour.
+  \item{verbose}{
+    Logical value indicating
+    whether to print progress reports during Monte Carlo simulation.
+  }
+  \item{nx}{
+    Integer. Number of covariate values to be used in the plot.
   }
   \item{splineargs}{
     A list of arguments passed to \code{smooth.spline}
     for the estimation of the derivatives in the case \code{cumulative=FALSE}.
   }
-  \item{verbose}{
-    Logical value indicating
-    whether to print progress reports during Monte Carlo simulation.
+  \item{internal}{
+    Internal use only.
   }
 }
 \value{
-  A list containing two dataframes
+  The (invisible) return value is an object 
+  belonging to the class \code{"lurk"}, for which there
+  are methods for \code{plot} and \code{print}.
+
+  This object is a list containing two dataframes
   \code{empirical} and \code{theoretical}. 
   The first dataframe \code{empirical} contains columns
   \code{covariate} and \code{value} giving the coordinates of the
@@ -124,17 +161,24 @@ lurking(object, covariate, type="eem",
   contains columns \code{covariate}, \code{mean} and \code{sd}
   giving the coordinates of the plot of the theoretical mean
   and standard deviation.
-
-  The return value belongs to the class \code{"lurk"} for which there is
-  a plot method. 
 }
 \details{
-  This function generates a `lurking variable' plot for a
+  This function generates a \sQuote{lurking variable} plot for a
   fitted point process model. 
   Residuals from the model represented by \code{object}
   are plotted against the covariate specified by \code{covariate}.
   This plot can be used to reveal departures from the fitted model,
   in particular, to reveal that the point pattern depends on the covariate.
+
+  The function \code{lurking} is generic, with methods for
+  \code{ppm} and \code{ppp} documented here, and possibly other methods.
+
+  The argument \code{object} would usually be a fitted point process model
+  (object of class \code{"ppm"}) produced by the
+  model-fitting algorithm \code{\link{ppm}}). If
+  \code{object} is a point pattern (object of class \code{"ppp"}) then
+  the model is taken to be the uniform Poisson process (Complete
+  Spatial Randomness) fitted to this point pattern.
 
   First the residuals from the fitted model (Baddeley et al, 2004)
   are computed at each quadrature point,
@@ -196,10 +240,6 @@ lurking(object, covariate, type="eem",
   using the innovation variance, an over-estimate of the true
   variance of the residuals.
 
-  The argument \code{object} must be a fitted point process model
-  (object of class \code{"ppm"}) typically produced by the maximum
-  pseudolikelihood fitting algorithm \code{\link{ppm}}).
-
   The argument \code{covariate} is either a numeric vector, a pixel
   image, or an R language expression.
   If it is a numeric vector, it is assumed to contain
@@ -247,13 +287,12 @@ lurking(object, covariate, type="eem",
  \code{\link{ppm}}
 }
 \references{
-  Baddeley, A., Turner, R., \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005)
+  Baddeley, A., Turner, R., \Moller, J. and Hazelton, M. (2005)
   Residual analysis for spatial point processes.
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.
 
-  Baddeley, A.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Pakes, A.G. (2006)
+  Baddeley, A., \Moller, J. and Pakes, A.G. (2006)
   Properties of residuals for spatial point processes.
   \emph{Annals of the Institute of Statistical Mathematics}
   \bold{60}, 627--649.
@@ -264,17 +303,13 @@ lurking(object, covariate, type="eem",
   \emph{Mathematische Nachrichten}, 151:95--100.
 }
 \examples{
-  data(nztrees)
-  lurking(nztrees, expression(x))
-  fit <- ppm(nztrees, ~x, Poisson())
-  lurking(fit, expression(x))
-  lurking(fit, expression(x), cumulative=FALSE)
+  (a <- lurking(nztrees, expression(x), type="raw"))
+  fit <- ppm(nztrees ~x, Poisson(), nd=128)
+  (b <- lurking(fit, expression(x), type="raw"))
+  lurking(fit, expression(x), type="raw", cumulative=FALSE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian and \rolf.
 }
 \keyword{spatial}
 \keyword{models}

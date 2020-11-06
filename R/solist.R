@@ -3,11 +3,11 @@
 ##
 ## Methods for class `solist' (spatial object list)
 ##
-##      and related classes 'anylist', 'ppplist', 'imlist'
+##      and related classes 'anylist', 'ppplist', 'imlist', 'linimlist'
 ##
 ## plot.solist is defined in plot.solist.R
 ##
-## $Revision: 1.12 $ $Date: 2015/06/05 08:52:38 $
+## $Revision: 1.23 $ $Date: 2020/10/31 05:00:33 $
 
 anylist <- function(...) {
   x <- list(...)
@@ -71,40 +71,56 @@ is.sob <- local({
                       "quadratcount", "quadrattest", 
                       "layered",
                       "funxy", "distfun", "nnfun", 
-                      "lpp", "linnet", "linfun",
+                      "lpp", "linnet", "linfun", "lintess",  
                       "influence.ppm", "leverage.ppm")
+  # Note 'linim' inherits 'im'
+  #      'dfbetas.ppm' inherits 'msr'
+
   is.sob <- function(x) { inherits(x, what=sobjectclasses) }
   is.sob
 })
   
-solist <- function(..., check=TRUE, promote=TRUE, demote=FALSE) {
+solist <- function(..., check=TRUE, promote=TRUE, demote=FALSE, .NameBase) {
   stuff <- list(...)
+  if(length(stuff) && !missing(.NameBase) && !any(nzchar(names(stuff))))
+    names(stuff) <- paste(.NameBase, seq_along(stuff))
   if((check || demote) && !all(sapply(stuff, is.sob))) {
     if(demote)
       return(as.anylist(stuff))
     stop("Some arguments of solist() are not 2D spatial objects")
   }
-  class(stuff) <- c("solist", "anylist", "listof", class(stuff))
+  class(stuff) <- unique(c("solist", "anylist", "listof", class(stuff)))
   if(promote) {
-    if(all(unlist(lapply(stuff, is.ppp)))) {
+    if(all(sapply(stuff, is.ppp))) {
       class(stuff) <- c("ppplist", class(stuff))
-    } else if(all(unlist(lapply(stuff, is.im)))) {
+    } else if(all(sapply(stuff, is.im))) {
       class(stuff) <- c("imlist", class(stuff))
+      if(all(sapply(stuff, is.linim)))
+        class(stuff) <- c("linimlist", class(stuff))
     }
   }
   return(stuff)
 }
 
 as.solist <- function(x, ...) {
-  if(inherits(x, "solist") && length(list(...)) == 0)
+  if(inherits(x, "solist") && length(list(...)) == 0) {
+    #' wipe superfluous info
+    if(inherits(x, "ppplist")) 
+      attributes(x)[c("fsplit", "fgroup")] <- NULL
+    class(x) <- c("solist", "anylist", "listof")
     return(x)
-  if(!is.list(x))
+  }
+  #' needs to be enclosed in list() ?
+  if(!is.list(x) || (is.sob(x) && !inherits(x, "layered")))
     x <- list(x)
   return(do.call(solist, append(x, list(...))))
 }
 
+is.solist <- function(x) inherits(x, "solist")
+
 print.solist <- function (x, ...) {
   what <- if(inherits(x, "ppplist")) "point patterns" else
+          if(inherits(x, "linimlist")) "pixel images on a network" else
           if(inherits(x, "imlist")) "pixel images" else "spatial objects"
   splat(paste("List of", what))
   parbreak()
@@ -114,8 +130,13 @@ print.solist <- function (x, ...) {
 
 "[.solist" <- function(x, i, ...) {
   cl <- oldClass(x)
-  ## invoke list method
-  y <- NextMethod("[")
+  if(!missing(i) && is.owin(i)) {
+    ## spatial subset
+    y <- lapply(unclass(x), "[", i=i, ...)
+  } else {
+    ## invoke list method
+    y <- NextMethod("[")
+  }
   if(length(y) == 0) return(list())
   class(y) <- cl
   return(y)
@@ -132,6 +153,7 @@ summary.solist <- function(object, ...) {
   x <- lapply(object, summary, ...)
   attr(x, "otype") <-
     if(inherits(object, "ppplist")) "ppp" else
+    if(inherits(object, "linimlist")) "im" else ""
     if(inherits(object, "imlist")) "im" else ""
   class(x) <- c("summary.solist", "anylist")
   x
@@ -151,6 +173,47 @@ as.layered.solist <- function(X) {
   layered(LayerList=X)
 }
 
+#'  ----- ppplist and imlist ----------------------------
+#'  for efficiency only
+
+as.ppplist <- function(x, check=TRUE) {
+  if(check) {
+    x <- as.solist(x, promote=TRUE, check=TRUE)
+    if(!inherits(x, "ppplist"))
+      stop("some entries are not point patterns")
+  }
+  class(x) <- unique(c("ppplist", "solist", "anylist", "listof", class(x)))
+  return(x)
+}
+
+is.ppplist <- function(x) inherits(x, "ppplist")
+
+as.imlist <- function(x, check=TRUE) {
+  if(check) {
+    x <- as.solist(x, promote=TRUE, check=TRUE)
+    if(!inherits(x, "imlist"))
+      stop("some entries are not images")
+  } else {
+    #' just apply required classes, in required order
+    reqd <- c("imlist", "solist", "anylist", "listof")
+    class(x) <- unique(c(reqd, class(x)))
+  }
+  return(x)
+}
+
+is.imlist <- function(x) inherits(x, "imlist")
+
+as.linimlist <- function(x, check=TRUE) {
+  x <- as.imlist(x, check=check)
+  if(check) {
+    if(!all(sapply(x, is.linim)))
+      stop("All entries must be pixel images on a network")
+  } 
+  class(x) <- unique(c("linimlist", class(x)))
+  return(x)
+}
+
+
 # --------------- counterparts of 'lapply' --------------------
 
 anylapply <- function(X, FUN, ...) {
@@ -164,18 +227,8 @@ solapply <- function(X, FUN, ..., check=TRUE, promote=TRUE, demote=FALSE) {
   return(u)
 }
 
-density.ppplist <- function(x, ..., se=FALSE) {
-  y <- lapply(x, density, ..., se=se)
-  if(!se) return(as.solist(y, demote=TRUE))
-  y.est <- lapply(y, getElement, name="estimate")
-  y.se  <- lapply(y, getElement, name="SE")
-  z <- list(estimate = as.solist(y.est, demote=TRUE),
-            SE       = as.solist(y.se,  demote=TRUE))
-  return(z)
-}
-
 expandSpecialLists <- function(x, special="solist") {
-  ## x is a list which may include entries which are lists, of class 'lclass'
+  ## x is a list which may include entries which are lists, of class 'special'
   ## unlist these entries only
   hit <- sapply(x, inherits, what=special) 
   if(!any(hit)) return(x)

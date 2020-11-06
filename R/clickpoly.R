@@ -2,12 +2,12 @@
 # clickpoly.R
 #
 #
-# $Revision: 1.9 $  $Date: 2015/03/02 08:13:34 $
+# $Revision: 1.10 $  $Date: 2015/10/21 09:06:57 $
 #
 #
 
 clickpoly <- function(add=FALSE, nv=NULL, np=1, ...) {
-  if((!add) | dev.cur() == 1) {
+  if((!add) | dev.cur() == 1L) {
     plot(0,0,type="n", xlab="", ylab="", xlim=c(0,1), ylim=c(0,1), asp=1.0,
          axes=FALSE)
     rect(0,0,1,1)

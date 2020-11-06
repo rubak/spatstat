@@ -96,28 +96,30 @@
   Cambridge University Press.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+  \adrian
+  
+  
+  and \rolf
+  
 }
 \seealso{
   \code{\link{ppm}}
 }
 \examples{
-\testonly{
-   exactMPLEstrauss(cells, 0.1, ngrid=128)
-   exactMPLEstrauss(cells, 0.1, ngrid=128, project=FALSE)
-}
-if(interactive()) {
-   exactMPLEstrauss(cells, 0.1)
-   coef(ppm(cells, ~1, Strauss(0.1)))
-   coef(ppm(cells, ~1, Strauss(0.1), nd=128))
-   exactMPLEstrauss(redwood, 0.04)
-   exactMPLEstrauss(redwood, 0.04, project=FALSE)
-   coef(ppm(redwood, ~1, Strauss(0.04)))
-}
+ if(interactive()) {
+   rc <- 0.09
+   exactMPLEstrauss(cells, rc, plotit=TRUE)
+   coef(ppm(cells ~1, Strauss(rc)))
+   coef(ppm(cells ~1, Strauss(rc), nd=128))
+   rr <- 0.04
+   exactMPLEstrauss(redwood, rr)
+   exactMPLEstrauss(redwood, rr, project=FALSE)
+   coef(ppm(redwood ~1, Strauss(rr)))
+ } else {
+   rc <- 0.09
+   exactMPLEstrauss(cells, rc, ngrid=64, plotit=TRUE)
+   exactMPLEstrauss(cells, rc, ngrid=64, project=FALSE)
+ }
 }
 \keyword{spatial}
 \keyword{models}

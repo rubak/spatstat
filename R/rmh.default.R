@@ -1,9 +1,11 @@
 #
-# $Id: rmh.default.R,v 1.100 2015/09/06 03:12:17 adrian Exp adrian $
+# $Id: rmh.default.R,v 1.115 2020/01/07 05:53:17 adrian Exp adrian $
 #
 rmh.default <- function(model,start=NULL,
                         control=default.rmhcontrol(model),
-                        ..., verbose=TRUE, snoop=FALSE) {
+                        ...,
+                        nsim=1, drop=TRUE, saveinfo=TRUE,
+                        verbose=TRUE, snoop=FALSE) {
 #
 # Function rmh.  To simulate realizations of 2-dimensional point
 # patterns, given the conditional intensity function of the 
@@ -32,6 +34,8 @@ rmh.default <- function(model,start=NULL,
     control <- update(control, ...)
 
   control <- rmhResolveControl(control, model)
+
+  saveinfo <- as.logical(saveinfo)
   
   # retain "..." arguments unrecognised by rmhcontrol
   # These are assumed to be arguments of functions defining the trend
@@ -68,7 +72,8 @@ rmh.default <- function(model,start=NULL,
 
 # Warn about a silly value of fixall:
   if(control$fixall & ntypes==1) {
-    warning("control$fixall applies only to multitype processes. Ignored. \n")
+    warning("control$fixall applies only to multitype processes. Ignored.",
+            call.=FALSE)
     control$fixall <- FALSE
     if(control$fixing == "n.each.type")
       control$fixing <- "n.total"
@@ -103,7 +108,7 @@ rmh.default <- function(model,start=NULL,
     if(is.im(trend))
       as.owin(trend)
     else if(is.list(trend) && any(ok <- unlist(lapply(trend, is.im))))
-      as.owin((trend[ok])[[1]])
+      as.owin((trend[ok])[[1L]])
     else NULL
 
 ##  Clipping window (for final result)
@@ -119,7 +124,7 @@ rmh.default <- function(model,start=NULL,
     } else NULL
 
   if(!is.owin(w.clip))
-    stop("Unable to determine window for pattern")
+    stop("Unable to determine window for pattern", call.=FALSE)
 
   
 ##  Simulation window 
@@ -134,10 +139,12 @@ rmh.default <- function(model,start=NULL,
 
     if(control$fixing != "none")
       stop(paste("If we're conditioning on the number of points,",
-                 "we cannot clip the result to another window.\n"))
+                 "we cannot clip the result to another window."),
+           call.=FALSE)
 
     if(!is.subset.owin(w.clip, w.sim))
-      stop("Expanded simulation window does not contain model window")
+      stop("Expanded simulation window does not contain model window",
+           call.=FALSE)
   }
 
 
@@ -153,19 +160,18 @@ rmh.default <- function(model,start=NULL,
     if(any(images)) {
       iwindows <- lapply(trends[images], as.owin)
       nimages <- length(iwindows)
-      misfit <- !unlist(lapply(iwindows,
-                               function(x,w) { is.subset.owin(w,x) },
-                               w = w.sim))
+      misfit <- !sapply(iwindows, is.subset.owin, A=w.sim)
       nmisfit <- sum(misfit)
       if(nmisfit > 1) 
         stop(paste("Expanded simulation window is not contained in",
                    "several of the trend windows.\n",
-                   "Bailing out.\n"))
+                   "Bailing out."), call.=FALSE)
       else if(nmisfit == 1) {
         warning(paste("Expanded simulation window is not contained in",
                       if(nimages == 1) "the trend window.\n"
                       else "one of the trend windows.\n",
-                      "Expanding to this trend window (only).\n"))
+                      "Expanding to this trend window (only)."),
+                call.=FALSE)
         w.sim <- iwindows[[which(misfit)]]
       }
     }
@@ -213,7 +219,7 @@ rmh.default <- function(model,start=NULL,
              stop(paste("Conditional simulation is undefined;",
                         "the conditioning window",
                         sQuote("as.owin(control$x.cond)"),
-                        "covers the entire simulation window"))
+                        "covers the entire simulation window"), call.=FALSE)
          },
          Palm={
            # Palm conditioning
@@ -233,9 +239,9 @@ rmh.default <- function(model,start=NULL,
   if(!is.null(x.condpp)) {
     if(mtype) {
       if(!is.marked(x.condpp))
-        stop("Model is multitype, but x.cond is unmarked")
-      if(!identical(all.equal(types, levels(marks(x.condpp))), TRUE))
-        stop("Types of points in x.cond do not match types in model")
+        stop("Model is multitype, but x.cond is unmarked", call.=FALSE)
+      if(!isTRUE(all.equal(types, levels(marks(x.condpp)))))
+        stop("Types of points in x.cond do not match types in model", call.=FALSE)
     }
   }
   
@@ -257,13 +263,13 @@ rmh.default <- function(model,start=NULL,
   if(start$given == "none") {
     # For conditional simulation, the starting state must be given
     if(condtype != "none")
-      stop("No starting state given")
+      stop("No starting state given", call.=FALSE)
     # Determine integral of beta * trend over data window.
     # This is the expected number of points in the reference Poisson process.
     area.w.clip <- area(w.clip)
     if(trendy) {
       tsummaries <- summarise.trend(trend, w=w.clip, a=area.w.clip)
-      En <- beta * unlist(lapply(tsummaries, function(x) { x$integral }))
+      En <- beta * sapply(tsummaries, getElement, name="integral")
     } else {
       En <- beta * area.w.clip
     }
@@ -277,7 +283,7 @@ rmh.default <- function(model,start=NULL,
 
   switch(start$given,
          none={
-           stop("No starting state given")
+           stop("No starting state given", call.=FALSE)
          },
          x = {
            # x.start was given
@@ -295,7 +301,8 @@ rmh.default <- function(model,start=NULL,
                              ngettext(nlost, "was", "were"),
                              "removed because",
                              ngettext(nlost, "it", "they"),
-                             "fell in the window of x.cond"))
+                             "fell in the window of x.cond"),
+                       call.=FALSE)
              x.start <- xs
            }
            npts.free <- x.start$n
@@ -313,7 +320,7 @@ rmh.default <- function(model,start=NULL,
            npts.free <- sum(n.start) # The ``sum()'' is redundant if n.start
                                 # is scalar; no harm, but.
          },
-         stop("Internal error: start$given unrecognized"))
+         stop("Internal error: start$given unrecognized"), call.=FALSE)
 
 #==+===+===+===+===+===+===+===+===+===+===+===+===+===+===+===+===+===+===
 #
@@ -330,7 +337,7 @@ rmh.default <- function(model,start=NULL,
     control$periodic <- periodic <- expanded && is.rectangle(w.state)
   } else if(periodic && !is.rectangle(w.state)) {
     # if periodic is TRUE we have to be simulating in a rectangular window.
-    stop("Need rectangular window for periodic simulation.\n")
+    stop("Need rectangular window for periodic simulation.", call.=FALSE)
   }
 
 # parameter passed to C:  
@@ -356,7 +363,7 @@ rmh.default <- function(model,start=NULL,
     } else {
       # Validate ptypes
       if(length(ptypes) != ntypes | sum(ptypes) != 1)
-        stop("Argument ptypes is mis-specified.\n")
+        stop("Argument ptypes is mis-specified.", call.=FALSE)
     }
   } 
 
@@ -373,11 +380,11 @@ rmh.default <- function(model,start=NULL,
     if(verbose)
       cat("Evaluating trend integral...")
     tsummaries <- summarise.trend(trend, w=w.sim, a=area.w.sim)
-    nbg  <- unlist(lapply(tsummaries, function(x) { x$min < 0 }))
-    if(any(nbg))
-      stop("Trend has negative values")
-    iota <- unlist(lapply(tsummaries, function(x) { x$integral }))
-    tmax <- unlist(lapply(tsummaries, function(x) { x$max }))
+    mins  <- sapply(tsummaries, getElement, name="min")
+    if(any(mins < 0))
+      stop("Trend has negative values", call.=FALSE)
+    iota <- sapply(tsummaries, getElement, name="integral")
+    tmax <- sapply(tsummaries, getElement, name="max")
   } else {
     iota <- area.w.sim
     tmax <- NULL
@@ -403,9 +410,9 @@ rmh.default <- function(model,start=NULL,
       mess <- paste("Initial pattern has 0 random points,",
                     "and simulation is conditional on the number of points -")
       if(condtype == "none")
-        warning(paste(mess, "returning an empty pattern\n"))
+        warning(paste(mess, "returning an empty pattern"), call.=FALSE)
       else
-        warning(paste(mess, "returning a pattern with no random points\n"))
+        warning(paste(mess, "returning a pattern with no random points"), call.=FALSE)
     }
   }
 
@@ -417,10 +424,10 @@ rmh.default <- function(model,start=NULL,
     if(control$fixing == "none" && condtype == "none") {
       # return empty pattern
       if(verbose)
-        warning("beta = 0 implies an empty pattern\n")
+        warning("beta = 0 implies an empty pattern", call.=FALSE)
       a.s.empty <- TRUE
     } else 
-      stop("beta = 0 implies an empty pattern, but we are simulating conditional on a nonzero number of points")
+      stop("beta = 0 implies an empty pattern, but we are simulating conditional on a nonzero number of points", call.=FALSE)
   }
 
 #
@@ -431,7 +438,7 @@ rmh.default <- function(model,start=NULL,
   if(condtype == "window" && is.subset.owin(w.clip, w.cond)) {
     a.s.empty <- TRUE
     warning(paste("Model window is a subset of conditioning window:",
-              "result is deterministic\n"))
+              "result is deterministic"), call.=FALSE)
   }    
 
 #
@@ -488,10 +495,33 @@ rmh.default <- function(model,start=NULL,
   class(InfoList) <- c("rmhInfoList", class(InfoList))
 
   # go
-  do.call("rmhEngine",
-          append(list(InfoList,
-                      verbose=verbose, snoop=snoop, kitchensink=TRUE),
-                 f.args))
+  if(nsim == 1 && drop) {
+    result <- do.call(rmhEngine,
+                      append(list(InfoList,
+                                  verbose=verbose,
+                                  snoop=snoop,
+                                  kitchensink=saveinfo),
+                             f.args))
+  } else {
+    result <- vector(mode="list", length=nsim)
+    if(verbose) {
+      splat("Generating", nsim, "point patterns...")
+      pstate <- list()
+    }
+    subverb <- verbose && (nsim == 1)
+    for(isim in 1:nsim) {
+      if(verbose) pstate <- progressreport(isim, nsim, state=pstate)
+      result[[isim]] <- do.call(rmhEngine,
+                                append(list(InfoList,
+                                            verbose=subverb,
+                                            snoop=snoop,
+                                            kitchensink=saveinfo),
+                                       f.args))
+    }
+    if(verbose) splat("Done.\n")
+    result <- simulationresult(result, nsim, drop)
+  }
+  return(result)
 }
 
 print.rmhInfoList <- function(x, ...) {
@@ -533,7 +563,7 @@ rmhEngine <- function(InfoList, ...,
 # This is the interface to the C code.
 
   if(!inherits(InfoList, "rmhInfoList"))
-    stop("data not in correct format for internal function rmhEngine")
+    stop("data not in correct format for internal function rmhEngine", call.=FALSE)
 
   
   if(preponly)
@@ -597,7 +627,7 @@ rmhEngine <- function(InfoList, ...,
 #############################################  
   
   if(!exists(".Random.seed"))
-    runif(1)
+    runif(1L)
 
   saved.seed <- .Random.seed
   
@@ -634,11 +664,11 @@ rmhEngine <- function(InfoList, ...,
                  switch(start$given,
                         n = n.start,
                         x = as.integer(table(marks(x.start, dfok=FALSE))),
-  stop("No starting state given; can't condition on fixed number of points"))
+  stop("No starting state given; can't condition on fixed number of points", call.=FALSE))
                rmpoint(npts.each, intensity, win=w.sim, types=types,
                        verbose=verbose)
              },
-             stop("Internal error: control$fixing unrecognised")
+             stop("Internal error: control$fixing unrecognised", call.=FALSE)
              )
     # if conditioning, add fixed points
     if(condtype != "none")
@@ -684,9 +714,9 @@ rmhEngine <- function(InfoList, ...,
              },
              x = {
                # x.start given
-               as.integer(marks(x.start, dfok=FALSE))-1
+               as.integer(marks(x.start, dfok=FALSE))-1L
              },
-             stop("internal error: start$given unrecognised")
+             stop("internal error: start$given unrecognised", call.=FALSE)
              )
 #
 # Then the x, y coordinates
@@ -713,21 +743,21 @@ rmhEngine <- function(InfoList, ...,
     x <- c(x.condpp$x, x)
     y <- c(x.condpp$y, y)
     if(mtype)
-      Cmarks <- c(as.integer(marks(x.condpp))-1, Cmarks)
+      Cmarks <- c(as.integer(marks(x.condpp))-1L, Cmarks)
   }
 
   if(!is.null(overrideXstart)) {
     #' override the previous data
     x <- overrideXstart$x
     y <- overrideXstart$y
-    if(mtype) Cmarks <- as.integer(marks(overrideXstart))-1
+    if(mtype) Cmarks <- as.integer(marks(overrideXstart))-1L
   }
 
 # decide whether to activate visual debugger
   if(snoop) {
     Xinit <- ppp(x, y, window=w.sim)
-    if(mtype)
-      marks(Xinit) <- Cmarks + 1
+    if(mtype) 
+      marks(Xinit) <- factor(Cmarks, levels=Ctypes, labels=types)
     if(verbose) cat("\nCreating debugger environment..")
     snoopenv <- rmhSnoopEnv(Xinit=Xinit, Wclip=w.clip, R=reach(model))
     if(verbose) cat("Done.\n")
@@ -747,7 +777,7 @@ rmhEngine <- function(InfoList, ...,
     
   ipar <- model$C.ipar
   iparlist <- if(ncif == 1) list(ipar) else model$C.iparlist
-  iparlen <- unlist(lapply(iparlist, length))
+  iparlen <- lengths(iparlist)
 
   beta <- model$internal$beta
   
@@ -768,28 +798,13 @@ rmhEngine <- function(InfoList, ...,
   nburn   <- control$nburn
   track   <- control$track
   thin    <- control$internal$thin
+  pstage  <- control$pstage %orifnull% "start"
+  if(pstage == "block" && !saving) pstage <- "start"
   temper  <- FALSE
   invertemp <- 1.0
-  
-  if(verbose)
-    cat("Proposal points...")
-           
-# If the pattern is multitype, generate the mark proposals (0 to ntypes-1)
-  Cmprop <- if(mtype) sample(Ctypes,nrep,TRUE,prob=ptypes) else 0
-		
-# Generate the ``proposal points'' in the expanded window.
-  xy <-
-    if(trendy)
-      rpoint.multi(nrep,trend,tmax,
-                   factor(Cmprop, levels=Ctypes),
-                   w.sim, ..., warn=FALSE)
-    else
-      runifpoint(nrep, w.sim, warn=FALSE)
-  xprop <- xy$x
-  yprop <- xy$y
 
   if(verbose)
-    cat("Start simulation.\n")
+    cat("Ready to simulate. ")
 
   storage.mode(ncif)   <- "integer"
   storage.mode(C.id)   <- "character"
@@ -797,8 +812,6 @@ rmhEngine <- function(InfoList, ...,
   storage.mode(ipar)    <- "double"
   storage.mode(iparlen) <- "integer"
   storage.mode(period) <- "double"
-  storage.mode(xprop)  <- storage.mode(yprop) <- "double"
-  storage.mode(Cmprop) <- "integer"
   storage.mode(ntypes) <- "integer"
   storage.mode(nrep)   <- "integer"
   storage.mode(p) <- storage.mode(q) <- "double"
@@ -812,11 +825,35 @@ rmhEngine <- function(InfoList, ...,
   storage.mode(temper) <- "integer"
   storage.mode(invertemp) <- "double"
 
+  if(pstage == "start" || !saving) {
+    #' generate all proposal points now.
+    if(verbose)
+      cat("Generating proposal points...")
+
+    #' If the pattern is multitype, generate the mark proposals (0 to ntypes-1)
+    Cmprop <- if(mtype) sample(Ctypes,nrep,TRUE,prob=ptypes) else 0
+    storage.mode(Cmprop) <- "integer"
+
+    #' Generate the ``proposal points'' in the expanded window.
+    xy <- if(trendy) {
+      rpoint.multi(nrep,trend,tmax,
+                   factor(Cmprop, levels=Ctypes),
+                   w.sim, ..., warn=FALSE)
+    } else runifpoint(nrep, w.sim, warn=FALSE)
+    xprop <- xy$x
+    yprop <- xy$y
+    storage.mode(xprop)  <- storage.mode(yprop) <- "double"
+  }
+  
   if(!saving) {
     # ////////// Single block /////////////////////////////////
+
     nrep0 <- 0
     storage.mode(nrep0)  <- "integer"
+
     # Call the Metropolis-Hastings C code:
+    if(verbose)
+      cat("Running Metropolis-Hastings.\n")
     out <- .Call("xmethas",
                  ncif,
                  C.id,
@@ -837,18 +874,15 @@ rmhEngine <- function(InfoList, ...,
                  thin,
                  snoopenv,
                  temper,
-                 invertemp)
-#                 PACKAGE="spatstat")
+                 invertemp,
+                 PACKAGE="spatstat")
   
     # Extract the point pattern returned from C
-    X <- ppp(x=out[[1]], y=out[[2]], window=w.state, check=FALSE)
+    X <- ppp(x=out[[1L]], y=out[[2L]], window=w.state, check=FALSE)
     if(mtype) {
-      # convert integer marks from C to R
-      marx <- factor(out[[3]], levels=0:(ntypes-1))
-      # then restore original type levels
-      levels(marx) <- types
-      # glue to points
-      marks(X) <- marx
+      #' convert integer marks from C to R
+      #' then restore original type levels
+      marks(X) <- factor(out[[3L]], levels=Ctypes, labels=types)
     }
 
     # Now clip the pattern to the ``clipping'' window:
@@ -873,15 +907,25 @@ rmhEngine <- function(InfoList, ...,
     }
   } else {
     # ////////// Multiple blocks /////////////////////////////////
-    # determine length of each block of simulations
-    nblocks <- as.integer(1 + ceiling((nrep - nburn)/nsave))
-    block <- c(nburn, rep.int(nsave, nblocks-1))
-    block[nblocks] <- block[nblocks] - (sum(block)-nrep)
-    block <- block[block >= 1]
+    ## determine length of each block of simulations
+    nsuperblocks <- as.integer(1L + ceiling((nrep - nburn)/sum(nsave)))
+    block <- c(nburn, rep.int(nsave, nsuperblocks-1L))
+    block <- block[cumsum(block) <= nrep]
+    if((tot <- sum(block)) < nrep)
+      block <- c(block, nrep-tot)
+    block <- block[block >= 1L]
     nblocks <- length(block)
     blockend <- cumsum(block)
-    # set up list to contain the saved point patterns
-    Xlist <- vector(mode="list", length=nblocks)
+    ## set up list to contain the saved point patterns
+    Xlist <- vector(mode="list", length=nblocks+1L)
+    ## save initial state
+    Xinit <- ppp(x=x, y=y, window=w.state, check=FALSE)
+    if(mtype) {
+      ## convert integer marks from C to R
+      ## then restore original type levels
+      marks(Xinit) <- factor(Cmarks, levels=Ctypes, labels=types)
+    }
+    Xlist[[1L]] <- Xinit
     # Call the Metropolis-Hastings C code repeatedly:
     xprev <- x
     yprev <- y
@@ -897,16 +941,41 @@ rmhEngine <- function(InfoList, ...,
       # number of previous iterations
       nrep0 <- if(I == 1) 0 else blockend[I-1]
       storage.mode(nrep0)  <- "integer"
-      # proposals
-      seqI <- 1:nrepI
-      xpropI <- xprop[seqI]
-      ypropI <- yprop[seqI]
-      CmpropI <- Cmprop[seqI]
-      storage.mode(xpropI) <- storage.mode(ypropI) <- "double"
-      storage.mode(CmpropI) <- "integer"
+      # Generate or extract proposals
+      switch(pstage,
+             start = {
+               #' extract proposals from previously-generated vectors
+               if(verbose)
+                 cat("Extracting proposal points...")
+               seqI <- 1:nrepI
+               xpropI <- xprop[seqI]
+               ypropI <- yprop[seqI]
+               CmpropI <- Cmprop[seqI]
+               storage.mode(xpropI) <- storage.mode(ypropI) <- "double"
+               storage.mode(CmpropI) <- "integer"
+             },
+             block = {
+               # generate 'nrepI' random proposals
+               if(verbose)
+                 cat("Generating proposal points...")
+               #' If the pattern is multitype, generate the mark proposals 
+               CmpropI <- if(mtype) sample(Ctypes,nrepI,TRUE,prob=ptypes) else 0
+               storage.mode(CmpropI) <- "integer"
+               #' Generate the ``proposal points'' in the expanded window.
+               xy <- if(trendy) {
+                 rpoint.multi(nrepI,trend,tmax,
+                              factor(CmpropI, levels=Ctypes),
+                              w.sim, ..., warn=FALSE)
+               } else runifpoint(nrepI, w.sim, warn=FALSE)
+               xpropI <- xy$x
+               ypropI <- xy$y
+               storage.mode(xpropI)  <- storage.mode(ypropI) <- "double"
+             })
       # no thinning in subsequent blocks
       if(I > 1) thin <- thinFALSE
-      # call
+      #' call
+      if(verbose)
+        cat("Running Metropolis-Hastings.\n")
       out <- .Call("xmethas",
                    ncif,
                    C.id,
@@ -927,17 +996,14 @@ rmhEngine <- function(InfoList, ...,
                    thin,
                    snoopenv,
                    temper,
-                   invertemp)
-#                   PACKAGE="spatstat")
+                   invertemp,
+                   PACKAGE = "spatstat")
       # Extract the point pattern returned from C
-      X <- ppp(x=out[[1]], y=out[[2]], window=w.state, check=FALSE)
+      X <- ppp(x=out[[1L]], y=out[[2L]], window=w.state, check=FALSE)
       if(mtype) {
         # convert integer marks from C to R
-        marx <- factor(out[[3]], levels=0:(ntypes-1))
         # then restore original type levels
-        levels(marx) <- types
-        # glue to points
-        marks(X) <- marx
+        marks(X) <- factor(out[[3L]], levels=Ctypes, labels=types)
       }
       
       # Now clip the pattern to the ``clipping'' window:
@@ -945,7 +1011,7 @@ rmhEngine <- function(InfoList, ...,
         X <- X[w.clip]
 
       # commit to list
-      Xlist[[I]] <- X
+      Xlist[[I+1L]] <- X
       
       # Extract transition history:
       if(track) {
@@ -967,22 +1033,24 @@ rmhEngine <- function(InfoList, ...,
       }
 
       # update 'previous state'
-      xprev <- out[[1]]
-      yprev <- out[[2]]
+      xprev <- out[[1L]]
+      yprev <- out[[2L]]
       Cmarksprev <- if(!mtype) 0 else out[[3]]
       storage.mode(xprev) <- storage.mode(yprev) <- "double"
       storage.mode(Cmarksprev) <- "integer"
 
-      # discard used proposals
-      xprop <- xprop[-seqI]
-      yprop <- yprop[-seqI]
-      Cmprop <- Cmprop[-seqI]
+      if(pstage == "start") {
+        #' discard used proposals
+        xprop <- xprop[-seqI]
+        yprop <- yprop[-seqI]
+        Cmprop <- Cmprop[-seqI]
+      }
     }
     # .............. end loop ...............................
     
     # Result of simulation is final state 'X'
     # Tack on the list of intermediate states
-    names(Xlist) <- paste("Iteration", as.integer(blockend), sep="_")
+    names(Xlist) <- paste("Iteration", c(0,as.integer(blockend)), sep="_")
     attr(X, "saved") <- as.solist(Xlist)
   }
 
@@ -1014,8 +1082,8 @@ summarise.trend <- local({
     } else {
       Z  <- as.im(x, w)[w, drop=FALSE]
       ran <- range(Z)
-      mini <- ran[1]
-      maxi <- ran[2]
+      mini <- ran[1L]
+      maxi <- ran[2L]
       integ <- integral.im(Z)
     }
     return(list(min=mini, max=maxi, integral=integ))

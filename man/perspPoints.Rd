@@ -76,15 +76,11 @@ perspContour(Z, M, \dots,
              zlab="Elevation", main="", 
              expand=6, visible=TRUE, shade=0.3)
 
-  perspPoints(bei, Z=bei.extra$elev, M=M, pch=16, cex=0.3)
+  perspContour(bei.extra$elev, M=M, col="pink", nlevels=12)
+  perspPoints(bei, Z=bei.extra$elev, M=M, pch=16, cex=0.3, col="chartreuse")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{hplot}

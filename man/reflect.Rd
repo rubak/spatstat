@@ -1,4 +1,4 @@
-\name{reflect} %DontDeclareMethods
+\name{reflect} 
 \alias{reflect}
 \alias{reflect.im}
 \alias{reflect.default}
@@ -42,11 +42,11 @@
   plot(reflect(as.im(letterR)))
   plot(reflect(letterR), add=TRUE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

@@ -51,7 +51,10 @@ which can then be fitted to point pattern data.
   \code{\link{ppm.object}},
   \code{\link{MultiStrauss}},
   \code{\link{MultiStraussHard}},
-  \code{\link{Strauss}}
+  \code{\link{Strauss}}.
+
+  See \code{\link{ragsMultiHard}} and \code{\link{rmh}} for
+  simulation.
 }
 \examples{
    h <- matrix(c(1,2,2,1), nrow=2,ncol=2)
@@ -78,12 +81,8 @@ which can then be fitted to point pattern data.
   \code{MultiHard(types=NULL, hradii)}.
   The new code attempts to handle the old syntax as well.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{models}

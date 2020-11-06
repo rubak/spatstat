@@ -13,8 +13,9 @@ pcfinhom(X, lambda = NULL, ..., r = NULL,
          correction = c("translate", "Ripley"),
          divisor = c("r", "d"),
          renormalise = TRUE, normpower=1,
+         update = TRUE, leaveoneout = TRUE,
          reciplambda = NULL,
-         sigma = NULL, varcov = NULL)
+         sigma = NULL, varcov = NULL, close=NULL)
 }
 \arguments{
   \item{X}{
@@ -27,7 +28,8 @@ pcfinhom(X, lambda = NULL, ..., r = NULL,
     at the points of the pattern \code{X},
     a pixel image (object of class \code{"im"}) giving the
     intensity values at all locations, a fitted point process model
-    (object of class \code{"ppm"}) or a \code{function(x,y)} which
+    (object of class \code{"ppm"}, \code{"kppm"} or \code{"dppm"})
+    or a \code{function(x,y)} which
     can be evaluated to give the intensity value at any location.
   }
   \item{r}{
@@ -38,17 +40,27 @@ pcfinhom(X, lambda = NULL, ..., r = NULL,
     Choice of smoothing kernel, passed to \code{\link{density.default}}.
   }
   \item{bw}{
-    Bandwidth for smoothing kernel, passed to \code{\link{density.default}}.
+    Bandwidth for smoothing kernel,
+    passed to \code{\link{density.default}}.
+    Either a single numeric value,
+    or a character string specifying a bandwidth selection rule
+    recognised by \code{\link{density.default}}.
+    If \code{bw} is missing or \code{NULL},
+    the default value is computed using
+    Stoyan's rule of thumb: see \code{\link{bw.stoyan}}.
   }
   \item{\dots}{
     Other arguments passed to the kernel density estimation 
     function \code{\link{density.default}}.
   }
   \item{stoyan}{
-    Bandwidth coefficient; see \code{\link{pcf.ppp}}.
+    Coefficient for Stoyan's bandwidth selection rule;
+    see \code{\link{bw.stoyan}}.
   }
   \item{correction}{
-    Choice of edge correction.
+    Character string or character vector
+    specifying the choice of edge correction.
+    See \code{\link{Kest}} for explanation and options.
   }
   \item{divisor}{
     Choice of divisor in the estimation formula:
@@ -61,6 +73,21 @@ pcfinhom(X, lambda = NULL, ..., r = NULL,
   \item{normpower}{
     Integer (usually either 1 or 2).
     Normalisation power. See Details.
+  }
+  \item{update}{
+    Logical. If \code{lambda} is a fitted model
+    (class \code{"ppm"}, \code{"kppm"} or \code{"dppm"})
+    and \code{update=TRUE} (the default),
+    the model will first be refitted to the data \code{X}
+    (using \code{\link{update.ppm}} or \code{\link{update.kppm}})
+    before the fitted intensity is computed.
+    If \code{update=FALSE}, the fitted intensity of the
+    model will be computed without re-fitting it to \code{X}.
+  }
+  \item{leaveoneout}{
+    Logical value (passed to \code{\link{density.ppp}} or
+    \code{\link{fitted.ppm}}) specifying whether to use a
+    leave-one-out rule when calculating the intensity.
   }
   \item{reciplambda}{
     Alternative to \code{lambda}.
@@ -77,6 +104,9 @@ pcfinhom(X, lambda = NULL, ..., r = NULL,
     Optional arguments passed to  \code{\link{density.ppp}}
     to control the smoothing bandwidth, when \code{lambda} is
     estimated by kernel smoothing.
+  }
+  \item{close}{
+    Advanced use only. Precomputed data. See section on Advanced Use.
   }
 }
 \details{
@@ -153,9 +183,18 @@ pcfinhom(X, lambda = NULL, ..., r = NULL,
   }
   as required.
 }
+\section{Advanced Use}{
+  To perform the same computation using several different bandwidths \code{bw},
+  it is efficient to use the argument \code{close}.
+  This should be the result of \code{\link{closepairs}(X, rmax)}
+  for a suitably large value of \code{rmax}, namely
+  \code{rmax >= max(r) + 3 * bw}.
+}
 \seealso{
   \code{\link{pcf}}, 
   \code{\link{pcf.ppp}}, 
+  \code{\link{bw.stoyan}},
+  \code{\link{bw.pcf}},
   \code{\link{Kinhom}}
 }
 \examples{
@@ -165,11 +204,8 @@ pcfinhom(X, lambda = NULL, ..., r = NULL,
   fit <- ppm(X, ~polynom(x,y,2))
   plot(pcfinhom(X, lambda=fit, normpower=2))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-}
+\author{
+  \spatstatAuthors.
+} 
 \keyword{spatial}
 \keyword{nonparametric}

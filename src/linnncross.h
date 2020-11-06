@@ -3,12 +3,15 @@
 
    Function body definitions with macros
 
-   $Revision: 1.1 $  $Date: 2013/10/21 02:01:39 $
+   $Revision: 1.3 $  $Date: 2018/12/18 02:43:11 $
 
    Macros used:
    FNAME   name of function
    EXCLU   whether serial numbers are provided
    WHICH   whether 'nnwhich' is required
+
+  Copyright (C) Adrian Baddeley, Ege Rubak and Rolf Turner 2001-2018
+  Licence: GNU Public Licence >= 2
 
 */
 
@@ -29,7 +32,7 @@ FNAME(np, xp, yp,   /* data points 'from' */
       nndist,  /* nearest neighbour distance for each point */
       nnwhich  /* identifies nearest neighbour */
 #else 
-      nndist,  /* nearest neighbour distance for each point */
+      nndist  /* nearest neighbour distance for each point */
 #endif
 )
   int *np, *nq, *nv, *ns;

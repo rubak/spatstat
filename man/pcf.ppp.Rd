@@ -10,7 +10,9 @@
                     stoyan=0.15,
                     correction=c("translate", "Ripley"),
                     divisor = c("r", "d"),
-                    domain=NULL)
+                    var.approx = FALSE,
+                    domain=NULL,
+                    ratio=FALSE, close=NULL)
 }
 \arguments{
   \item{X}{
@@ -22,28 +24,49 @@
   }
   \item{kernel}{
     Choice of smoothing kernel,
-    passed to \code{density}.
+    passed to \code{\link{density.default}}.
   }
   \item{bw}{
-    Bandwidth for smoothing kernel, passed to \code{density}.
+    Bandwidth for smoothing kernel,
+    passed to \code{\link{density.default}}.
+    Either a single numeric value giving the standard deviation of the kernel,
+    or a character string specifying a bandwidth selection rule
+    recognised by \code{\link{density.default}}.
+    If \code{bw} is missing or \code{NULL},
+    the default value is computed using
+    Stoyan's rule of thumb: see Details.
   }
   \item{\dots}{
     Other arguments passed to the kernel density estimation 
-    function \code{density}.
+    function \code{\link{density.default}}.
   }
   \item{stoyan}{
-    Bandwidth coefficient; see Details.
+    Coefficient for Stoyan's bandwidth selection rule; see Details.
   }
   \item{correction}{
-    Choice of edge correction.
+    Edge correction. A character vector specifying the choice
+    (or choices) of edge correction. See Details.
   }
   \item{divisor}{
     Choice of divisor in the estimation formula:
     either \code{"r"} (the default) or \code{"d"}. See Details.
   }
+  \item{var.approx}{
+    Logical value indicating whether to compute an analytic
+    approximation to the variance of the estimated pair correlation.
+  }
   \item{domain}{
     Optional. Calculations will be restricted to this subset
     of the window. See Details.
+  }
+  \item{ratio}{
+    Logical. 
+    If \code{TRUE}, the numerator and denominator of
+    each edge-corrected estimate will also be saved,
+    for use in analysing replicated point patterns.
+  }
+  \item{close}{
+    Advanced use only. Precomputed data. See section on Advanced Use.
   }
 } 
 \value{
@@ -62,7 +85,19 @@
   \item{iso}{vector of values of \eqn{g(r)}
     estimated by Ripley isotropic correction
   }
+  \item{v}{vector of approximate values of the variance of
+    the estimate of \eqn{g(r)}
+  }
   as required.
+
+  If \code{ratio=TRUE} then the return value also has two
+  attributes called \code{"numerator"} and \code{"denominator"}
+  which are \code{"fv"} objects
+  containing the numerators and denominators of each
+  estimate of \eqn{g(r)}.
+
+  The return value also has an attribute \code{"bw"} giving the
+  smoothing bandwidth that was used.
 }
 \details{
   The pair correlation function \eqn{g(r)} 
@@ -125,24 +160,33 @@
     is used. For \code{divisor="r"} the translation-corrected estimate
     is given in equation (15.15), page 284 of Stoyan and Stoyan (1994).
     \item
-    If \code{correction="Ripley"} then Ripley's isotropic edge correction
+    If \code{correction="Ripley"} or \code{correction="isotropic"}
+    then Ripley's isotropic edge correction
     is used. For \code{divisor="r"} the isotropic-corrected estimate
     is given in equation (15.18), page 285 of Stoyan and Stoyan (1994). 
     \item
-    If \code{correction=c("translate", "Ripley")} then both estimates
-    will be computed.
+    If \code{correction="none"} then no edge correction is used,
+    that is, an uncorrected estimate is computed. 
   }
+  Multiple corrections can be selected. The default is
+  \code{correction=c("translate", "Ripley")}.
+  
+  Alternatively \code{correction="all"} selects all options;
+  \code{correction="best"} selects the option which has the best
+  statistical performance; \code{correction="good"} selects the option
+  which is the best compromise between statistical performance and speed
+  of computation.
   
   The choice of smoothing kernel is controlled by the 
-  argument \code{kernel} which is passed to \code{\link{density}}.
+  argument \code{kernel} which is passed to \code{\link{density.default}}.
   The default is the Epanechnikov kernel, recommended by
   Stoyan and Stoyan (1994, page 285).
 
   The bandwidth of the smoothing kernel can be controlled by the
-  argument \code{bw}. Its precise interpretation
-  is explained in the documentation for \code{\link{density.default}}.
-  For the Epanechnikov kernel, the argument \code{bw} is
-  equivalent to \eqn{h/\sqrt{5}}{h/sqrt(5)}.
+  argument \code{bw}. Bandwidth is defined as the standard deviation
+  of the kernel; see the documentation for \code{\link{density.default}}.
+  For the Epanechnikov kernel with half-width \code{h},
+  the argument \code{bw} is equivalent to \eqn{h/\sqrt{5}}{h/sqrt(5)}.
 
   Stoyan and Stoyan (1994, page 285) recommend using the Epanechnikov
   kernel with support \eqn{[-h,h]} chosen by the rule of thumn
@@ -150,9 +194,12 @@
   where \eqn{\lambda}{lambda} is the (estimated) intensity of the
   point process, and \eqn{c} is a constant in the range from 0.1 to 0.2.
   See equation (15.16).
-  If \code{bw} is missing, then this rule of thumb will be applied.
+  If \code{bw} is missing or \code{NULL},
+  then this rule of thumb will be applied.
   The argument \code{stoyan} determines the value of \eqn{c}.
-
+  The smoothing bandwidth that was used in the calculation is returned
+  as an attribute of the final result.
+  
   The argument \code{r} is the vector of values for the
   distance \eqn{r} at which \eqn{g(r)} should be evaluated.
   There is a sensible default.
@@ -172,29 +219,49 @@
 
   To compute a confidence band for the true value of the
   pair correlation function, use \code{\link{lohboot}}.
+
+  If \code{var.approx = TRUE}, the variance of the
+  estimate of the pair correlation will also be calculated using
+  an analytic approximation (Illian et al, 2008, page 234)
+  which is valid for stationary point processes which are not
+  too clustered. This calculation is not yet implemented when
+  the argument \code{domain} is given.
+}
+\section{Advanced Use}{
+  To perform the same computation using several different bandwidths \code{bw},
+  it is efficient to use the argument \code{close}.
+  This should be the result of \code{\link{closepairs}(X, rmax)}
+  for a suitably large value of \code{rmax}, namely
+  \code{rmax >= max(r) + 3 * bw}.
 }
 \references{
+  Illian, J., Penttinen, A., Stoyan, H. and Stoyan, D. (2008)
+  \emph{Statistical Analysis and Modelling of Spatial Point Patterns.}
+  Wiley.
+
   Stoyan, D. and Stoyan, H. (1994)
-  Fractals, random shapes and point fields:
-  methods of geometrical statistics.
+  \emph{Fractals, random shapes and point fields:
+  methods of geometrical statistics.}
   John Wiley and Sons.
 }
 \seealso{
   \code{\link{Kest}},
   \code{\link{pcf}},
-  \code{\link{density}},
+  \code{\link{density.default}},
+  \code{\link{bw.stoyan}},
+  \code{\link{bw.pcf}},
   \code{\link{lohboot}}.
 }
 \examples{
-  data(simdat)
+  X <- simdat
   \testonly{
-    simdat <- simdat[seq(1,simdat$n, by=4)]
+    X <- X[seq(1,npoints(X), by=4)]
   }
-  p <- pcf(simdat)
-  plot(p, main="pair correlation function for simdat")
+  p <- pcf(X)
+  plot(p, main="pair correlation function for X")
   # indicates inhibition at distances r < 0.3
 
-  pd <- pcf(simdat, divisor="d")
+  pd <- pcf(X, divisor="d")
 
   # compare estimates
   plot(p, cbind(iso, theo) ~ r, col=c("blue", "red"),
@@ -202,12 +269,13 @@
   plot(pd, iso ~ r, col="green", lwd=2, add=TRUE)
   legend("center", col=c("blue", "green"), lty=1, lwd=2,
          legend=c("divisor=r","divisor=d"))
+
+  # calculate approximate variance and show POINTWISE confidence bands
+  pv <- pcf(X, var.approx=TRUE)
+  plot(pv, cbind(iso, iso+2*sqrt(v), iso-2*sqrt(v)) ~ r)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
   and Martin Hazelton.
 }
 \keyword{spatial}

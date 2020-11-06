@@ -9,12 +9,12 @@
   for a point pattern.
 }
 \usage{
-edge.Trans(X, Y = X, W = X$window,
+edge.Trans(X, Y = X, W = Window(X),
       exact = FALSE, paired = FALSE,
       ..., 
       trim = spatstat.options("maxedgewt"),
       dx=NULL, dy=NULL,
-      give.rmax=FALSE)
+      give.rmax=FALSE, gW=NULL)
 
 rmax.Trans(W, g=setcov(W))
 }
@@ -53,8 +53,9 @@ rmax.Trans(W, g=setcov(W))
     \code{rmax.Trans(W)} and return it as an attribute
     of the result.
   }
-  \item{g}{
-    Optional. Set covariance of \code{W}.
+  \item{g, gW}{
+    Optional. Set covariance of \code{W}, if it has already been
+    computed. Not required if \code{W} is a rectangle.
   }
 }
 \details{
@@ -137,11 +138,8 @@ rmax.Trans(W, g=setcov(W))
   v <- edge.Trans(cells)
   rmax.Trans(Window(cells))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf.
 }
 \keyword{spatial}
 \keyword{nonparametric}

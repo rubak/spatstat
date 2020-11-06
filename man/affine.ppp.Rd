@@ -1,4 +1,4 @@
-\name{affine.ppp} %DontDeclareMethods
+\name{affine.ppp} 
 \alias{affine.ppp} 
 \title{Apply Affine Transformation To Point Pattern}
 \description{
@@ -51,11 +51,11 @@
   plot(affine(cells, diag(c(1,1.3))))
   }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

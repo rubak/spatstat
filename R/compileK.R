@@ -3,7 +3,7 @@
 # Function to take a matrix of pairwise distances
 # and compile a 'K' function in the format required by spatstat.
 #
-#   $Revision: 1.7 $  $Date: 2014/10/24 00:22:30 $
+#   $Revision: 1.10 $  $Date: 2018/07/21 04:05:36 $
 # -------------------------------------------------------------------
 
 compileK <- function(D, r, weights=NULL, denom=1, check=TRUE, ratio=FALSE,
@@ -24,7 +24,7 @@ compileK <- function(D, r, weights=NULL, denom=1, check=TRUE, ratio=FALSE,
     stopifnot(is.matrix(weights) && all(dim(weights)==dim(D)))
     wvalues <- weights[ok]
   } else wvalues <- NULL
-  # count the number of D values in each interval (r[k], r[k+1]]
+  # count the number of D values in each interval (r[k], r[k+1L]]
   counts <- whist(Dvalues, breaks=breaks$val, weights=wvalues)
   # cumulative counts: number of D values in [0, r[k])
   Kcount <- cumsum(counts)
@@ -40,8 +40,8 @@ compileK <- function(D, r, weights=NULL, denom=1, check=TRUE, ratio=FALSE,
   } else {
     num <- data.frame(r=r, est=Kcount)
     den <- data.frame(r=r, est=denom)
-    K <- ratfv(num, den,
-               "r", quote(K[compile](r)), "est", . ~ r , c(0,rmax),
+    K <- ratfv(df=NULL, numer=num, denom=den,
+               "r", quote(K(r)), "est", . ~ r , c(0,rmax),
                c("r", makefvlabel(NULL, "hat", fname)), 
                c("distance argument r", "estimated %s"),
                fname=fname)
@@ -51,7 +51,7 @@ compileK <- function(D, r, weights=NULL, denom=1, check=TRUE, ratio=FALSE,
 
 
 compilepcf <- function(D, r, weights=NULL, denom=1, check=TRUE,
-                       endcorrect=TRUE, ..., fname="g") {
+                       endcorrect=TRUE, ratio=FALSE, ..., fname="g") {
   # process r values
   breaks <- breakpts.from.r(r)
   if(!breaks$even)
@@ -87,7 +87,7 @@ compilepcf <- function(D, r, weights=NULL, denom=1, check=TRUE,
   gval <- gval/denom
   # edge effect correction at r = 0
   if(endcorrect) {
-    one <- do.call("density",
+    one <- do.call(density,
                    resolve.defaults(
                                     list(seq(rmin,rmax,length=512)),
                                     list(bw=den$bw, adjust=1),
@@ -97,12 +97,21 @@ compilepcf <- function(D, r, weights=NULL, denom=1, check=TRUE,
     gval <- gval /((rmax-rmin) * onefun(den$x))
   }
   # wrap it up as an 'fv' object for use in spatstat
-  df <- data.frame(r=r,
-                   est=gval)
-  g <- fv(df, "r", quote(g(r)), "est", . ~ r , c(0,rmax),
-          c("r", makefvlabel(NULL, "hat", fname)),
-          c("distance argument r", "estimated %s"),
-          fname=fname)
+  df <- data.frame(r=r, est=gval)
+  if(!ratio) {
+    g <- fv(df, "r", quote(g(r)), "est", . ~ r , c(0,rmax),
+            c("r", makefvlabel(NULL, "hat", fname)),
+    	    c("distance argument r", "estimated %s"),
+	    fname=fname)
+  } else {
+      num <- data.frame(r=r, est=gval * denom)
+      den <- data.frame(r=r, est=denom)
+      g <- ratfv(df=NULL, numer=num, denom=den,
+                 "r", quote(g(r)), "est", . ~ r , c(0,rmax),
+                 c("r", makefvlabel(NULL, "hat", fname)), 
+                 c("distance argument r", "estimated %s"),
+                 fname=fname)
+  }
   attr(g, "bw") <- den$bw
   return(g)
 }

@@ -4,7 +4,7 @@
 ##  'persp' method for image objects
 ##      plus annotation
 ##  
-##  $Revision: 1.11 $ $Date: 2015/08/20 02:44:09 $
+##  $Revision: 1.20 $ $Date: 2016/09/01 05:49:42 $
 ##
 
 persp.im <- local({
@@ -139,8 +139,8 @@ persp.im <- local({
                               list(main=xname),
                               .StripNull=TRUE)
 
-    jawab <- do.call.matched("persp", yargh, 
-                             funargs=.Spatstat.persp.args)
+    jawab <- do.call.matched(persp, yargh, 
+                             funargs=graphicsPars("persp"))
 
     attr(jawab, "expand") <- yargh$expand
     
@@ -174,7 +174,8 @@ persp.im <- local({
     PZ <- as.matrix(X)
     ok <- !is.na(PZ)
     PZ[ok] <- pz
-    maxslip <- max(abs(apply(PZ, 1, diff)), abs(apply(PZ, 2, diff)))
+    maxslip <- max(0, abs(apply(PZ, 1, diff)),
+                      abs(apply(PZ, 2, diff)), na.rm=TRUE)
     ## determine which pixels are in front
     d <- ceiling(dim(X)/2)
     jx <- cut(px, breaks=d[2])
@@ -219,6 +220,9 @@ persp.im <- local({
     ## put into image
     Y <- eval.im(X > 0)
     Y[] <- isvis
+    ## replace 'NA' by 'FALSE'
+    if(anyNA(Y))
+      Y <- as.im(Y, na.replace=FALSE)
     return(Y)
   }
 
@@ -226,20 +230,11 @@ persp.im <- local({
 })
 
 
-.Spatstat.persp.args <- c("x", "y", "z",
-                          "xlim", "ylim", "zlim",
-                          "xlab", "ylab", "zlab",
-                          "main", "sub",
-                          "theta", "phi", "r", "d", "scale",
-                          "expand", "col", "border",
-                          "ltheta", "lphi", "shade", "box",
-                          "axes", "nticks", "ticktype")
-
 perspPoints <- function(x, y=NULL, ..., Z, M) {
   xy <- xy.coords(x, y)
   stopifnot(is.im(Z))
   X <- as.ppp(xy, W=Frame(Z))
-  if(!is.matrix(M) && all(dim(M) == 4))
+  if(!(is.matrix(M) && all(dim(M) == 4)))
     stop("M should be a 4 x 4 matrix, returned from persp()")
   V <- attr(M, "visible")
   if(is.null(V)) {
@@ -247,15 +242,20 @@ perspPoints <- function(x, y=NULL, ..., Z, M) {
                "it should be recomputed by persp() with visible=TRUE"))
   } else {
     ## restrict to visible points
-    X <- X[V[X]]
+    VX <- V[X, drop=FALSE]
+    VX[is.na(VX)] <- FALSE
+    X <- X[VX]
   }
-  points(trans3d(X$x, X$y, Z[X], M), ...)
+  #' determine heights
+  ZX <- Z[X, drop=FALSE] # may contain NA
+  #' transform and plot
+  points(trans3d(X$x, X$y, ZX, M), ...)
 }
 
 perspSegments <- local({
   perspSegments <- function(x0, y0=NULL, x1=NULL, y1=NULL, ..., Z, M) {
     stopifnot(is.im(Z))
-    if(!is.matrix(M) && all(dim(M) == 4))
+    if(!(is.matrix(M) && all(dim(M) == 4)))
       stop("M should be a 4 x 4 matrix, returned from persp()")
     V <- attr(M, "visible")
     if(is.null(V))
@@ -280,13 +280,16 @@ perspSegments <- local({
       eps <- with(Z, min(xstep,ystep))
       Y <- do.call(rbind, lapply(as.data.frame(t(eX)), chopsegment, eps=eps))
       ## determine which segments are visible
-      ok <- V[list(x=Y[,1], y=Y[,2])] & V[list(x=Y[,3], y=Y[,4])]
+      yleft  <- list(x=Y[,1], y=Y[,2])
+      yright <- list(x=Y[,3], y=Y[,4])
+      ok <- V[yleft, drop=FALSE] & V[yright, drop=FALSE]
+      ok[is.na(ok)] <- FALSE
       Y <- Y[ok, ,drop=FALSE]
     }
     if(nrow(Y) == 0) return(invisible(NULL))
     ## map to projected plane
-    x0y0 <- trans3d(Y[,1], Y[,2], Z[list(x=Y[,1],y=Y[,2])], M)
-    x1y1 <- trans3d(Y[,3], Y[,4], Z[list(x=Y[,3],y=Y[,4])], M)
+    x0y0 <- trans3d(Y[,1], Y[,2], Z[list(x=Y[,1],y=Y[,2]), drop=FALSE], M)
+    x1y1 <- trans3d(Y[,3], Y[,4], Z[list(x=Y[,3],y=Y[,4]), drop=FALSE], M)
     segments(x0y0$x, x0y0$y, x1y1$x, x1y1$y, ...)
   }
 
@@ -323,5 +326,4 @@ perspContour <- function(Z, M, ...,
   }
   invisible(NULL)
 }
-
 

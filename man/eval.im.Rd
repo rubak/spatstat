@@ -6,7 +6,7 @@
   and returns a pixel image.
 }
 \usage{
-  eval.im(expr, envir, harmonize=TRUE)
+  eval.im(expr, envir, harmonize=TRUE, warn=TRUE)
 }
 \arguments{
   \item{expr}{An expression.}
@@ -16,6 +16,10 @@
   \item{harmonize}{
     Logical. Whether to resolve inconsistencies between
     the pixel grids.
+  }
+  \item{warn}{
+    Logical. Whether to issue a warning if the pixel grids were
+    inconsistent.
   }
 }
 \details{
@@ -53,14 +57,18 @@
   There must be at least one pixel image in the expression.
 
   All images must have compatible dimensions.
-  If \code{harmonize=TRUE}, images that have incompatible dimensions
-  will be resampled so that they are compatible.
   If \code{harmonize=FALSE}, images that are incompatible will cause an error.
+  If \code{harmonize=TRUE}, images that have incompatible dimensions
+  will be resampled so that they are compatible; if \code{warn=TRUE},
+  a warning will be issued.
 }
 \value{
   An image object of class \code{"im"}.
 }
 \seealso{
+  \code{\link{im.apply}} for operations similar to \code{\link{apply}},
+  such as taking the sum of a list of images.
+  
   \code{\link{as.im}},
   \code{\link{compatible.im}},
   \code{\link{harmonise.im}},
@@ -79,11 +87,9 @@
   ## Use of 'envir'
   W <- eval.im(sin(U), list(U=density(cells)))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{manip}

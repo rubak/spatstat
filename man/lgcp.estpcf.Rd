@@ -3,7 +3,6 @@
 \title{Fit a Log-Gaussian Cox Point Process by Minimum Contrast}
 \description{
   Fits a log-Gaussian Cox point process model
-  (with exponential covariance function)
   to a point pattern dataset by the Method of Minimum Contrast
   using the pair correlation function.
 }
@@ -48,9 +47,13 @@ lgcp.estpcf(X,
   }
 }
 \details{
-  This algorithm fits a log-Gaussian Cox point process model
-  to a point pattern dataset
-  by the Method of Minimum Contrast, using the pair correlation function.
+  This algorithm fits a log-Gaussian Cox point process (LGCP) model
+  to a point pattern dataset by the Method of Minimum Contrast,
+  using the estimated pair correlation function of the point pattern.
+
+  The shape of the covariance of the LGCP must be specified:
+  the default is the exponential covariance function,
+  but other covariance models can be selected.
 
   The argument \code{X} can be either
   \describe{
@@ -76,7 +79,7 @@ lgcp.estpcf(X,
   see \code{\link{mincontrast}}.
 
   The model fitted is a stationary, isotropic log-Gaussian Cox process
-  (\ifelse{latex}{\out{M\o ller}}{Moller} and Waagepetersen, 2003, pp. 72-76).
+  (\Moller and Waagepetersen, 2003, pp. 72-76).
   To define this process we start with
   a stationary Gaussian random field \eqn{Z} in the two-dimensional plane,
   with constant mean \eqn{\mu}{mu} and covariance function \eqn{C(r)}.
@@ -140,7 +143,7 @@ lgcp.estpcf(X,
   For a list of available models see 
   \code{\link[RandomFields]{RMmodel}} in the
   \pkg{RandomFields} package. For example the
-  Matern covariance with exponent \eqn{\nu=0.3}{nu = 0.3} is specified
+  \Matern covariance with exponent \eqn{\nu=0.3}{nu = 0.3} is specified
   by \code{covmodel=list(model="matern", nu=0.3)} corresponding
   to the function \code{RMmatern} in the \pkg{RandomFields} package.
   
@@ -175,12 +178,12 @@ lgcp.estpcf(X,
   }
 }
 \references{
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J.,
+  \Moller, J.,
   Syversveen, A. and Waagepetersen, R. (1998)
   Log Gaussian Cox Processes.
   \emph{Scandinavian Journal of Statistics} \bold{25}, 451--482.
   
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2003).
+  \Moller, J. and Waagepetersen, R. (2003).
   Statistical Inference and Simulation for Spatial Point Processes.
   Chapman and Hall/CRC, Boca Raton.
 
@@ -190,13 +193,11 @@ lgcp.estpcf(X,
   \emph{Biometrics} \bold{63}, 252--258.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
   with modifications by Shen Guochun and 
   Rasmus Waagepetersen
   \email{rw@math.auc.dk}
-  and Ege Rubak.
+  and \ege.
 }
 \seealso{
   \code{\link{lgcp.estK}} for alternative method of fitting LGCP.

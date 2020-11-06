@@ -4,7 +4,7 @@
 #  A simple, robust point & click interface
 #     used in rmh visual debugger.
 #
-#  $Revision: 1.13 $  $Date: 2014/11/11 02:37:44 $
+#  $Revision: 1.14 $  $Date: 2016/04/25 02:34:40 $
 #
 
 simplepanel <- function(title, B, boxes, clicks, redraws=NULL, exit=NULL, env) {
@@ -31,11 +31,10 @@ simplepanel <- function(title, B, boxes, clicks, redraws=NULL, exit=NULL, env) {
   } else stopifnot(is.function(exit))
   stopifnot(is.environment(env))
   n <- length(boxes)
-  got.boxnames <- (sum(nzchar(names(boxes))) == n)
-  got.clicknames <- (sum(nzchar(names(clicks))) == n)
-  nama <- if(got.boxnames && !got.clicknames) names(boxes) else
-          if(got.clicknames && !got.boxnames) names(clicks) else
-          paste("Button", seq_len(n))
+  bnames <- names(boxes) %orifnull% rep("", n)
+  cnames <- names(clicks) %orifnull% rep("", n)
+  dnames <- paste("Button", seq_len(n))
+  nama <- ifelse(nzchar(bnames), bnames, ifelse(nzchar(cnames), cnames, dnames))
   out <- list(title=title, B=B,
               nama=nama, boxes=boxes, clicks=clicks, redraws=redraws,
               exit=exit, env=env)
@@ -55,6 +54,8 @@ grow.simplepanel <- function(P, side=c("right","left","top","bottom"),
     new.redraws <- rep.int(list(dflt.redraw), length(new.clicks))
   } else {
     stopifnot(is.list(new.redraws) && length(new.redraws) == length(new.clicks))
+    if(any(isnul <- sapply(new.redraws, is.null)))
+      new.redraws[isnul] <- rep.int(list(dflt.redraw), sum(isnul))
     if(!all(unlist(lapply(new.redraws, is.function))))
       stop("new.redraws must be a list of functions")
   }
@@ -131,7 +132,7 @@ run.simplepanel <- function(P, popup=TRUE, verbose=FALSE) {
     more <- TRUE
     while(more) {
       redraw.simplepanel(P, verbose=verbose)
-      xy <- locator(1)
+      xy <- spatstatLocator(1)
       if(is.null(xy)) {
         if(verbose) cat("No (x,y) coordinates\n")
         break

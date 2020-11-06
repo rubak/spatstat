@@ -5,7 +5,7 @@
 #
 #   original code by Abdollah Jalilian
 #
-#  $Revision: 1.17 $    $Date: 2015/07/18 03:12:53 $
+#  $Revision: 1.21 $    $Date: 2019/07/09 09:52:18 $
 #
 
 rLGCP <- local({
@@ -13,10 +13,12 @@ rLGCP <- local({
   rLGCP <- function(model="exp", mu = 0, param = NULL, ...,
                     win=NULL, saveLambda=TRUE, nsim=1, drop=TRUE) {
     ## validate
-    if (!(is.numeric(mu) || is.function(mu) || is.im(mu))) 
+    if (is.numeric(mu)) {
+      check.1.real(mu, paste("if", sQuote("mu"), "is numeric,"))
+    } else if(!is.function(mu) && !is.im(mu))
       stop(paste(sQuote("mu"), "must be a constant, a function or an image"))
-    if (is.numeric(mu) && !(length(mu) == 1)) 
-      stop(paste(sQuote("mu"), "must be a single number"))
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
     ## check for outdated usage
     if(!all(nzchar(names(param))))
       stop("Outdated syntax of argument 'param' to rLGCP", call.=FALSE)
@@ -30,17 +32,12 @@ rLGCP <- local({
                        eps = NULL, dimyx = NULL, xy = NULL,
                        modelonly=FALSE, nsim=1, drop=TRUE) {
     ## make RF model object from RandomFields package
-    kraever("RandomFields")
     ## get the 'model generator'
-    modelname <- if(model == "exponential") "exp" else model
-    modgen <- try(getExportedValue("RandomFields", 
-                                   paste0("RM", modelname)),
-                  silent=TRUE)
-    if(inherits(modgen, "try-error") ||
-       !inherits(modgen, "RMmodelgenerator"))
-      stop(paste("Model", sQuote(model), "is not recognised"))
+    modgen <- getRandomFieldsModelGen(model)
     ## now create a RandomFields 'model' object
     rfmodel <- do.call(modgen, append(as.list(param), list(...)))
+    if(!inherits(rfmodel, "RMmodel"))
+      stop("Unable to create RandomFields model object", call.=FALSE)
 
     ## secret exit
     if(modelonly)
@@ -59,29 +56,35 @@ rLGCP <- local({
     w <- as.mask(w=win, eps=eps, dimyx=dimyx, xy=xy)
     xcol <- w$xcol
     yrow <- w$yrow
-    dim <- w$dim
-    xy <- expand.grid(x=xcol, y=yrow)
-    xx <- xy$x
-    yy <- xy$y
+    dimw <- w$dim
 
-    muxy <- if(is.numeric(mu)) mu else
-            if (is.function(mu)) mu(xx,yy) else
-            lookup.im(mu, xx, yy, naok=TRUE, strict=TRUE)
-    muxy[is.na(muxy)] <- -Inf
+    ## evaluate 'mu' at pixels of mask
+    if(is.numeric(mu)) {
+      muxy <- mu
+    } else {
+      xy <- rasterxy.mask(w, drop=FALSE)
+      xx <- xy$x
+      yy <- xy$y
+      muxy <- if (is.function(mu)) mu(xx,yy) else
+              lookup.im(mu, xx, yy, naok=TRUE, strict=TRUE)
+      muxy[is.na(muxy)] <- -Inf
+    }
+    ## corresponding image template
+    Lambda <- as.im(w)
 
-    stopifnot(nsim >= 1)
+    ## generate 'nsim' realisations of a zero-mean Gaussian random field Z
+    spc <- RandomFields::RFoptions()$general$spConform
+    if(spc) RandomFields::RFoptions(spConform=FALSE)
+    z <- RandomFields::RFsimulate(rfmodel, xcol, yrow, grid = TRUE, n=nsim)
+    if(spc) RandomFields::RFoptions(spConform=TRUE)
+    ## ensure 3D array
+    if(length(dim(z)) == 2) z <- array(z, dim=c(dim(z), 1))
+
+    ## generate realisations of LGCP
     result <- vector(mode="list", length=nsim)
     for(i in 1:nsim) {
-      ## generate zero-mean Gaussian random field
-      spc <- RandomFields::RFoptions()$general$spConform
-      if(spc) RandomFields::RFoptions(spConform=FALSE)
-      z <- RandomFields::RFsimulate(rfmodel, xcol, yrow, grid = TRUE)
-      if(spc) RandomFields::RFoptions(spConform=TRUE)
-
-      ## convert to log-Gaussian image
-      logLambda <- muxy + z
-      Lambda <- matrix(exp(logLambda), nrow=dim[1], ncol=dim[2], byrow=TRUE)
-      Lambda <- as.im(Lambda, W=w)
+      ## Extract i-th realisation of Z; convert to log-Gaussian image
+      Lambda$v[] <- exp(muxy + z[,,i])
       ## generate Poisson points
       X <- rpoispp(Lambda)[win]
       ## 

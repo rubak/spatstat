@@ -1,4 +1,4 @@
-\name{pixellate.psp}  %DontDeclareMethods
+\name{pixellate.psp}  
 \alias{pixellate.psp}
 \title{
   Convert Line Segment Pattern to Pixel Image
@@ -9,7 +9,8 @@
 }
 \usage{
 \method{pixellate}{psp}(x, W=NULL, ..., weights = NULL,
-                        what=c("length", "number"))
+                        what=c("length", "number"),
+                        DivideByPixelArea=FALSE)
 }
 \arguments{
   \item{x}{
@@ -31,6 +32,10 @@
     total length of intersection (\code{what="length"}, the default)
     or the total number of segments intersecting each pixel
     (\code{what="number"}).
+  }
+  \item{DivideByPixelArea}{
+    Logical value, indicating whether the resulting pixel values
+    should be divided by the pixel area.
   }
 }
 \details{
@@ -71,17 +76,12 @@
   X <- psp(runif(10),runif(10), runif(10), runif(10), window=owin())
   plot(pixellate(X))
   plot(X, add=TRUE)
-  sum(lengths.psp(X))
+  sum(lengths_psp(X))
   sum(pixellate(X))
   plot(pixellate(X, what="n"))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{manip}

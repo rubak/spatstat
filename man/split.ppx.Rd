@@ -14,7 +14,7 @@
     An object of class \code{"ppx"}.
   }
   \item{f}{
-    Data determining the grouping. Either a factor, 
+    Data determining the grouping. Either a factor, a logical vector,
     or the name of one of the columns of marks.
   }
   \item{drop}{
@@ -99,18 +99,14 @@
 }
 \examples{
    df <- data.frame(x=runif(4),y=runif(4),t=runif(4),
-                    age=rep(c("old", "new"), 2),
+                    age=factor(rep(c("old", "new"), 2)),
                     size=runif(4))
    X <- ppx(data=df, coord.type=c("s","s","t","m","m"))
    X
    split(X)
 }
-
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{methods}

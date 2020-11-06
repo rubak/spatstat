@@ -40,7 +40,8 @@ markconnect(X, i, j, r=NULL,
     \code{"sm"} and \code{"smrep"}.
   }
   \item{\dots}{
-    Arguments passed to the density estimation routine
+    Arguments passed to \code{\link{markcorr}},
+    or passed to the density estimation routine
     (\code{\link{density}}, \code{\link{loess}} or \code{sm.density})
     selected by \code{method}.
   }
@@ -103,7 +104,7 @@ markconnect(X, i, j, r=NULL,
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape.
 
   Biases due to edge effects are
@@ -113,13 +114,17 @@ markconnect(X, i, j, r=NULL,
     \item{isotropic/Ripley}{Ripley's isotropic correction
       (see Ripley, 1988; Ohser, 1983).
       This is implemented only for rectangular and polygonal windows
-      (not for binary masks).
+      (not for binary masks) and is slow for complicated polygons.
     }
     \item{translate}{Translation correction (Ohser, 1983).
-      Implemented for all window geometries, but slow for
-      complex windows. 
+      Implemented for all window geometries.
     }
+    \item{none}{No edge correction.}
   }
+  The option \code{correction="none"} should only be used if the
+  number of data points is extremely large (otherwise an edge correction
+  is needed to correct bias).
+
   Note that the estimator assumes the process is stationary (spatially
   homogeneous). 
 
@@ -174,11 +179,11 @@ markconnect(X, i, j, r=NULL,
     # Compute for all pairs of types at once
     plot(alltypes(amacrine, markconnect))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

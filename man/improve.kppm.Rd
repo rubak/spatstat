@@ -103,9 +103,10 @@ improve.kppm(object, type=c("quasi", "wclik1", "clik1"), rmax = NULL,
   to inference for inhomogeneous spatial point processes, \emph{Biometrika},
   \bold{97}, 867-880.
   
-  Guan, Y., Jalilian, A. and Waagepetersen, R. (2013) 
-  Quasi-likelihood for spatial Cox point processes. 
-  \emph{Submitted}.
+  Guan, Y., Jalilian, A. and Waagepetersen, R. (2015)
+  Quasi-likelihood for spatial point processes. 
+  \emph{Journal of the Royal Statistical Society, Series B}
+  \bold{77}, 677--697.
 }
 \examples{
   # fit a Thomas process using minimum contrast estimation method 
@@ -124,11 +125,11 @@ improve.kppm(object, type=c("quasi", "wclik1", "clik1"), rmax = NULL,
 %  \url{http://www.razi.ac.ir/ajalilian/}
   and Rasmus Waagepetersen
   \email{rw@math.aau.dk}
-  adapted for \pkg{spatstat} by Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  adapted for \pkg{spatstat} by \adrian
+  
+  
+  and \ege
+  
 }
 \keyword{spatial}
 \keyword{fit model}

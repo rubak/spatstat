@@ -33,7 +33,8 @@
     will be returned.
   }
   \item{\dots}{
-    Ignored. 
+     Additional arguments, passed to other subset methods
+     if the subset index is a window.
   }
   \item{value}{List of objects which shall replace the designated
     subset, or an object which shall replace the designated element.
@@ -70,18 +71,18 @@
   \code{\link{layered}}
 }
 \examples{
- example(layered)
+ D <- distmap(cells)
+ L <- layered(D, cells,
+              plotargs=list(list(ribbon=FALSE), list(pch=16)))
+
  L[-2]
  L[, square(0.5)]
 
  L[[3]] <- japanesepines
  L
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{manip}

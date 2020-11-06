@@ -32,6 +32,7 @@ Tstat(X, ..., r = NULL, rmax = NULL,
     options \code{"none"}, \code{"border"}, \code{"bord.modif"},
     \code{"translate"}, \code{"translation"}, or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{ratio}{
     Logical. 
@@ -82,9 +83,9 @@ Tstat(X, ..., r = NULL, rmax = NULL,
 \examples{
   plot(Tstat(redwood))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+\author{\adrian
+  
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -9,7 +9,9 @@
 mincontrast(observed, theoretical, startpar, \dots,
           ctrl=list(q = 1/4, p = 2, rmin=NULL, rmax=NULL),
           fvlab=list(label=NULL, desc="minimum contrast fit"),
-          explain=list(dataname=NULL, modelname=NULL, fname=NULL))
+          explain=list(dataname=NULL, modelname=NULL, fname=NULL),
+          action.bad.values=c("warn", "stop", "silent"),
+          adjustment=NULL, pint=NULL)
 }
 \arguments{
   \item{observed}{
@@ -39,13 +41,26 @@ mincontrast(observed, theoretical, startpar, \dots,
     Optional. List containing strings that give a human-readable description
     of the model, the data and the summary statistic.
   }
+  \item{action.bad.values}{
+    String (partially matched) specifying what to do if
+    values of the summary statistic are \code{NA}, \code{NaN} or infinite.
+    If \code{action.bad.values="stop"}, or if all of the values are bad,
+    then a fatal error occurs.
+    Otherwise, the domain of the summary function is shortened
+    to avoid the bad values. A warning is issued if
+    \code{action.bad.values="warn"} (the default)
+    and no warning is issued if \code{action.bad.values="silent"}.
+  }
+  \item{adjustment,pint}{
+    Do not use these arguments; they are for internal use by the package.
+  }
 }
 \details{
   This function is a general algorithm for fitting point process models
   by the Method of Minimum Contrast. If you want to fit the
   Thomas process, see \code{\link{thomas.estK}}.
   If you want to fit a log-Gaussian Cox process, see
-  \code{\link{lgcp.estK}}.  If you want to fit the Matern cluster
+  \code{\link{lgcp.estK}}.  If you want to fit the \Matern cluster
   process, see \code{\link{matclust.estK}}.
 
   The Method of Minimum Contrast (Diggle and Gratton, 1984)
@@ -95,7 +110,7 @@ mincontrast(observed, theoretical, startpar, \dots,
   and \eqn{p,q} are two exponents. The default is \code{q = 1/4},
   \code{p=2} so that the contrast criterion is the integrated squared
   difference between the fourth roots of the two functions
-  (Waagepetersen, 2006).
+  (Waagepetersen, 2007).
 
   The other arguments just make things print nicely.
   The argument \code{fvlab} contains labels for the component
@@ -129,21 +144,19 @@ mincontrast(observed, theoretical, startpar, \dots,
   \emph{Journal of the Royal Statistical Society, series B}
   \bold{46}, 193 -- 212.
 
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2003).
+  \Moller, J. and Waagepetersen, R. (2003).
   Statistical Inference and Simulation for Spatial Point Processes.
   Chapman and Hall/CRC, Boca Raton.
 
-  Waagepetersen, R. (2006).
+  Waagepetersen, R. (2007).
   An estimating function approach to inference for
   inhomogeneous Neyman-Scott processes.
-  \emph{Biometrics} \bold{63} (2007) 252--258.
+  \emph{Biometrics} \bold{63}, 252--258.
 }  
 \author{Rasmus Waagepetersen
   \email{rw@math.auc.dk},
   adapted for \pkg{spatstat} by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian.
 }
 \seealso{
   \code{\link{kppm}},

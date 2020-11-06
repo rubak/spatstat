@@ -2,7 +2,7 @@
 #
 #    strauss.R
 #
-#    $Revision: 2.32 $	$Date: 2014/12/07 09:01:47 $
+#    $Revision: 2.43 $	$Date: 2018/03/15 07:37:41 $
 #
 #    The Strauss process
 #
@@ -27,6 +27,7 @@ Strauss <- local({
        },
        par      = list(r = NULL), # to be filled in
        parnames = "interaction distance",
+       hasInf   = FALSE,
        init     = function(self) {
          r <- self$par$r
          if(!is.numeric(r) || length(r) != 1 || r <= 0)
@@ -50,7 +51,7 @@ Strauss <- local({
        },
        irange = function(self, coeffs=NA, epsilon=0, ...) {
          r <- self$par$r
-         if(any(is.na(coeffs)))
+         if(anyNA(coeffs))
            return(r)
          loggamma <- coeffs[1]
          if(abs(loggamma) <= epsilon)
@@ -63,8 +64,10 @@ Strauss <- local({
        can.do.fast=function(X,correction,par) {
          return(all(correction %in% c("border", "none")))
        },
-       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction, ...) {
-         # fast evaluator for Strauss interaction
+       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction,
+                      splitInf=FALSE, ...) {
+         #' fast evaluator for Strauss interaction
+         dont.complain.about(splitInf)
          if(!all(correction %in% c("border", "none")))
            return(NULL)
          if(spatstat.options("fasteval") == "test")
@@ -89,16 +92,17 @@ Strauss <- local({
                          - (1-gamma)^2 * (acos(t) - t * sqrt(1 - t^2)))
          return(y)
        },
-       delta2 = function(X, inte, correction, ...) {
-         if(!(correction %in% c("border", "none")))
-           return(NULL)
+       delta2 = function(X, inte, correction, ..., sparseOK=FALSE) {
          r <- inte$par$r
          X <- as.ppp(X) # algorithm is the same for data and dummy points
          nX <- npoints(X)
-         cl <- closepairs(X, r, what="indices")
-         I <- factor(cl$i, levels=1:nX)
-         J <- factor(cl$j, levels=1:nX)
-         v <- table(I, J)
+         cl <- weightedclosepairs(X, r, correction=correction, what="indices")
+         if(is.null(cl))
+           return(NULL)
+         v <- sparseMatrix(i=cl$i, j=cl$j, x=cl$weight,
+                           dims=c(nX, nX))
+         if(!sparseOK)
+           v <- as.matrix(v)
          return(v)
        }
        )
@@ -123,7 +127,7 @@ strausscounts <- function(U, X, r, EqualPairs=NULL) {
   # subtract counts of identical pairs
   if(length(EqualPairs) > 0) {
     nU <- npoints(U)
-    idcount <- as.integer(table(factor(EqualPairs[,2], levels=1:nU)))
+    idcount <- as.integer(table(factor(EqualPairs[,2L], levels=1:nU)))
     answer <- answer - idcount
   }
   return(answer)
@@ -150,7 +154,8 @@ crosspaircounts <- function(X, Y, r) {
             xtarget  = as.double(Ysort$x),
             ytarget  = as.double(Ysort$y),
             rrmax    = as.double(r),
-            counts   = as.integer(integer(nX)))
+            counts   = as.integer(integer(nX)),
+            PACKAGE = "spatstat")
   answer <- integer(nX)
   answer[oX] <- out$counts
   return(answer)
@@ -171,9 +176,55 @@ closepaircounts <- function(X, r) {
             x      = as.double(Xsort$x),
             y      = as.double(Xsort$y),
             rmaxi  = as.double(r),
-            counts = as.integer(integer(nX)))
+            counts = as.integer(integer(nX)),
+            PACKAGE = "spatstat")
   answer <- integer(nX)
   answer[oX] <- out$counts
   return(answer)
 }
 
+weightedclosepairs <- function(X, r, correction,
+                               what=c("all", "indices", "ijd")) {
+  what <- match.arg(what)
+  ## return list(i,j,..,weight) for all r-close pairs
+  switch(correction,
+         none = ,
+         border = {
+           cl <- closepairs(X, r, what=what)
+           weight <- rep(1, length(cl$i))
+         },
+         isotropic = ,
+         Ripley = {
+           if(what == "indices") {
+             cl <- closepairs(X, r, what="ijd")
+             weight <- edge.Ripley(X[cl$i], cl$d)
+             cl <- cl[c("i", "j")]
+           } else {
+             cl <- closepairs(X, r, what=what)
+             weight <- edge.Ripley(X[cl$i], cl$d)
+           }
+         },
+         translate = {
+           cl <- closepairs(X, r, what="all")
+           weight <- edge.Trans(dx = cl$dx,
+                                dy = cl$dy,
+                                W = Window(X),
+                                paired=TRUE)
+           switch(what,
+                  indices = { cl <- cl[c("i", "j")] },
+                  ijd     = { cl <- cl[c("i", "j", "d")] },
+                  all     = { })
+         },
+         periodic = {
+           cl <- closepairs(X, r, what=what, periodic=TRUE)
+           weight <- rep(1, length(cl$i))
+         },
+         {
+           warning(paste("Unrecognised correction", sQuote(correction)),
+                   call.=FALSE)
+           return(NULL)
+         }
+         )
+  result <- append(cl, list(weight=as.numeric(weight)))
+  return(result)
+}

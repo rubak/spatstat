@@ -1,7 +1,7 @@
 ##
 ##    hierhard.R
 ##
-##    $Revision: 1.1 $	$Date: 2015/05/26 09:11:56 $
+##    $Revision: 1.4 $	$Date: 2018/03/15 07:37:41 $
 ##
 ##    The hierarchical hard core process
 ##
@@ -87,7 +87,8 @@ HierHard <- local({
                  "hierarchical order"),
     pardesc  = c("vector of possible types",
                   "matrix of hardcore distances",
-                  "hierarchical order"),
+                 "hierarchical order"),
+    hasInf = TRUE,
     selfstart = function(X, self) {
       types <- self$par$types
       hradii <- self$par$hradii
@@ -102,7 +103,7 @@ HierHard <- local({
         marx <- marks(X)
         d <- nndist(X, by=marx)
         h <- aggregate(d, by=list(from=marx), min)
-        h <- as.matrix(h[, -1, drop=FALSE])
+        h <- as.matrix(h[, -1L, drop=FALSE])
         m <- table(marx)
         mm <- outer(m, m, pmin)
         hradii <- h * mm/(mm+1)
@@ -122,7 +123,7 @@ HierHard <- local({
         if(length(types) == 0)
           stop(paste("The", sQuote("types"),"argument should be",
                      "either NULL or a vector of all possible types"))
-        if(any(is.na(types)))
+        if(anyNA(types))
           stop("NA's not allowed in types")
         if(is.factor(types)) {
           types <- levels(types)

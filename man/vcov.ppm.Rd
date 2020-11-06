@@ -11,6 +11,7 @@
                     gam.action=c("warn", "fatal", "silent"),
                     matrix.action=c("warn", "fatal", "silent"),
                     logi.action=c("warn", "fatal", "silent"),
+                    nacoef.action=c("warn", "fatal", "silent"),
                     hessian=FALSE)
 }
 \arguments{
@@ -40,6 +41,10 @@
   \item{logi.action}{String indicating what to do if \code{object} was
     fitted via the logistic regression approximation using a
     non-standard dummy point process.
+  }
+  \item{nacoef.action}{
+    String indicating what to do if some of the fitted coefficients
+    are \code{NA} (so that variance cannot be calculated).
   }
   \item{hessian}{
     Logical. Use the negative Hessian matrix
@@ -155,13 +160,17 @@
   \emph{system is computationally singular} indicates that the
   determinant of the Fisher information matrix was either too large 
   or too small for reliable numerical calculation.
-  This can occur because of numerical overflow or
+
+  If this message occurs, try repeating the calculation
+  using \code{fine=TRUE}. 
+
+  Singularity can occur because of numerical overflow or
   collinearity in the covariates. To check this, rescale the 
   coordinates of the data points and refit the model. See the Examples.
 
   In a Gibbs model, a singular matrix may also occur if the
   fitted model is a hard core process: this is a feature of the
-  variance estimator.
+  variance estimator. 
 }
 \value{
   A square matrix.
@@ -173,30 +182,29 @@
   vcov(fit, what="Fish")
 
   # example of singular system
-  data(demopat)
-  m <- ppm(demopat, ~polynom(x,y,2))
+  m <- ppm(demopat ~polynom(x,y,2))
   \dontrun{
     try(v <- vcov(m))
   }
   # rescale x, y coordinates to range [0,1] x [0,1] approximately
-  demopat <- rescale(demopat, 10000)
-  m <- ppm(demopat, ~polynom(x,y,2))
+  demopatScale <- rescale(demopat, 10000)
+  m <- ppm(demopatScale ~ polynom(x,y,2))
   v <- vcov(m)
 
   # Gibbs example
-  fitS <- ppm(swedishpines, ~1, Strauss(9))
+  fitS <- ppm(swedishpines ~1, Strauss(9))
   coef(fitS)
   sqrt(diag(vcov(fitS)))
 }
 \author{
   Original code for Poisson point process was written by
-  Adrian Baddeley \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner \email{r.turner@auckland.ac.nz}.
+  \adrian 
+  
+  and \rolf .
   New code for stationary Gibbs point processes was generously contributed by
-  Ege Rubak and Jean-Francois Coeurjolly.
-  New code for generic Gibbs process written by Adrian Baddeley.
-  New code for logistic method contributed by Ege Rubak.
+  \ege and Jean-Francois Coeurjolly.
+  New code for generic Gibbs process written by \adrian.
+  New code for logistic method contributed by \ege.
 }
 \seealso{
   \code{\link{vcov}} for the generic,

@@ -72,7 +72,7 @@ beachcolourmap(range, ...)
   For \code{beachcolourmap}, a colour map (object of class \code{"colourmap"}).
 }
 \references{
-  Baddeley, A., Turner, R., \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005)
+  Baddeley, A., Turner, R., \Moller, J. and Hazelton, M. (2005)
   Residual analysis for spatial point processes.
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.
@@ -84,11 +84,11 @@ beachcolourmap(range, ...)
 \examples{
   plot(beachcolourmap(c(-2,2)))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{color}

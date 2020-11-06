@@ -6,7 +6,7 @@
 #  generic functions
 #  and methods for owin, psp, ppp
 #
-#  $Revision: 1.28 $   $Date: 2015/08/15 05:23:15 $
+#  $Revision: 1.33 $   $Date: 2020/03/16 10:28:51 $
 #
 
 # ............ generic  ............................
@@ -22,10 +22,11 @@ opening  <- function(w, r, ...) { UseMethod("opening") }
 # ............ methods for class 'owin' ............................
 
 
-erode.owin <- function(...) {
-  .Deprecated("erosion.owin", package="spatstat")
-  erosion.owin(...)
-}
+# DELETED
+# erode.owin <- function(...) {
+#   .Deprecated("erosion.owin", package="spatstat")
+#   erosion.owin(...)
+# }
 
 erosion.owin <- 
   function(w, r, shrink.frame=TRUE, ..., strict=FALSE, polygonal=NULL) {
@@ -108,10 +109,11 @@ erosion.owin <-
   return(wnew)
 }	
 
-dilate.owin <- function(...) {
-  .Deprecated("dilation.owin", package="spatstat")
-  dilation.owin(...)
-}
+# DELETED
+# dilate.owin <- function(...) {
+#   .Deprecated("dilation.owin", package="spatstat")
+#   dilation.owin(...)
+# }
 
 dilation.owin <- 
   function(w, r, ..., polygonal=NULL, tight=TRUE) {
@@ -233,7 +235,7 @@ dilation.psp <- function(w, r, ..., polygonal=TRUE, tight=TRUE) {
     # old code for polygonal case
     ends   <- x$ends
     angles <- angles.psp(x, directed=TRUE)
-#    lengths <- lengths.psp(x)
+#    lengths <- lengths_psp(x)
     out <- NULL
     # dilate individual segments
     halfcircle <- seq(from=0, to=pi, length.out=128)[-c(1,128)]
@@ -315,23 +317,27 @@ dilation.ppp <- function(w, r, ..., polygonal=TRUE, tight=TRUE) {
   
   # bounding frame
   bb <- if(tight) boundingbox(x) else as.rectangle(x)
-    newbox <- grow.rectangle(bb, r)
+  releps <- 1e-6
+  newbox <- grow.rectangle(bb, r * (1+releps))
 
   # compute dilation
   if(!polygonal) {
     # compute pixel approximation
-    x <- rebound.ppp(x, newbox)
+    Window(x) <- newbox
     distant <- distmap(x, ...)
     dil <- levelset(distant, r, "<=")
     return(dil)
   } else {
     # compute polygonal approximation
     # generate discs
-    out <- NULL
-    for(i in seq_len(x$n)) {
-      balli <- disc(r, c(x$x[i], x$y[i]))
-      out <- union.owin(out, balli)
-    }
+    coo <- coords(x)
+    nn <- npoints(x)
+    balls <- vector(mode="list", length=nn)
+    ball0 <- disc(r, c(0,0), ...)
+    for(i in seq_len(nn))
+      balls[[i]] <- shift(ball0, vec=coo[i,])
+    class(balls) <- c("solist", class(balls))
+    out <- union.owin(balls)
     return(out)
   }
 }

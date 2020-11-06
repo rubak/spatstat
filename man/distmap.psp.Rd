@@ -1,4 +1,4 @@
-\name{distmap.psp}  %DontDeclareMethods
+\name{distmap.psp}  
 \alias{distmap.psp}
 \title{
   Distance Map of Line Segment Pattern
@@ -65,11 +65,11 @@
     plot(Z)
     plot(a, add=TRUE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

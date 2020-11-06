@@ -8,7 +8,7 @@
   a pixel image on a linear network.
 }
 \usage{
-  linim(L, Z, ..., df=NULL)
+  linim(L, Z, \dots, restrict=TRUE, df=NULL)
 }
 \arguments{
   \item{L}{
@@ -18,6 +18,14 @@
     Pixel image (object of class \code{"im"}).
   }
   \item{\dots}{Ignored.}
+  \item{restrict}{
+    Advanced use only.
+    Logical value indicating whether to ensure that all pixels in \code{Z}
+    which do not lie on the network \code{L} have pixel value \code{NA}.
+    This condition must be satisfied, but if you set
+    \code{restrict=FALSE} it will not be checked, and the code will
+    run faster.
+  }
   \item{df}{
     Advanced use only. Data frame giving full details of the mapping between
     the pixels of \code{Z} and the lines of \code{L}.
@@ -54,9 +62,7 @@
   There is a special method for plotting this class.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
 }
 \seealso{
   \code{\link{plot.linim}},
@@ -66,10 +72,8 @@
   \code{\link{im}}.
 }
 \examples{
-  example(linnet)
-  M <- as.mask.psp(as.psp(letterA))
-  Z <- as.im(function(x,y) {x-y}, W=M)
-  X <- linim(letterA, Z)
+  Z <- as.im(function(x,y) {x-y}, Frame(simplenet))
+  X <- linim(simplenet, Z)
   X
 }
 \references{

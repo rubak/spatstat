@@ -42,6 +42,7 @@ Kdot(X, i, r=NULL, breaks=NULL, correction, ..., ratio=FALSE, from)
     \code{"translation"},
     \code{"none"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{\dots}{Ignored.}
   \item{ratio}{
@@ -126,16 +127,16 @@ Kdot(X, i, r=NULL, breaks=NULL, correction, ..., ratio=FALSE, from)
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape.
   Biases due to edge effects are
   treated in the same manner as in \code{\link{Kest}},
-  using the border correction.
+  using the chosen edge correction(s).
 
   The argument \code{r} is the vector of values for the
   distance \eqn{r} at which \eqn{K_{i\bullet}(r)}{Ki.(r)} should be evaluated. 
   The values of \eqn{r} must be increasing nonnegative numbers
-  and the maximum \eqn{r} value must exceed the radius of the
+  and the maximum \eqn{r} value must not exceed the radius of the
   largest disc contained in the window.
 
   The pair correlation function can also be applied to the
@@ -173,8 +174,7 @@ Kdot(X, i, r=NULL, breaks=NULL, correction, ..., ratio=FALSE, from)
 
   The reduced sample estimator of \eqn{K_{i\bullet}}{Ki.} is pointwise approximately 
   unbiased, but need not be a valid distribution function; it may 
-  not be a nondecreasing function of \eqn{r}. Its range is always 
-  within \eqn{[0,1]}.
+  not be a nondecreasing function of \eqn{r}.
 }
 \seealso{
  \code{\link{Kdot}},
@@ -184,15 +184,11 @@ Kdot(X, i, r=NULL, breaks=NULL, correction, ..., ratio=FALSE, from)
 }
 \examples{
      # Lansing woods data: 6 types of trees
-    data(lansing)
+    woods <- lansing
 
-    \dontrun{
-    Kh. <- Kdot(lansing, "hickory") 
-    }
-    \testonly{
-    sub <- lansing[seq(1,lansing$n, by=80), ]
-    Kh. <- Kdot(sub, "hickory") 
-    }
+    \testonly{woods <- woods[seq(1, npoints(woods), by=80)]}
+
+    Kh. <- Kdot(woods, "hickory") 
     # diagnostic plot for independence between hickories and other trees
     plot(Kh.)
 
@@ -203,11 +199,11 @@ Kdot(X, i, r=NULL, breaks=NULL, correction, ..., ratio=FALSE, from)
     K <- Kdot(pp, "a")
     }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

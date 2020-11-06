@@ -1,14 +1,14 @@
 #
 #  colourtools.R
 #
-#   $Revision: 1.17 $   $Date: 2015/07/08 10:23:36 $
+#   $Revision: 1.21 $   $Date: 2019/04/05 09:20:59 $
 #
 
 
 rgb2hex <- function(v, maxColorValue=255) {
   stopifnot(is.numeric(v))
   if(!is.matrix(v))
-    v <- matrix(v, nrow=1)
+    v <- matrix(v, nrow=1L)
   if(ncol(v) %in% c(3, 4)) {
     out <- rgb(v, maxColorValue=maxColorValue)
     return(out)
@@ -22,11 +22,11 @@ rgb2hsva <- function(red, green=NULL, blue=NULL, alpha=NULL,
     ## red should be a 3-row matrix of RGB values
     ## or a 4-row matrix of RGBA values 
     if(!is.matrix(red))
-      red <- matrix(red, ncol=1)
+      red <- matrix(red, ncol=1L)
     ## check for an alpha channel
     if(nrow(red) == 4) {
-      alpha <- red[4,]
-      red <- red[-4, , drop=FALSE]
+      alpha <- red[4L,]
+      red <- red[-4L, , drop=FALSE]
     }
   }
   y <- rgb2hsv(red, green, blue, maxColorValue=maxColorValue)
@@ -97,6 +97,18 @@ to.transparent <- function(x, fraction) {
     return(to.opaque(x))
   rgb(t(col2rgb(x))/255, alpha=fraction, maxColorValue=1)
 }
+
+to.saturated <- function(x, s=1) {
+  y <- rgb2hsv(col2rgb(x))
+  ## map grey to black, otherwise saturate the colour
+  notwhite <- !(y["h",] == 0 & y["s",] == 0 & y["v", ] == 1)
+  isgrey <- (y["s", ] == 0) 
+  y["v",  isgrey & notwhite] <- 0
+  y["s", !isgrey & notwhite] <- s
+  ## convert back
+  z <- hsv(y["h",], y["s",], y["v",])
+  return(z)
+}
   
 to.grey <- function(x, weights=c(0.299, 0.587, 0.114), transparent=FALSE) {
   if(is.null(x)) return(NULL)
@@ -121,13 +133,13 @@ to.grey <- function(x, weights=c(0.299, 0.587, 0.114), transparent=FALSE) {
     yy <- col2rgb(x, alpha=TRUE)
     y <- yy[1:3, , drop=FALSE]
     g <- (weights %*% y)/(255 * sum(weights))
-    z <- grey(g, alpha=y[4,])
+    z <- grey(g, alpha=yy[4L,]/255.0)
   }
   return(z)
 }
 
 is.col.argname <- function(x) {
-  return(nzchar(x) & ((x == "col") | (substr(x, 1, 4) == "col.")))
+  return(nzchar(x) & ((x == "col") | (substr(x, 1L, 4L) == "col.")))
 }
 
 col.args.to.grey <- function(x, ...) {
@@ -166,3 +178,29 @@ hsvNA <- function(h, s, v, alpha=NULL) {
   return(result)
 }
 
+## This function traps the colour arguments
+## and converts to greyscale if required.
+
+do.call.plotfun <- function(fun, arglist, ...) {
+  if(spatstat.options("monochrome")) {
+    keys <- names(arglist)
+    if(!is.null(keys)) {
+      cols <- nzchar(keys) & ((keys %in% c("border", "col", "fg", "bg")) |
+                              (substr(keys, 1, 4) == "col."))
+      if(any(cols))
+        arglist[cols] <- lapply(arglist[cols], to.grey)
+    }
+  }
+  do.call.matched(fun, arglist, ...)
+}
+
+gammabreaks <- function(ra, n, gamma=1) {
+  # make breaks for x which are evenly spaced on the scale y = x^gamma
+  check.1.real(gamma)
+  stopifnot(gamma > 0)
+  y <- seq(from=0, to=1, length.out=n)
+  breaks <- ra[1L] + diff(ra) * y^(1/gamma)
+  breaks[1L] <- ra[1L]
+  breaks[n]  <- ra[2L]
+  return(breaks)
+}

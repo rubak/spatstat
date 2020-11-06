@@ -31,17 +31,12 @@
 }
 \seealso{
   \code{\link{area.owin}},
+  \code{\link{volume.linnet}},
   \code{\link{volume.box3}},
-  \code{\link{volume.boxx}},
-  \code{\link{volume.linnet}}
+  \code{\link{volume.boxx}}.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{math}

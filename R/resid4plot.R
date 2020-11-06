@@ -5,7 +5,7 @@
 #         resid1plot       one or more unrelated individual plots 
 #         resid1panel      one panel of resid1plot
 #
-#   $Revision: 1.32 $    $Date: 2015/08/18 08:00:19 $
+#   $Revision: 1.37 $    $Date: 2019/12/15 05:26:58 $
 #
 #
 
@@ -29,7 +29,7 @@ resid4plot <- local({
   }
 
   do.lines <- function(x, y, defaulty=1, ...) {
-    do.call("lines",
+    do.call(lines,
             resolve.defaults(list(x, y),
                              list(...),
                              list(lty=defaulty)))
@@ -68,15 +68,13 @@ resid4plot <- local({
        c(0, height) + c(-outerspace, outerRspace),
        type="n", asp=1.0, axes=FALSE, xlab="", ylab="")
   # determine colour map for background
+  nullvalue <- if(type == "eem") 1 else 0
   if(is.null(srange)) {
     Yrange <- if(!is.null(Ydens)) summary(Ydens)$range else NULL
     Zrange <- if(!is.null(Z)) summary(Z)$range else NULL
-    srange <- range(c(0, Yrange, Zrange), na.rm=TRUE)
-  } else {
-    stopifnot(is.numeric(srange) && length(srange) == 2)
-    stopifnot(all(is.finite(srange)))
-  }
-  backcols <- beachcolours(srange, if(type=="eem") 1 else 0, monochrome)
+    srange <- range(c(Yrange, Zrange, nullvalue), na.rm=TRUE)
+  } else check.range(srange)
+  backcols <- beachcolours(srange, nullvalue, monochrome)
   if(is.null(col.neg)) col.neg <- backcols
   if(is.null(col.smooth)) col.smooth <- backcols
   
@@ -126,7 +124,7 @@ resid4plot <- local({
            Yds <- shift(Ydens, vec)
            Yms <- shift(Ymass, vec)
            Contour(Yds, add=TRUE, ...)
-           do.call("plot",
+           do.call(plot,
                    resolve.defaults(list(x=Yms, add=TRUE),
                                     list(...), 
                                     list(use.marks=showscale,
@@ -149,7 +147,7 @@ resid4plot <- local({
            if(plot.neg == "imagecontour")
              Contour(Yds, add=TRUE, ...)
            ## plot positive masses at atoms
-           do.call("plot",
+           do.call(plot,
                    resolve.defaults(list(x=Yms, add=TRUE),
                                     list(...),
                                     list(use.marks=showscale,
@@ -189,7 +187,7 @@ resid4plot <- local({
     observedX <-    a$x
     theoreticalV <- a$ExZ
     theoreticalX <- a$x
-    theoreticalSD <- NULL
+    theoreticalSD <- theoreticalHI <- theoreticalLO <- NULL
     if(is.null(rlab)) rlab <- paste("marginal of", typename)
   } else if(!is.null(RES$xcumul)) {
     a <- RES$xcumul
@@ -365,12 +363,13 @@ resid1plot <- local({
     Ymass <- RES$Ymass[Wclip]
     ## determine colour map
     if(opt$all || opt$marks || opt$smooth) {
+      nullvalue <- if(type == "eem") 1 else 0
       if(is.null(srange)) {
         Yrange <- if(!is.null(Ydens)) summary(Ydens)$range else NULL
         Zrange <- if(!is.null(Z)) summary(Z)$range else NULL
-        srange <- range(c(0, Yrange, Zrange), na.rm=TRUE)
-      }
-      backcols <- beachcolours(srange, if(type=="eem") 1 else 0, monochrome)
+        srange <- range(c(Yrange, Zrange, nullvalue), na.rm=TRUE)
+      } else check.range(srange)
+      backcols <- beachcolours(srange, nullvalue, monochrome)
       if(is.null(col.neg)) col.neg <- backcols
       if(is.null(col.smooth)) col.smooth <- backcols
     }
@@ -589,7 +588,7 @@ resid1plot
 resid1panel <- local({
 
   do.lines <- function(x, y, defaulty=1, ...) {
-      do.call("lines",
+      do.call(lines,
               resolve.defaults(list(x, y),
                                list(...),
                                list(lty=defaulty)))
@@ -642,7 +641,8 @@ ploterodewin <- function(W1, W2, col.edge=grey(0.75), col.inside=rgb(1,0,0),
            ok <- inside.owin(x, y, W2)
            Z$v[ok] <- 2
            z <- plot(Z, ..., col=c(col.edge, col.inside),
-                     add=TRUE, ribbon=FALSE, do.plot=do.plot)
+                     add=TRUE, ribbon=FALSE, do.plot=do.plot,
+                     show.all=TRUE)
          }
          )
   return(z)
@@ -654,8 +654,9 @@ ploterodeimage <- function(W, Z, ..., Wcol=grey(0.75), rangeZ, colsZ,
   # Image Z is assumed to live on a subset of mask W
   # colsZ are the colours for the values in the range 'rangeZ'
 
-  if(W$type != "mask" && do.plot) {
-    plot(W, add=TRUE)
+  if(!is.mask(W)) {
+    if(do.plot)
+      plot(W, add=TRUE)
     W <- as.mask(W)
   }
   

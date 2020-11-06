@@ -1,7 +1,7 @@
 #
 #	plot.ppp.R
 #
-#	$Revision: 1.81 $	$Date: 2015/10/04 01:28:59 $
+#	$Revision: 1.96 $	$Date: 2020/02/25 05:33:46 $
 #
 #
 #--------------------------------------------------------------------------
@@ -15,7 +15,8 @@ plot.ppp <- local({
   ## determine symbol map for marks of points
   default.symap.points <- function(x, ..., 
                                   chars=NULL, cols=NULL, 
-                                  maxsize=NULL, meansize=NULL, markscale=NULL) {
+                                  maxsize=NULL, meansize=NULL, markscale=NULL,
+                                  markrange=NULL, marklevels=NULL) {
     marx <- marks(x)
     if(is.null(marx)) {
       ## null or constant symbol map
@@ -43,7 +44,7 @@ plot.ppp <- local({
       timerange <- range(marx, na.rm=TRUE)
       shapedefault <- if(!assumecircles) list() else list(shape="circles")
       if(sizegiven) {
-        g <- do.call("symbolmap",
+        g <- do.call(symbolmap,
           resolve.defaults(list(range=timerange),
                            list(...),
                            shapedefault,
@@ -65,7 +66,7 @@ plot.ppp <- local({
       }
       formals(sizefun)[[2]] <- scal  ## ensures value of 'scal' is printed
       ##
-      g <- do.call("symbolmap",
+      g <- do.call(symbolmap,
                    resolve.defaults(list(range=timerange),
                                     list(...),
                                     shapedefault,
@@ -75,12 +76,19 @@ plot.ppp <- local({
     if(is.numeric(marx)) {
       ## ............. marks are numeric values ...................
       marx <- marx[is.finite(marx)]
-      if(length(marx) == 0)
-        return(symbolmap(..., chars=chars, cols=cols))
-      markrange <- range(marx)
+      if(is.null(markrange)) {
+        #' usual case
+        if(length(marx) == 0)
+          return(symbolmap(..., chars=chars, cols=cols))
+        markrange <- range(marx)
+      } else {
+        if(!all(inside.range(marx, markrange)))
+          warning("markrange does not encompass the range of mark values",
+                  call.=FALSE)
+      }
       ## 
       if(sizegiven) {
-        g <- do.call("symbolmap",
+        g <- do.call(symbolmap,
           resolve.defaults(list(range=markrange),
                            list(...),
                            if(assumecircles) list(shape="circles") else list(),
@@ -101,7 +109,7 @@ plot.ppp <- local({
         shapedefault <-
           if(!assumecircles) list() else list(shape="circles")
         cexfun <- function(x, scal=1) { scal * x }
-        circfun <- function(x, scal=1) { scal * x/2 }
+        circfun <- function(x, scal=1) { scal * x }
         formals(cexfun)[[2]] <- formals(circfun)[[2]] <- scal
         sizedefault <-
           if(sizegiven) list() else
@@ -112,28 +120,43 @@ plot.ppp <- local({
           if(!assumecircles) list() else
           list(shape=function(x) { ifelse(x >= 0, "circles", "squares") })
         cexfun <- function(x, scal=1) { scal * abs(x) }
-        circfun <- function(x, scal=1) { scal * ifelse(x >= 0, x/2, -x) }
+        circfun <- function(x, scal=1) { scal * abs(x) }
         formals(cexfun)[[2]] <- formals(circfun)[[2]] <- scal
         sizedefault <-
           if(sizegiven) list() else
           if(chargiven) list(cex=cexfun) else list(size=circfun)
       }
-      g <- do.call("symbolmap",
+      g <- do.call(symbolmap,
                    resolve.defaults(list(range=markrange),
                                     list(...),
                                     shapedefault,
                                     sizedefault,
-                                    chars=chars, cols=cols))
+                                    list(chars=chars, cols=cols)))
       return(g)
     }
     ##  ...........  non-numeric marks .........................
-    um <- if(is.factor(marx)) levels(marx) else sort(unique(marx))
+    um <- marklevels %orifnull%
+          if(is.factor(marx)) levels(marx) else sortunique(marx)
     ntypes <- length(um)
-    ## resolve parameters 'chars' and 'cols'
-    chars <- default.charmap(ntypes, chars)
     if(!is.null(cols))
       cols <- rep.int(cols, ntypes)[1:ntypes]
-    g <- symbolmap(inputs=um, ..., chars=chars, cols=cols)
+    if(shapegiven && sizegiven) {
+      #' values mapped to symbols (shape and size specified)
+      g <- symbolmap(inputs=um, ..., cols=cols)
+    } else if(!shapegiven) {
+      #' values mapped to 'pch'
+      chars <- default.charmap(ntypes, chars)
+      g <- symbolmap(inputs=um, ..., chars=chars, cols=cols)
+    } else {
+      #' values mapped to symbols
+      #' determine size
+      scal <- mark.scale.default(rep(1, npoints(x)),
+                                 Window(x), 
+                                 maxsize=maxsize,
+                                 meansize=meansize,
+                                 characters=FALSE)
+      g <- symbolmap(inputs=um, ..., size=scal, cols=cols)
+    }
     return(g)
   }
                                   
@@ -165,15 +188,20 @@ plot.ppp <- local({
     main <- short.deparse(substitute(x))
 
   type <- match.arg(type)
+  if(missing(legend)) legend <- (type == "p")
 
-  if(!missing(maxsize) || !missing(markscale) || !missing(meansize))
-    warn.once("circlescale",
-              "Interpretation of arguments maxsize and markscale",
-              "has changed (in spatstat version 1.37-0 and later).",
-              "Size of a circle is now measured by its diameter.")
-  
-  if(!is.null(clipwin))
+#  if(!missing(maxsize) || !missing(markscale) || !missing(meansize))
+#    warn.once("circlescale",
+#              "Interpretation of arguments maxsize and markscale",
+#              "has changed (in spatstat version 1.37-0 and later).",
+#              "Size of a circle is now measured by its diameter.")
+
+  if(clipped <- !is.null(clipwin)) {
+    stopifnot(is.owin(clipwin))
+    W <- Window(x)
+    clippy <- if(is.mask(W)) intersect.owin(W, clipwin) else edges(W)[clipwin]
     x <- x[clipwin]
+  } else clippy <- NULL
   
   ## sensible default position
   legend <- legend && show.all
@@ -186,7 +214,7 @@ plot.ppp <- local({
 #    ## plot the window only
 #    xwindow <- x$window
 #    if(do.plot) 
-#      do.call("plot.owin",
+#      do.call(plot.owin,
 #              resolve.defaults(list(xwindow),
 #                               list(...),
 #                               list(main=main, invert=TRUE, add=add,
@@ -206,14 +234,15 @@ plot.ppp <- local({
     do.several <- want.several && !add && multiplot
     if(do.several) {
       ## generate one plot for each column of marks
-      y <- as.solist(lapply(mx, function(z, P) setmarks(P,z), P=x))
+      y <- solapply(mx, setmarks, x=x)
       out <- do.call(plot,
                      resolve.defaults(list(x=y, main=main,
-                                           show.window=show.window,
+                                           show.window=show.window && !clipped,
                                            do.plot=do.plot,
                                            type=type),
                                       list(...),
-                                      list(equal.scales=TRUE), 
+                                      list(equal.scales=TRUE),
+                                      list(panel.end=clippy),
                                       list(legend=legend,
                                            leg.side=leg.side,
                                            leg.args=leg.args),
@@ -304,7 +333,7 @@ plot.ppp <- local({
   legend <- legend && (symbolmaptype(symap) != "constant") 
   if(legend) {
     ## guess maximum size of symbols
-    maxsize <- invoke.symbolmap(symap, marx,
+    maxsize <- invoke.symbolmap(symap, symbolmapdomain(symap),
                                 corners(as.rectangle(x)),
                                 add=add, do.plot=FALSE)
     sizeguess <- if(maxsize <= 0) NULL else (1.5 * maxsize)
@@ -328,10 +357,13 @@ plot.ppp <- local({
   main <- pt$main
   nlines <- pt$nlines
   blankmain <- if(nlines == 0) "" else rep("  ", nlines)
-  cex.main <- resolve.1.default(list(cex.main=1), list(...))
-  plot(BB, type="n", add=add, main=blankmain, show.all=show.all,
-       cex.main=cex.main)
-
+  dflt <- list(cex.main=1, xlim=NULL, ylim=NULL,
+               ann=FALSE, axes=FALSE, xlab="", ylab="")
+  rez <- resolve.defaults(list(...), dflt)[names(dflt)]
+  do.call(plot.owin,
+          append(list(x=BB, type="n", add=add,
+                      main=blankmain, show.all=show.all),
+                 rez))
   if(sick) {
     if(show.window) {
       ## plot windows
@@ -340,17 +372,19 @@ plot.ppp <- local({
         rwinpardefault <- list(lty=2,lwd=1,border=1)
         rwinpars <-
           resolve.defaults(par.rejects, rwinpardefault)[names(rwinpardefault)]
-        do.call("plot.owin", append(list(rwin, add=TRUE), rwinpars))
+        do.call(plot.owin, append(list(rwin, add=TRUE), rwinpars))
       }
       ## plot window of main pattern
-      do.call("plot.owin",
-              resolve.defaults(list(x$window, add=TRUE),
-                               list(...),
-                               list(invert=TRUE)))
+      if(!clipped) {
+        do.call(plot.owin,
+                resolve.defaults(list(x$window, add=TRUE),
+                                 list(...),
+                                 list(invert=TRUE)))
+      } else plot(clippy, add=TRUE, ...)
     }
     if(type != "n") {
       ## plot reject points
-      do.call("plot.ppp", append(list(rejects, add=TRUE), par.all))
+      do.call(plot.ppp, append(list(rejects, add=TRUE), par.all))
       warning(paste(rejects$n, "illegal points also plotted"))
     }
     ## the rest is added
@@ -362,14 +396,17 @@ plot.ppp <- local({
   xwindow <- x$window
 
   ## Plot observation window (or at least the main title)
-  do.call("plot.owin",
+  do.call(plot.owin,
           resolve.defaults(list(x=xwindow,
                                 add=TRUE,
                                 main=main,
-                                type=if(show.window) "w" else "n",
+                                type=if(show.window && !clipped) "w" else "n",
                                 show.all=show.all),
                            list(...),
                            list(invert=TRUE)))
+  ## If clipped, plot visible part of original window
+  if(show.window && clipped)
+    plot(clippy, add=TRUE, ...)
   # else if(show.all) fakemaintitle(as.rectangle(xwindow), main, ...)
 
   if(type != "n") {
@@ -381,8 +418,8 @@ plot.ppp <- local({
   if(legend) {
     b <- legbox$b
     legendmap <- if(length(leg.args) == 0) symap else 
-                 do.call("update", append(list(object=symap), leg.args))
-    do.call("plot",
+                 do.call(update, append(list(object=symap), leg.args))
+    do.call(plot,
             append(list(x=legendmap, main="", add=TRUE,
                         xlim=b$xrange, ylim=b$yrange),
                    leg.args))
@@ -396,7 +433,7 @@ plot.ppp
 })
 
 
-mark.scale.default <- function(marx, w, markscale=NULL,
+mark.scale.default <- function(marx, w, ..., markscale=NULL,
                                maxsize=NULL, meansize=NULL,
                                characters=FALSE) {
   ## establish values of markscale, maxsize, meansize
@@ -464,8 +501,13 @@ fakemaintitle <- function(bb, main, ...) {
   parlist <- par(parnames)
   parlist <- resolve.defaults(list(...), parlist)[parnames]
   names(parlist) <- c('cex', 'col', 'font')
-  do.call.matched("text.default",
+  do.call.matched(text.default,
                   resolve.defaults(list(x=x0, y=y0, labels=main),
-                                   parlist,    list(...)))
+                                   parlist,    list(...)),
+                  funargs=graphicsPars("text"))
   return(invisible(NULL))
+}
+
+text.ppp <- function(x, ...) {
+  graphics::text.default(x=x$x, y=x$y, ...)
 }

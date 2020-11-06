@@ -2,7 +2,7 @@
 #
 #    hierpair.family.R
 #
-#    $Revision: 1.2 $	$Date: 2015/03/09 09:24:30 $
+#    $Revision: 1.11 $	$Date: 2019/02/20 03:34:50 $
 #
 #    The family of hierarchical pairwise interactions
 #
@@ -67,9 +67,9 @@ hierpair.family <-
          p <- pairpot(dd, tx, ty, potpars)
          if(length(dim(p))==2)
            p <- array(p, dim=c(dim(p),1), dimnames=NULL)
-         if(dim(p)[3] != length(coeff))
+         if(dim(p)[3L] != length(coeff))
            stop("Dimensions of potential do not match coefficient vector")
-         for(k in seq_len(dim(p)[3]))
+         for(k in seq_len(dim(p)[3L]))
            p[,,k] <- multiply.only.finite.entries( p[,,k] , coeff[k] )
          y <- exp(apply(p, c(1,2), sum))
          ylim <- range(0, 1.1, y, finite=TRUE)
@@ -78,7 +78,7 @@ hierpair.family <-
          for(i in seq_len(m)) {
            for(j in seq_len(m)) {
              ## relevant position in matrix
-             ijpos <- i + (j-1) * m
+             ijpos <- i + (j-1L) * m
              which[i,j] <- ijpos
              ## extract values of potential
              yy <- y[tx == types[i], j]
@@ -96,7 +96,7 @@ hierpair.family <-
                       title="Fitted pairwise interactions",
                       rowNames=paste(types), colNames=paste(types))
          if(plotit)
-           do.call("plot.fasp",
+           do.call(plot.fasp,
                    resolve.defaults(list(funz),
                                     list(...),
                                     list(ylim=ylim,
@@ -114,9 +114,9 @@ hierpair.family <-
          ## 
 
 fop <- names(formals(pairpot))
-if(identical(all.equal(fop, c("d", "par")), TRUE))
+if(isTRUE(all.equal(fop, c("d", "par"))))
   marx <- FALSE
-else if(identical(all.equal(fop, c("d", "tx", "tu", "par")), TRUE))
+else if(isTRUE(all.equal(fop, c("d", "tx", "tu", "par"))))
   marx <- TRUE
 else 
   stop("Formal arguments of pair potential function are not understood")
@@ -210,7 +210,7 @@ if(correction == "translate" || correction == "translation") {
 
 # No pair potential term between a point and itself
 if(length(EqualPairs) > 0) {
-  nplanes <- dim(POT)[3]
+  nplanes <- dim(POT)[3L]
   for(k in 1:nplanes)
     POT[cbind(EqualPairs, k)] <- 0
 }
@@ -303,15 +303,75 @@ return(V)
   # Sufficient statistic for second order conditional intensity
   # for hierarchical pairwise interaction processes
   # Equivalent to evaluating pair potential.
-    X <- as.ppp(X)
-    nX <- npoints(X)
-    E <- cbind(1:nX, 1:nX)
-    R <- reach(inte)
-    result <- hierpair.family$eval(X,X,E,
-                                   inte$pot,inte$par,
-                                   correction,
-                                   pot.only=TRUE,
-                                   Reach=R)
+    if(is.ppp(X)) {
+      seqX <- seq_len(npoints(X))
+      E <- cbind(seqX, seqX)
+      R <- reach(inte)
+      POT <- hierpair.family$eval(X,X,E,
+                                  inte$pot,inte$par,
+                                  correction,
+                                  pot.only=TRUE,
+                                  Reach=R, splitInf=TRUE)
+      result <- aperm(POT, c(2,1,3))
+      M <- attr(POT, "IsNegInf")
+      if(!is.null(M)) {
+        #' validate
+        if(length(dim(M)) != 3)
+          stop("Internal error: IsNegInf is not a 3D array")
+        M <- aperm(M, c(2,1,3))
+        #' collapse vector-valued potential, yielding a matrix
+        M <- apply(M, c(1,2), any)
+        if(!is.matrix(M)) M <- matrix(M, nrow=nX)
+        #' count conflicts
+        hits <- colSums(M)
+        #'  hits[j] == 1 implies that X[j] violates hard core with only one X[i]
+        #'  and therefore changes status if X[i] is deleted.
+        deltaInf <- M
+        deltaInf[, hits != 1] <- FALSE
+        attr(result, "deltaInf") <- deltaInf
+      }
+    } else if(is.quad(X)) {
+      U <- union.quad(X)
+      izdat <- is.data(X)
+      nU <- npoints(U)
+      nX <- npoints(X$data)
+      seqU <- seq_len(nU)
+      E <- cbind(seqU, seqU)
+      R <- reach(inte)
+      POT <- hierpair.family$eval(U,U,E,
+                                  inte$pot,inte$par,
+                                  correction,
+                                  pot.only=TRUE,
+                                  Reach=R, splitInf=TRUE)
+      result <- aperm(POT, c(2,1,3))
+      M <- attr(POT, "IsNegInf")
+      if(!is.null(M)) {
+        #' validate
+        if(length(dim(M)) != 3)
+          stop("Internal error: IsNegInf is not a 3D array")
+        M <- aperm(M, c(2,1,3))
+        #' consider conflicts with data points
+        MXU <- M[izdat, , , drop=FALSE]
+        #' collapse vector-valued potential, yielding a matrix
+        MXU <- apply(MXU, c(1,2), any)
+        if(!is.matrix(MXU)) MXU <- matrix(MXU, nrow=nX)
+        #' count data points conflicting with each quadrature point
+        nhitdata <- colSums(MXU)
+        #' for a conflicting pair U[i], U[j],
+        #' status of U[j] will change when U[i] is added/deleted
+        #' iff EITHER
+        #'     U[i] = X[i] is a data point and
+        #'     U[j] is only in conflict with X[i],
+        deltaInf <- apply(M, c(1,2), any)
+        deltaInf[izdat, nhitdata != 1] <- FALSE
+        #' OR
+        #'     U[i] is a dummy point,
+        #'     U[j] has no conflicts with X.
+        deltaInf[!izdat, nhitdata != 0] <- FALSE
+        attr(result, "deltaInf") <- deltaInf
+      }
+    }
+    return(result)
   }
 ######### end of function $delta2
 )

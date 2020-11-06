@@ -1,22 +1,32 @@
 Package: spatstat
-Version: 1.43-0.003
-Nickname: Lessons of October
-Date: 2015-10-16
+Version: 1.64-3.001
+Date: 2020-11-05
 Title: Spatial Point Pattern Analysis, Model-Fitting, Simulation, Tests
-Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
+Author: Adrian Baddeley <Adrian.Baddeley@curtin.edu.au>,
 	Rolf Turner <r.turner@auckland.ac.nz> 
         and Ege Rubak <rubak@math.aau.dk>,
 	with substantial contributions of code by 
 	Kasper Klitgaard Berthelsen;
+	Ottmar Cronie;
+	Tilman Davies;
+	Yongtao Guan;
 	Ute Hahn;
 	Abdollah Jalilian;
 	Marie-Colette van Lieshout;
+	Greg McSwiggan;
 	Tuomas Rajala;
+	Suman Rakshit;
 	Dominic Schuhmacher;
-	and 
-	Rasmus Waagepetersen.
+	Rasmus Waagepetersen;
+ 	and Hangsheng Wang.
 	Additional contributions 
-	by Q.W. Ang; 
+	by M. Adepeju;
+        C. Anderson; 
+        Q.W. Ang;
+	R. Arellano;
+	J. Astrom;
+	R. Aue;
+        M. Austenfeld;
 	S. Azaele; 
 	M. Baddeley;
 	C. Beale; 
@@ -31,17 +41,26 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
 	R. Bivand;
 	J.M. Blanco Moreno;
 	F. Bonneu;
+	J. Brown;
+	I. Buller;
 	J. Burgos; 
 	S. Byers; 
 	Y.M. Chang; 
 	J.B. Chen; 
 	I. Chernayavsky; 
 	Y.C. Chin; 
-	B. Christensen; 
+	B. Christensen;
+	L. Cobo Sanchez;
 	J.-F. Coeurjolly;
+	K. Colyvas;
+	H. Commenges;
+	R. Constantine;
 	R. Corria Ainslie;
+	R. Cotton;
+	A. Craig;
 	M. de la Cruz; 
 	P. Dalgaard; 
+	M. D'Antuono;
         S. Das;
 	P.J. Diggle; 
 	P. Donnelly;
@@ -49,6 +68,7 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
 	S. Eglen; 
 	A. El-Gabbas;
         B. Fandohan;
+	P. Fibich;
         O. Flores;
 	E.D. Ford;
         P. Forbes;
@@ -57,6 +77,7 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
 	N. Funwi-Gabga;
         O. Garcia;
 	A. Gault; 
+ 	J. Geldmann;
 	M. Genton;
 	S. Ghalandarayeshi;
 	J. Gilbey;
@@ -69,27 +90,36 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
 	M. Hazelton; 
 	J. Heikkinen; 
 	M. Hering; 
-	M. Herrmann; 
+	M. Herrmann;
+	M. Hesselbarth;
+	P. Hewson;
+	H. Heydarian;
+	K. Hingee;
 	K. Hornik; 
 	P. Hunziker; 
 	J. Hywood;
-	R. Ihaka; 
+	R. Ihaka;
+	C. Icos; 
 	A. Jammalamadaka;
 	R. John-Chandran; 
 	D. Johnson; 
 	M. Khanmohammadi;
 	R. Klaver;
 	P. Kovesi;
+	L. Kozmian-Ledward;
 	M. Kuhn; 
 	J. Laake; 
-	F. Lavancier;
-	T. Lawrence; 
 	R.A. Lamb; 
+	F. Lavancier;
+	T. Lawrence;
+	T. Lazauskas;
 	J. Lee; 
-	G.P. Leser; 
+	G.P. Leser;
+	A. Li;
 	H.T. Li;
 	G. Limitsios;
 	A. Lister;
+	N. Luambua;
 	B. Madin;
 	M. Maechler;
 	J. Marcus;
@@ -98,14 +128,20 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
 	J. Mateu;
 	P. McCullagh; 
 	U. Mehlig;
+	F. Mestre;
 	S. Meyer; 
 	X.C. Mi;
 	L. De Middeleer;
 	R.K. Milne; 
         E. Miranda;
-	J. Moller; 
+	J. Moller;
+	A. Mollie;
+	I. Moncada;
+	M. Moradi;
+	V. Morera Pujol; 
 	E. Mudrak;
         G.M. Nair;
+	N. Najari;
 	N. Nava;
 	L.S. Nielsen; 
 	F. Nunes; 
@@ -115,21 +151,25 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
 	S. O'Riordan;
 	E. Parilov; 
 	J. Picka; 
-	N. Picard; 
+	N. Picard;
+	T. Pollington;
 	M. Porter;
 	S. Protsiv;
 	A. Raftery; 
 	S. Rakshit; 
 	B. Ramage;
 	P. Ramon;
-	X. Raynaud,
+	X. Raynaud;
+	N. Read; 
 	M. Reiter; 
         I. Renner;
 	T.O. Richardson;  
-	B.D. Ripley;  
+	B.D. Ripley;
+	Y. Rosen;
 	E. Rosenbaum; 
 	B. Rowlingson; 
 	J. Rudokas;
+	T. Rudolph;
 	J. Rudge;
 	C. Ryan; 
 	F. Safavimanesh;
@@ -142,16 +182,20 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
 	F. Semecurbe;
 	V. Shcherbakov;
 	G.C. Shen;
+        P. Shi;
 	H.-J. Ship;
+	T.L. Silva;
 	I.-M. Sintorn; 
 	Y. Song; 
 	M. Spiess; 
 	M. Stevenson; 
-	K. Stucki; 
+	K. Stucki;
+	J. Sulavik;
 	M. Sumner; 
 	P. Surovy; 
 	B. Taylor; 
 	T. Thorarinsdottir;
+	L. Torres;
 	B. Turlach; 
 	T. Tvedebrink;
         K. Ummer;
@@ -161,29 +205,33 @@ Author: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>,
         M. Vihtakari;
 	A. Villers; 
         F. Vinatier;
+        M. Vogtland;
         S. Voss;
+	S. Wagner;
 	H. Wang; 
 	H. Wendrock; 
 	J. Wild;
 	C. Witthoft;
 	S. Wong;
 	M. Woringer;
+	L. Yates;
 	M.E. Zamboni
 	and
 	A. Zeileis.
-Maintainer: Adrian Baddeley <Adrian.Baddeley@uwa.edu.au>
-Depends: R (>= 3.2.2), stats, graphics, grDevices, utils, methods, nlme
-Imports: mgcv, Matrix, deldir (>= 0.0-21), abind, tensor, polyclip (>= 1.3-0), goftest
-Suggests: sm, maptools, gsl, locfit, spatial, rpanel, tkrplot, RandomFields (>= 3.0.0)
-Description: Comprehensive open-source toolbox for analysing spatial data, mainly Spatial Point Patterns, including multi-type/marked points and spatial covariates, in any two-dimensional spatial region. Also supports three-dimensional point patterns, space-time point patterns in any number of dimensions, and point patterns on a linear network. 
+Maintainer: Adrian Baddeley <Adrian.Baddeley@curtin.edu.au>
+Depends: R (>= 3.5.0), spatstat.data (>= 1.4-2), stats, graphics, grDevices, utils, methods, nlme, rpart
+Imports: spatstat.utils (>= 1.17-0), spatstat.sparse, mgcv, Matrix, deldir (>= 0.0-21), abind, tensor, polyclip (>= 1.10-0), goftest (>= 1.2-2)
+Suggests: sm, maptools (>= 0.9-9), gsl, locfit, spatial, RandomFields (>= 3.1.24.1), RandomFieldsUtils(>= 0.3.3.1), fftwtools (>= 0.9-8)
+Remotes: spatstat/spatstat.utils, spatstat/spatstat.data, spatstat/spatstat.sparse, baddstats/polyclip
+Description: Comprehensive open-source toolbox for analysing Spatial Point Patterns. Focused mainly on two-dimensional point patterns, including multitype/marked points, in any spatial region. Also supports three-dimensional point patterns, space-time point patterns in any number of dimensions, point patterns on a linear network, and patterns of other geometrical objects. Supports spatial covariate data such as pixel images. 
 	Contains over 2000 functions for plotting spatial data, exploratory data analysis, model-fitting, simulation, spatial sampling, model diagnostics, and formal inference. 
 	Data types include point patterns, line segment patterns, spatial windows, pixel images, tessellations, and linear networks. 
-	Exploratory methods include quadrat counts, K-functions and their simulation envelopes, nearest neighbour distance and empty space statistics, Fry plots, pair correlation function, kernel smoothed intensity, relative risk estimation with cross-validated bandwidth selection, mark correlation functions, segregation indices, mark dependence diagnostics, and kernel estimates of covariate effects. Formal hypothesis tests of random pattern (chi-squared, Kolmogorov-Smirnov, Diggle-Cressie-Loosmore-Ford, Dao-Genton) and tests for covariate effects (Cox-Berman-Waller-Lawson, Kolmogorov-Smirnov) are also supported.
+	Exploratory methods include quadrat counts, K-functions and their simulation envelopes, nearest neighbour distance and empty space statistics, Fry plots, pair correlation function, kernel smoothed intensity, relative risk estimation with cross-validated bandwidth selection, mark correlation functions, segregation indices, mark dependence diagnostics, and kernel estimates of covariate effects. Formal hypothesis tests of random pattern (chi-squared, Kolmogorov-Smirnov, Monte Carlo, Diggle-Cressie-Loosmore-Ford, Dao-Genton, two-stage Monte Carlo) and tests for covariate effects (Cox-Berman-Waller-Lawson, Kolmogorov-Smirnov, ANOVA) are also supported.
 	Parametric models can be fitted to point pattern data using the functions ppm(), kppm(), slrm(), dppm() similar to glm(). Types of models include Poisson, Gibbs and Cox point processes, Neyman-Scott cluster processes, and determinantal point processes. Models may involve dependence on covariates, inter-point interaction, cluster formation and dependence on marks. Models are fitted by maximum likelihood, logistic regression, minimum contrast, and composite likelihood methods. 
 	A model can be fitted to a list of point patterns (replicated point pattern data) using the function mppm(). The model can include random effects and fixed effects depending on the experimental design, in addition to all the features listed above.
-	Fitted point process models can be simulated, automatically. Formal hypothesis tests of a fitted model are supported (likelihood ratio test, analysis of deviance, Monte Carlo tests) along with basic tools for model selection (stepwise(), AIC()). Tools for validating the fitted model include simulation envelopes, residuals, residual plots and Q-Q plots, leverage and influence diagnostics, partial residuals, and added variable plots.
+	Fitted point process models can be simulated, automatically. Formal hypothesis tests of a fitted model are supported (likelihood ratio test, analysis of deviance, Monte Carlo tests) along with basic tools for model selection (stepwise(), AIC()) and variable selection (sdr). Tools for validating the fitted model include simulation envelopes, residuals, residual plots and Q-Q plots, leverage and influence diagnostics, partial residuals, and added variable plots.
 License: GPL (>= 2)
-URL: http://www.spatstat.org
+URL: http://spatstat.org/
 LazyData: true
 NeedsCompilation: yes
 ByteCompile: true

@@ -3,10 +3,10 @@
 #
 #    Intersections of line segments
 #    
-#    $Revision: 1.19 $   $Date: 2015/02/08 09:57:11 $
+#    $Revision: 1.26 $   $Date: 2020/03/23 01:15:26 $
 #
 #
-crossing.psp <- function(A,B,fatal=TRUE) {
+crossing.psp <- function(A,B,fatal=TRUE,details=FALSE) {
   verifyclass(A, "psp")
   verifyclass(B, "psp")
   
@@ -50,13 +50,20 @@ crossing.psp <- function(A,B,fatal=TRUE) {
               yy=as.double(numeric(na * nb)),
               ta=as.double(numeric(na * nb)),
               tb=as.double(numeric(na * nb)),
-              ok=as.integer(integer(na * nb)))
+              ok=as.integer(integer(na * nb)),
+              PACKAGE = "spatstat")
     
     ok <- (matrix(out$ok, na, nb) != 0)
     xx <- matrix(out$xx, na, nb)
     yy <- matrix(out$yy, na, nb)
     xx <- as.vector(xx[ok])
     yy <- as.vector(yy[ok])
+    if(details) {
+      ia <- as.vector(row(ok)[ok])
+      jb <- as.vector(col(ok)[ok])
+      ta <- as.vector(matrix(out$ta, na, nb)[ok])
+      tb <- as.vector(matrix(out$tb, na, nb)[ok])
+    }
   } else {
     # new
     storage.mode(x0a) <- storage.mode(y0a) <- "double"
@@ -73,12 +80,20 @@ crossing.psp <- function(A,B,fatal=TRUE) {
                  y0b, 
                  dxb, 
                  dyb, 
-    	         eps)
-#                 PACKAGE="spatstat")
+    	           eps,
+                 PACKAGE="spatstat")
     xx <- out[[5]]
     yy <- out[[6]]
+    if(details) {
+      ia <- out[[1L]] + 1L
+      jb <- out[[2L]] + 1L
+      ta <- out[[3L]]
+      tb <- out[[4L]]
+    }
   }
   result <- ppp(xx, yy, window=ABW, check=FALSE)
+  if(details)
+    marks(result) <- data.frame(iA=ia, jB=jb, tA=ta, tB=tb)
   return(result)
 }
 
@@ -114,7 +129,8 @@ test.crossing.psp <- function(A,B) {
             dxb=as.double(dxb),
             dyb=as.double(dyb), 
             eps=as.double(eps),
-            ok=as.integer(integer(na * nb)))
+            ok=as.integer(integer(na * nb)),
+            PACKAGE = "spatstat")
 
   hit <- (matrix(out$ok, na, nb) != 0)
   return(hit)
@@ -153,7 +169,8 @@ anycrossing.psp <- function(A,B) {
             dxb=as.double(dxb),
             dyb=as.double(dyb), 
             eps=as.double(eps),
-            ok=as.integer(integer(1)))
+            ok=as.integer(integer(1L)),
+            PACKAGE = "spatstat")
   hit <- (out$ok != 0)
   return(hit)
 }
@@ -183,7 +200,8 @@ selfcrossing.psp <- function(A) {
               yy=as.double(numeric(n^2)),
               ti=as.double(numeric(n^2)),
               tj=as.double(numeric(n^2)),
-              ok=as.integer(integer(n^2)))
+              ok=as.integer(integer(n^2)),
+              PACKAGE = "spatstat")
 
     ok <- (matrix(out$ok, n, n) != 0)
     xx <- matrix(out$xx, n, n)
@@ -200,10 +218,10 @@ selfcrossing.psp <- function(A) {
                  y0, 
                  dx, 
                  dy, 
-    	         eps)
-#                 PACKAGE="spatstat")
-    xx <- out[[5]]
-    yy <- out[[6]]
+    	           eps,
+                 PACKAGE="spatstat")
+    xx <- out[[5L]]
+    yy <- out[[6L]]
   }
   result <- ppp(xx, yy, window=A$window, check=FALSE)
   return(result)
@@ -228,19 +246,22 @@ test.selfcrossing.psp <- function(A) {
             dx=as.double(dx),
             dy=as.double(dy), 
             eps=as.double(eps),
-            ok=as.integer(integer(n*n)))
+            ok=as.integer(integer(n*n)),
+            PACKAGE = "spatstat")
   hit <- (matrix(out$ok, n, n) != 0)
   return(hit)
 }
 
 selfcut.psp <- function(A, ..., eps) {
   stopifnot(is.psp(A))
-#  n <- A$n
+  n <- A$n
   eA <- A$ends
   x0 <- eA$x0
   y0 <- eA$y0
-  dx <- eA$x1 - eA$x0
-  dy <- eA$y1 - eA$y0
+  x1 <- eA$x1
+  y1 <- eA$y1
+  dx <- x1 - x0
+  dy <- y1 - y0
   if(missing(eps) || is.null(eps)) {
     eps <- sqrt(.Machine$double.eps) * diameter(Frame(A))
   } else {
@@ -257,50 +278,74 @@ selfcut.psp <- function(A, ..., eps) {
               y0, 
               dx, 
               dy, 
-              eps)
-  if(length(zz[[1]]) == 0)
+              eps,
+              PACKAGE = "spatstat")
+  if(length(zz[[1]]) == 0) {
+    ## no dissection required
+    attr(A, "camefrom") <- seq_len(n)
     return(A)
+  }
   ##
   names(zz) <- c("i", "j", "ti", "tj", "x", "y")
-  df <- as.data.frame(zz)
-  df$i <- df$i + 1L
-  df$j <- df$j + 1L
-  ##
-  gone <- with(df, unique(c(i,j)))
-  newends <- as.matrix(eA)
-  newends <- newends[-gone, , drop=FALSE]
-  newmarx <- marx <- marks(A)
-  if(mama <- !is.null(marx)) 
-    newmarx <- as.data.frame(marx)[-gone, ,drop=FALSE]
+  icross  <- zz$i + 1L
+  jcross  <- zz$j + 1L
+  ticross <- zz$ti
+  tjcross <- zz$tj
+  xcross  <- zz$x
+  ycross  <- zz$y
+  ## which segments are split...
+  gone <- unique(c(icross, jcross))
+  ## ... and which are not
+  retained <- setdiff(seq_len(n), gone)
+  ## initialise result
+  ## start with all segments which are retained
+  x0out <- x0[retained]
+  y0out <- y0[retained]
+  x1out <- x1[retained]
+  y1out <- y1[retained]
+  camefrom <- retained
   ## cut each segment using the *provided* values of x,y
   for(ii in gone) {
     ## assemble cuts through segment ii
-    imatch <- with(df, which(i == ii))
-    jmatch <- with(df, which(j == ii))
-    df.i <- with(df,
-                 data.frame(t=c(ti[imatch], tj[jmatch]),
-                            x=x[c(imatch, jmatch)],
-                            y=y[c(imatch, jmatch)]))
+    imatch <- which(icross == ii)
+    jmatch <- which(jcross == ii)
+    ijmatch <- c(imatch, jmatch)
+    tt <- c(ticross[imatch], tjcross[jmatch])
+    xx <- xcross[ijmatch]
+    yy <- ycross[ijmatch]
     # discard T-junctions
-    ok <- with(df.i, t > 0 & t < 1)
-    df.i <- df.i[ok, ,drop=FALSE]
+    ok <- (tt > 0 & tt < 1)
+    tt <- tt[ok]
+    xx <- xx[ok]
+    yy <- yy[ok]
     # order the pieces
-    ord <- with(df.i, order(t))
-    df.i <- df.i[ord, , drop=FALSE]
-    ## add endpoints
-    xnew <- c(eA[ii,"x0"], df.i$x, eA[ii,"x1"])
-    ynew <- c(eA[ii,"y0"], df.i$y, eA[ii,"y1"])
+    ord <- order(tt)
+    xx <- xx[ord]
+    yy <- yy[ord]
+    ## add endpoints of old segment
+    xnew <- c(x0[ii], xx, x1[ii])
+    ynew <- c(y0[ii], yy, y1[ii])
+    ## append to result
     m <- length(xnew)
-    newsegs <- cbind(xnew[-m], ynew[-m], xnew[-1], ynew[-1])
-    newends <- rbind(newends, newsegs)
-    if(mama)
-      newmarx <- rbind(newmarx, marx[rep(ii, m-1), , drop=FALSE])
+    x0out <- c(x0out, xnew[-m])
+    y0out <- c(y0out, ynew[-m])
+    x1out <- c(x1out, xnew[-1L])
+    y1out <- c(y1out, ynew[-1L])
+    camefrom <- c(camefrom, rep(ii, m-1L))
   }
-  Y <- as.psp(newends, window=Window(A), marks=newmarx)
+  marx <- marks(A)
+  marxout <- if(is.null(marx)) NULL else
+             as.data.frame(marx)[camefrom, , drop=FALSE]
+  Y <- psp(x0out, y0out, x1out, y1out, window=Window(A), marks=marxout,
+           check=FALSE)
   if(eps > 0) {
-    ok <- (lengths.psp(Y) > eps)
-    if(any(!ok)) Y <- Y[ok]
+    ok <- (lengths_psp(Y) > eps)
+    if(!all(ok)) {
+      Y <- Y[ok]
+      camefrom <- camefrom[ok]
+    }
   }
+  attr(Y, "camefrom") <- camefrom
   return(Y)
 }
   

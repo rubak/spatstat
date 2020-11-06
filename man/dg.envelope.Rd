@@ -11,7 +11,7 @@
 dg.envelope(X, \dots,
             nsim = 19, nsimsub=nsim-1, nrank = 1,
             alternative=c("two.sided", "less", "greater"),
-            interpolate = FALSE,
+            leaveout=1, interpolate = FALSE,
             savefuns=FALSE, savepatterns=FALSE,
             verbose = TRUE)
 }
@@ -52,6 +52,12 @@ dg.envelope(X, \dots,
     (\code{alternative="less"}) or a one-sided test
     with an upper critical boundary (\code{alternative="greater"}).
   }
+  \item{leaveout}{
+    Optional integer 0, 1 or 2 indicating how to calculate the
+    deviation between the observed summary function and the
+    nominal reference value, when the reference value must be estimated
+    by simulation. See Details.
+  }
   \item{interpolate}{
     Logical value indicating whether to interpolate the distribution of
     the test statistic by kernel smoothing, as described in
@@ -77,6 +83,10 @@ dg.envelope(X, \dots,
   If \code{X} is a point pattern, the null hypothesis is CSR.
 
   If \code{X} is a fitted model, the null hypothesis is that model.
+
+  The Dao-Genton test is biased when the significance level is very small
+  (small \eqn{p}-values are not reliable) and
+  we recommend \code{\link{bits.envelope}} in this case.
 }
 \value{
   An object of class \code{"fv"}.
@@ -94,16 +104,16 @@ dg.envelope(X, \dots,
   Monte Carlo tests. Submitted for publication.
 }
 \author{
-  Adrian Baddeley, Andrew Hardegen, Tom Lawrence,
+  \adrian, Andrew Hardegen, Tom Lawrence,
   Robin Milne, Gopalan Nair and Suman Rakshit.
   Implemented by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  \adrian
+  
+  
+  \rolf
+  
+  and \ege
+  
 }
 \seealso{
   \code{\link{dg.test}},

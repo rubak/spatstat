@@ -13,7 +13,7 @@ lppm(X, ...)
 
 \method{lppm}{formula}(X, interaction=NULL, ..., data=NULL)
 
-\method{lppm}{lpp}(X, ..., eps=NULL, nd=1000)
+\method{lppm}{lpp}(X, ..., eps=NULL, nd=1000, random=FALSE)
 }
 \arguments{
   \item{X}{
@@ -41,8 +41,12 @@ lppm(X, ...)
     network. 
   }
   \item{nd}{
-    Optional. Number of dummy points equally spaced along each segment
-    of the network. Ignored if \code{eps} is given.
+    Optional. Total number of dummy points placed on 
+    the network. Ignored if \code{eps} is given.
+  }
+  \item{random}{
+    Logical value indicating whether the grid of dummy points should be
+    placed at a randomised starting position.
   }
 }
 \details{
@@ -79,9 +83,8 @@ lppm(X, ...)
   \code{coef} and similar functions.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
+  and Greg McSwiggan.
 }
 \seealso{
   \code{\link{methods.lppm}},
@@ -90,9 +93,12 @@ lppm(X, ...)
   \code{\link{lpp}}.
 }
 \examples{
-  example(lpp)
+  X <- runiflpp(15, simplenet)
   lppm(X ~1)
   lppm(X ~x)
+  marks(X) <- factor(rep(letters[1:3], 5))
+  lppm(X ~ marks)
+  lppm(X ~ marks * x)
 }
 \references{
   Ang, Q.W. (2010)

@@ -10,7 +10,7 @@
                                   discard=TRUE, warn=TRUE)
 }
 \arguments{
-  \item{x}{Point pattern (object of class \code{"hyperframe"}).}
+  \item{x}{Hyperframe (object of class \code{"hyperframe"}).}
   \item{row.names}{Optional character vector of row names.}
   \item{optional}{Argument passed to \code{\link{as.data.frame}}
     controlling what happens to row names.}
@@ -39,11 +39,11 @@
   as.data.frame(h, discard=TRUE, warn=FALSE)
   as.data.frame(h, discard=FALSE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{manip}

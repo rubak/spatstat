@@ -1,4 +1,4 @@
-\name{periodify} %DontDeclareMethods
+\name{periodify} 
 \alias{periodify}
 \alias{periodify.owin}
 \alias{periodify.ppp}
@@ -100,15 +100,15 @@ periodify(X, ...)
 \examples{
   data(cells)
   plot(periodify(cells))
-  a <- lapply(periodify(cells$window, combine=FALSE),
+  a <- lapply(periodify(Window(cells), combine=FALSE),
         plot, add=TRUE,lty=2)
 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{manip}

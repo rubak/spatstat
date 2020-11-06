@@ -46,7 +46,7 @@ quadrats(X, nx = 5, ny = nx, xbreaks = NULL, ybreaks = NULL, keepempty=FALSE)
   giving the \eqn{x} coordinates of the quadrat boundaries.
   If it is not given, it defaults to a
   sequence of \code{nx+1} values equally spaced
-  over the range of \eqn{x} coordinates in the window \code{X$window}.
+  over the range of \eqn{x} coordinates in the window \code{Window(X)}.
 
   Similarly if \code{ybreaks} is given, it should be a numeric
   vector giving the \eqn{y} coordinates of the quadrat boundaries.
@@ -75,16 +75,25 @@ quadrats(X, nx = 5, ny = nx, xbreaks = NULL, ybreaks = NULL, keepempty=FALSE)
  plot(quadrats(letterR, 5, 7))
 }
 \seealso{
-  \code{\link{tess}},
+  For calculations using quadrats, see
   \code{\link{quadratcount}},
   \code{\link{quadrat.test}},
   \code{\link{quadratresample}}
+
+  For other kinds of tessellations, see 
+  \code{\link{tess}},
+  \code{\link{hextess}},
+  \code{\link{venn.tess}},
+  \code{\link{polartess}},
+  \code{\link{dirichlet}}, \code{\link{delaunay}},
+  \code{\link{rpoislinetess}} and \code{\link{quantess}}.
+
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{utilities}
 \keyword{datagen}

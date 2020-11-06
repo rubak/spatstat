@@ -3,7 +3,7 @@
 #
 # engine of plot method for ppm
 #
-# $Revision: 1.18 $  $Date: 2015/04/21 13:14:20 $
+# $Revision: 1.20 $  $Date: 2016/12/30 01:44:07 $
 #
 #
 
@@ -41,7 +41,7 @@ plot.plotppm <- function(x,data=NULL,trend=TRUE,cif=TRUE,se=TRUE,
 
   # plotting style
   howmat <- outer(how, c("persp", "image", "contour"), "==")
-  howmatch <- apply(howmat, 1, any)
+  howmatch <- matrowany(howmat)
   if (any(!howmatch)) 
     stop(paste("unrecognised option", how[!howmatch]))
 
@@ -67,14 +67,14 @@ plot.plotppm <- function(x,data=NULL,trend=TRUE,cif=TRUE,se=TRUE,
       for (style in how) {
         switch(style,
                persp = {
-                 do.call("persp",
+                 do.call(persp,
                          resolve.defaults(list(xs[[i]]),
                                           list(...), 
                                           spatstat.options("par.persp"),
                                           list(xlab="x", zlab=ttt, main=main)))
                },
                image = {
-                 do.call("image",
+                 do.call(image,
                          resolve.defaults(list(xs[[i]]),
                                           list(...),
                                           list(main=main)))
@@ -84,7 +84,7 @@ plot.plotppm <- function(x,data=NULL,trend=TRUE,cif=TRUE,se=TRUE,
                  }
                },
                contour = {
-                 do.call("contour",
+                 do.call(contour,
                          resolve.defaults(list(xs[[i]]),
                                           list(...),
                                           list(main=main)))

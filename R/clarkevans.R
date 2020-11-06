@@ -1,6 +1,6 @@
 ## clarkevans.R
 ## Clark-Evans statistic and test
-## $Revision: 1.16 $ $Date: 2014/11/10 05:34:18 $
+## $Revision: 1.17 $ $Date: 2015/10/19 05:03:37 $
 
 clarkevans <- function(X, correction=c("none", "Donnelly", "cdf"),
                        clipregion=NULL)
@@ -37,7 +37,7 @@ clarkevans <- function(X, correction=c("none", "Donnelly", "cdf"),
     correction <- c(correction, "guard")
 
   result <- clarkevansCalc(X, correction, clipregion)
-  if(length(result) == 1) result <- unname(result)
+  if(length(result) == 1L) result <- unname(result)
   return(result)
 }
 
@@ -119,12 +119,12 @@ clarkevans.test <- function(X, ...,
       sims[i] <- clarkevansCalc(Xsim, correction=correction,
                                 clipregion=clipregion)
     }
-    p.upper <- (1 + sum(sims >= statistic))/(1 + nsim)
-    p.lower <- (1 + sum(sims <= statistic))/(1 + nsim)
+    p.upper <- (1 + sum(sims >= statistic))/(1.0 + nsim)
+    p.lower <- (1 + sum(sims <= statistic))/(1.0 + nsim)
     p.value <- switch(alternative,
                       less=p.lower,
                       greater=p.upper,
-                      two.sided=2*min(p.lower, p.upper))
+                      two.sided=min(1, 2*min(p.lower, p.upper)))
     
     pvblurb <- paste("Monte Carlo test based on",
                      nsim, "simulations of CSR with fixed n")

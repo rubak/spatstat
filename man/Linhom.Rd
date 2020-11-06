@@ -1,23 +1,29 @@
 \name{Linhom}
 \alias{Linhom}
-\title{L-function}
+\title{Inhomogeneous L-function}
 \description{
   Calculates an estimate of the inhomogeneous version of
   the \eqn{L}-function (Besag's transformation of Ripley's \eqn{K}-function)
   for a spatial point pattern.
 }
 \usage{
-  Linhom(...)
+  Linhom(X, ..., correction)
 }
 \arguments{
-  \item{\dots}{
-    Arguments passed to \code{\link{Kinhom}}
-    to estimate the inhomogeneous K-function.
+  \item{X}{
+    The observed point pattern, 
+    from which an estimate of \eqn{L(r)} will be computed.
+    An object of class \code{"ppp"}, or data
+    in any format acceptable to \code{\link{as.ppp}()}.
+  }
+  \item{correction,\dots}{
+    Other arguments passed to \code{\link{Kinhom}}
+    to control the estimation procedure.
   }
 }
 \details{
   This command computes an estimate of the inhomogeneous version of
-  the \eqn{L}-function for a spatial point pattern
+  the \eqn{L}-function for a spatial point pattern.
 
   The original \eqn{L}-function is a transformation
   (proposed by Besag) of Ripley's \eqn{K}-function,
@@ -29,7 +35,7 @@
   of the inhomogeneous \eqn{K}-function, estimated by \code{\link{Kinhom}}.
   It is appropriate when the point pattern clearly does not have a
   homogeneous intensity of points. It was proposed by
-  Baddeley, \ifelse{latex}{\out{M\o ller}}{Moller} and Waagepetersen (2000).
+  Baddeley, \Moller and Waagepetersen (2000).
 
   The command \code{Linhom} first calls
   \code{\link{Kinhom}} to compute the estimate of the inhomogeneous K-function,
@@ -61,7 +67,7 @@
   named.
 }
 \references{
-  Baddeley, A., \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2000)
+  Baddeley, A., \Moller, J. and Waagepetersen, R. (2000)
   Non- and semiparametric estimation of interaction in
   inhomogeneous point patterns.
   \emph{Statistica Neerlandica} \bold{54}, 329--350.
@@ -78,11 +84,11 @@
  L <- Linhom(X, sigma=0.1)
  plot(L, main="Inhomogeneous L function for Japanese Pines")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

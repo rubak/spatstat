@@ -1,4 +1,4 @@
-\name{scalardilate} %DontDeclareMethods
+\name{scalardilate} 
 \alias{scalardilate}
 \alias{scalardilate.im}
 \alias{scalardilate.owin}
@@ -37,8 +37,10 @@
   \item{origin}{
     Origin for the scalar dilation. Either a vector of 2 numbers,
     or one of the character strings
-    \code{"centroid"}, \code{"midpoint"} or  \code{"bottomleft"}
-    (partially matched).
+    \code{"centroid"}, \code{"midpoint"},
+    \code{"left"}, \code{"right"}, \code{"top"}, \code{"bottom"},
+    \code{"topleft"}, \code{"bottomleft"}, \code{"topright"} or
+    \code{"bottomright"} (partially matched).
   }
 }
 \value{
@@ -73,13 +75,13 @@
 }
 \examples{
 plot(letterR)
-plot(scalardilate(letterR, 0.7, origin="bot"), col="red", add=TRUE)
+plot(scalardilate(letterR, 0.7, origin="left"), col="red", add=TRUE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

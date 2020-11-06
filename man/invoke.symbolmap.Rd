@@ -8,7 +8,7 @@
   plot the resulting symbols.
 }
 \usage{
-invoke.symbolmap(map, values, x, y = NULL, \dots, add = FALSE,
+invoke.symbolmap(map, values, x=NULL, y = NULL, \dots, add = FALSE,
                do.plot = TRUE, started = add && do.plot)
 }
 \arguments{
@@ -47,12 +47,12 @@ invoke.symbolmap(map, values, x, y = NULL, \dots, add = FALSE,
 \value{
   (Invisibly) the maximum diameter of the symbols, in user coordinate units.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak.
+\author{\adrian
+  
+  ,
+  \rolf
+  
+  and \ege.
 }
 \seealso{
   \code{\link{plot.symbolmap}} to plot the graphics map itself.

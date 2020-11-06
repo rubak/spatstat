@@ -37,7 +37,7 @@ lpp(X, L, \dots)
     the first two columns of \code{X} will be interpreted
     as spatial coordinates, and any remaining columns as marks.
     \item 
-    The exception occurs if \code{X} is a data frame with columns named
+    An exception occurs if \code{X} is a data frame with columns named
     \code{x}, \code{y}, \code{seg} and \code{tp}. Then
     \code{x} and \code{y} will be interpreted as spatial
     coordinates, and \code{seg} and \code{tp} as local
@@ -45,7 +45,16 @@ lpp(X, L, \dots)
     \code{L} the point lies on, and \code{tp} indicating how far along
     the segment the point lies (normalised to 1). Any remaining columns
     will be interpreted as marks.
+    \item 
+    Another exception occurs if \code{X} is a data frame with columns named
+    \code{seg} and \code{tp}. Then
+    \code{seg} and \code{tp} will be interpreted as local
+    coordinates, as above, and the spatial coordinates
+    \code{x,y} will be computed from them.
+    Any remaining columns will be interpreted as marks.
   }
+  If \code{X} is missing or \code{NULL}, the result is an empty
+  point pattern (i.e. containing no points).
 }
 \section{Note on changed format}{
   The internal format of \code{"lpp"} objects was changed in
@@ -61,12 +70,14 @@ lpp(X, L, \dots)
 }
 \author{
   Ang Qi Wei \email{aqw07398@hotmail.com} and
-  Adrian Baddeley \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian 
+  
 }
 \seealso{
   Installed datasets which are \code{"lpp"} objects:
-  \code{\link{chicago}}, \code{\link{dendrite}}, \code{\link{spiders}}.
+  \code{\link[spatstat.data]{chicago}},
+  \code{\link[spatstat.data]{dendrite}},
+  \code{\link[spatstat.data]{spiders}}.
   
   See \code{\link{as.lpp}} for converting data to an \code{lpp} object.
 
@@ -96,11 +107,21 @@ lpp(X, L, \dots)
   See \code{\link{linnet}} for linear networks.
 }
 \examples{
-  example(linnet)
+  # letter 'A' 
+  v <- ppp(x=(-2):2, y=3*c(0,1,2,1,0), c(-3,3), c(-1,7))
+  edg <- cbind(1:4, 2:5)
+  edg <- rbind(edg, c(2,4))
+  letterA <- linnet(v, edges=edg)
+
+  # points on letter A
   xx <- list(x=c(-1.5,0,0.5,1.5), y=c(1.5,3,4.5,1.5))
   X <- lpp(xx, letterA)
+
   plot(X)
   X
   summary(X)
+
+  # empty pattern
+  lpp(L=letterA)
 }
 \keyword{spatial}

@@ -1,0 +1,752 @@
+Change log from 1.59-0 to 1.60-0
+================================
+
+22 mar 2019
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Version 1.59-0.001
+	Nickname "Insistez bien sur les pieds"
+
+23 mar 2019
+
+   tests/Kfuns.R
+	Added a test of validity of Ripley's isotropic correction.
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 mar 2019
+
+   tests/Kfuns.R
+	Slackened the tolerance of numerical error in the
+	test of validity of Ripley's isotropic correction.
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.002
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+29 mar 2019
+
+   src/corrections.c
+   src/ripleypoly.h [New file]
+   edgeRipley.R
+	edgeRipley now accepts method="debug"
+	which prints debug info in the polygonal case.
+
+   tests/Kfuns.R
+	The tests for edge.Ripley now use method="debug"
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.003
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   src/ripleypoly.h
+	Improved debug messages
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.004
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/Kfuns.R
+	Test edge.Ripley with and without debugging
+	in case there are quirks of compiler optimisation
+	(trying to reproduce errors encountered in appveyor tests)
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.005
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   rLGCP.R
+	Accelerated.
+
+   src/ripleypoly.h
+	Robustified code against vagaries of compiler.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.006
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   src/ripleypoly.h
+	More robustification
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.007
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+30 mar 2019
+   
+   src/ripleypoly.h
+   src/corrections.c
+	More robustification
+
+   tests/Kfuns.R
+	Tweak the test to increase information
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.008
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+
+   tests/Kfuns.R
+	Yet more tweaks
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.008
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+31 mar 2019
+
+   src/ripleypoly.h
+   src/corrections.c
+   tests/Kfuns.R
+	tweaks for debugging
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.009
+
+01 apr 2019
+
+   src/ripleypoly.h
+   src/corrections.c
+   tests/Kfuns.R
+	yet more tweaks
+	Bug seems to be fixed.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.010
+
+------------- passed R-3.5.2 CMD check ---------------
+---------- passed rhub::check_on_windows ------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+05 apr 2019
+
+   random.R
+   rthin.Rd
+	rthin handles pp3, ppx, psp
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.011
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   colourtools.R
+	Bug fix in to.grey()
+
+   tests/colour.R
+   tests/kppm.R
+   tests/lppstuff.R
+   tests/nndist.R
+   tests/ppmlogi.R
+   tests/randoms.R
+	Miscellaneous tests added
+
+   nnclean.Rd
+	Tweaked examples
+
+   Kmeasure.R
+	Detects non-finite values in kernel function
+	(workaround for infinite values from 'clusterfunction')
+	
+06 apr 2019
+
+   nndistlpp.R
+	Bug fix in "non-fast" case
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.012
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 apr 2019
+
+   tests/ppmlogi.R
+	Tweak to avoid a crash on some systems due to insufficient memory
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Nickname changed to 'Mostly Harmless'
+	Version 1.59-0.013
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 apr 2019
+
+   tests/ppmlogi.R
+	Further tweak to avoid crash due to insufficient memory
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.014
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 apr 2019
+
+   vblogistic.R
+	Accelerated predict.vblogit
+
+   tests/ppmlogi.R
+	Increased number of prediction points
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.015
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 apr 2019
+
+   tests/segments.R
+   tests/randoms.R
+	More tests
+
+   Jcross.Rd
+   Jdot.Rd
+   Kcross.inhom.Rd
+   Kdot.Rd
+   Kdot.inhom.Rd
+	Correct misstatement
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.016
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+15 apr 2019
+
+   tests/rmhMulti.R
+	Test of multihard.c, straushm.c with initial state violating hard core.
+
+21 apr 2019
+
+   linim.R
+	In plot.linim, all relevant entries of leg.args
+	are now passed to text.default
+
+   plot.linim.Rd
+   plot.im.Rd
+	Added more information about control of legend
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.017
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   eval.im.R
+	Bug fix in im.apply
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.018
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 april 2019
+
+   rlabel.R
+	Now handles 'psp' objects
+
+   bw.abram.R
+   bw.abram.Rd
+	New argument 'smoother' determines how the pilot is computed.
+	
+   densityVoronoi.R
+        Bug fix in handling duplicated points.
+
+   rmhmodel.R
+	Improved print method.
+	
+   tests/rmhBasic.R
+	tweak
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.019
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+27 april 2019
+
+   predict.ppm.R
+	Bug fix when type="trend" and se=TRUE
+
+   parres.R
+	Bug fix in handling models with interaction.
+
+   tests/testparres.R
+   tests/prediction.R
+	Tests of these bugs.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.020
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+28 april 2019
+
+   tests/segments.R
+   tests/cluck.R
+	More tests of psp code
+
+   DESCRIPTION
+   spatstat-package.Rd
+	Tilman Davies acknowledged for 'substantial' contributions.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.021
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+29 april 2019
+
+............. passed 'make bookcheck'  ...............
+
+   tests/closeshave.R
+	Extended coverage of code in closepairs.R
+
+   man/nndist.Rd
+	Corrected out-of-date usage
+
+   stienen.R
+	Bug fix for case where nndist=0
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.022
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+03 may 2019
+
+============= installed R-3.6.0 ======================
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.023
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+
+16 may 2019
+
+   unique.ppp.R
+	Attempted to accelerate, but not successful.
+	Edits removed again.
+
+17 may 2019
+
+   uniquemap.h [New file]
+   uniquemap.c [New file]
+   uniquemap.R [New file]
+   uniquemap.ppp.Rd [New file]
+   	New function 'uniquemap'
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.024
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   unique.ppp.R
+	Accelerated anyDuplicated.ppp using code in uniquemap.c
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.025
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+20 may 2019
+
+   unique.ppp.R
+	Accelerated duplicated.ppp using uniquemap
+
+   tests/duplicity.R
+	Added tests of validity
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Nickname changed to 'Kangaroos in the top paddock'
+	Version 1.59-0.026
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+21 may 2019
+
+   uniquemap.h
+   uniquemap.c
+	Handle point patterns with integer or factor marks
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.027
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   uniquemap.R
+   uniquemap.default.Rd [New file]
+   	Methods for data.frame etc
+
+   unique.ppp.R
+   spatstat-internal.Rd
+   uniquemap.R
+	Recoded IdenticalRows
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.028
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   
+24 may 2019
+
+   eval.fv.R
+   compatible.fv.Rd
+	compatible.fv has new argument 'samenames'
+
+   fv.R
+	Bug fix in names<-.fv (did not adjust the formula)
+
+   Kmulti.inhom.R
+   Kinhom.R
+   pcfinhom.R
+	Removed unnecessary block on dppm in leaveoneout case
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.029
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+27 may 2019
+
+   [Pull request merged]
+
+   markcorr.R
+	Bug fix in handling correction="none"
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Tim Pollington
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.030
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+31 may 2019
+
+   psp.R
+   extrapolate.psp.Rd [New file]
+        New function extrapolate.psp
+
+   psp.Rd
+   angles.psp.Rd
+   endpoints.psp.Rd
+   lengths.psp.Rd
+   midpoints.psp.Rd
+	Added cross-references.
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.031
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+3 june 2019
+
+   dclftest.R
+	Bug fixes in handling non-finite function values
+
+   tests/mctests.R
+	Added checks for bugs
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.032
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+10 june 2019
+
+   plot.im.R
+   plot.im.Rd
+	New argument 'riblab'
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.033
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 june 2019
+
+   localKcross.R [New file]
+   	local multitype K functions (written by Ege)
+
+   localKcross.Rd	 [New file]
+   localKcross.inhom.Rd  [New file]
+   localKdot.Rd		 [New file]
+   	Rough bash at the documentation
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.034
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+16 june 2019
+
+   daogenton.R => twostage.R [Renamed file]
+       Internal bug fix in twostage.test
+
+   twostage.R
+   bits.envelope.Rd [New file]
+   spatstat-internal.Rd
+       New function bits.envelope
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.035
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   NEWS
+	tweak
+
+   updates.Rnw
+	updated to cover all the above.
+
+21 june 2019
+
+   localK.R
+   localKcross.R
+   localK.Rd
+   localKcross.Rd
+   localKcross.inhom.Rd
+   localKdot.Rd
+   localKinhom.Rd
+   spatstat-internal.Rd
+	Added argument 'rmax' (changes by Ege)
+	Plus a couple of minor bug fixes
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.036
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   lohboot.R
+   lohboot.Rd
+	Confidence bands for L functions are now computed
+	by using local K functions and transforming them.
+
+   lohboot.R
+	Modified fv labels.
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.037
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+22 june 2019
+
+   tests/Kfuns.R
+	Test the local Kcross functions and their use in lohboot.
+
+   localK.R
+   localKcross.R
+	Tweaked the fv labels.
+	
+   updates.Rnw
+	Updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.038
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+23 june 2019
+
+   lohboot.R
+   lohboot.Rd
+	Added support for Kdot, Ldot
+	
+   localK.R
+   localKcross.R
+   lohboot.R
+   spatstat-internal.Rd
+      Tweaked fv labels
+	
+   updates.Rnw
+	Updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.039
+
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   uniquemap.R
+	Removed unused variables detected by codetools.
+
+   localK.R
+	Buglet fix
+
+   DESCRIPTION
+   NEWS
+	Version 1.59-0.040
+
+------------- passed R-3.6.0 CMD check ---------------
+============= passed R-devel CMD check ===============
+              (2019-06-21 r76731)
+
+   localK.R
+	Tweaked resolve.lambda.cross
+
+   Kinhom.R
+   spatstat-internal.Rd
+	New function 'resolve.lambda'
+
+   localpcf.R
+   localpcf.Rd
+	New arguments 'update', 'leaveoneout'
+	Tweaked fv labels
+
+   localK.R
+   localKinhom.Rd
+   localKcross.R
+	Internal changes
+
+   updates.Rnw
+	Updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Redubbed version 1.60-0
+	Nickname: "Swinging Sixties"
+	
+------------- passed R-3.6.0 CMD check ---------------
+------------- installed on laptop      ---------------
+============= passed R-devel CMD check ===============
+              (2019-06-21 r76731)
+------------- passed 'make bookcheck'  ---------------
+!!!!!!!!!!!!!    submitted to CRAN     !!!!!!!!!!!!!!!
+
+   spatstat-package.Rd
+	Fixed URLs as required by CRAN
+
+!!!!!!!!!!!!!  resubmitted to CRAN     !!!!!!!!!!!!!!!
+------------- committed to GitHub      ---------------
+

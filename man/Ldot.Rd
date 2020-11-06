@@ -7,7 +7,7 @@
   for a multitype point pattern.
 }
 \usage{
-  Ldot(X, i, ..., from)
+  Ldot(X, i, ..., from, correction)
 }
 \arguments{
   \item{X}{The observed point pattern, 
@@ -22,7 +22,7 @@
     character string).
     Defaults to the first level of \code{marks(X)}.
   }
-  \item{\dots}{
+  \item{correction,\dots}{
     Arguments passed to \code{\link{Kdot}}.
   }
   \item{from}{An alternative way to specify \code{i}.}
@@ -76,11 +76,11 @@
  L <- Ldot(amacrine, "off")
  plot(L)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -1,7 +1,7 @@
 #
 # linearKmulti
 #
-# $Revision: 1.7 $ $Date: 2015/02/25 06:23:05 $
+# $Revision: 1.18 $ $Date: 2020/01/11 04:35:04 $
 #
 # K functions for multitype point pattern on linear network
 #
@@ -12,7 +12,7 @@ linearKdot <- function(X, i, r=NULL, ..., correction="Ang") {
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i)) i <- lev[1] else
+  if(missing(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))  
   I <- (marx == i)
   J <- rep(TRUE, npoints(X))  # i.e. all points
@@ -29,9 +29,9 @@ linearKcross <- function(X, i, j, r=NULL, ..., correction="Ang") {
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i)) i <- lev[1] else
+  if(missing(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))
-  if(missing(j)) j <- lev[2] else
+  if(missing(j)) j <- lev[2L] else
     if(!(j %in% lev)) stop(paste("j = ", j , "is not a valid mark"))
   #
   if(i == j) {
@@ -57,9 +57,8 @@ linearKmulti <- function(X, I, J, r=NULL, ..., correction="Ang") {
                            multi=FALSE)
   
   # extract info about pattern
-  sX <- summary(X)
-  np <- sX$npoints
-  lengthL <- sX$totlength
+  np <- npoints(X)
+  lengthL <- volume(domain(X))
   # validate I, J
   if(!is.logical(I) || !is.logical(J))
     stop("I and J must be logical vectors")
@@ -83,6 +82,7 @@ linearKmulti <- function(X, I, J, r=NULL, ..., correction="Ang") {
   correction <- attr(K, "correction")
   type <- if(correction == "Ang") "L" else "net"
   K <- rebadge.as.crossfun(K, "K", type, "I", "J")
+  attr(K, "correction") <- correction
   return(K)
 }
 
@@ -94,7 +94,7 @@ linearKdot.inhom <- function(X, i, lambdaI, lambdadot,
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i)) i <- lev[1] else
+  if(missing(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))  
   I <- (marx == i)
   J <- rep(TRUE, npoints(X))  # i.e. all points
@@ -106,6 +106,7 @@ linearKdot.inhom <- function(X, i, lambdaI, lambdadot,
   correction <- attr(result, "correction")
   type <- if(correction == "Ang") "L, inhom" else "net, inhom"
   result <- rebadge.as.dotfun(result, "K", type, i)
+  attr(result, "correction") <- correction
   return(result)
 }
 
@@ -116,9 +117,9 @@ linearKcross.inhom <- function(X, i, j, lambdaI, lambdaJ,
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i)) i <- lev[1] else
+  if(missing(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))
-  if(missing(j)) j <- lev[2] else
+  if(missing(j)) j <- lev[2L] else
     if(!(j %in% lev)) stop(paste("j = ", j , "is not a valid mark"))
   #
   if(i == j) {
@@ -136,6 +137,7 @@ linearKcross.inhom <- function(X, i, j, lambdaI, lambdaJ,
   correction <- attr(result, "correction")
   type <- if(correction == "Ang") "L, inhom" else "net, inhom"
   result <- rebadge.as.crossfun(result, "K", type, i, j)
+  attr(result, "correction") <- correction
   return(result)
 }
 
@@ -150,9 +152,9 @@ linearKmulti.inhom <- function(X, I, J, lambdaI, lambdaJ,
                            multi=FALSE)
   
   # extract info about pattern
-  sX <- summary(X)
-  np <- sX$npoints
-  lengthL <- sX$totlength
+  np <- npoints(X)
+  lengthL <- volume(domain(X))
+  #
   # validate I, J
   if(!is.logical(I) || !is.logical(J))
     stop("I and J must be logical vectors")
@@ -163,12 +165,12 @@ linearKmulti.inhom <- function(X, I, J, lambdaI, lambdaJ,
   if(!any(I)) stop("no points satisfy I")
 
   # validate lambda vectors
-  lambdaI <- getlambda.lpp(lambdaI, X[I], ...)
-  lambdaJ <- getlambda.lpp(lambdaJ, X[J], ...)
+  lambdaI <- getlambda.lpp(lambdaI, X, subset=I, ...)
+  lambdaJ <- getlambda.lpp(lambdaJ, X, subset=J, ...)
 
   # compute K
   weightsIJ <- outer(1/lambdaI, 1/lambdaJ, "*")
-  denom <- if(!normalise) lengthL else sum(1/lambdaI)
+  denom <- if(!normalise) lengthL else sum(1/lambdaI) 
   K <- linearKmultiEngine(X, I, J, r=r,
                           reweight=weightsIJ, denom=denom,
                           correction=correction, ...)
@@ -179,6 +181,7 @@ linearKmulti.inhom <- function(X, I, J, lambdaI, lambdaJ,
   # set markers for 'envelope'
   attr(K, "dangerous") <- union(attr(lambdaI, "dangerous"),
                                 attr(lambdaJ, "dangerous"))
+  attr(K, "correction") <- correction
   return(K)
 }
 
@@ -189,17 +192,12 @@ linearKmultiEngine <- function(X, I, J, ..., r=NULL, reweight=NULL, denom=1,
   # ensure distance information is present
   X <- as.lpp(X, sparse=FALSE)
   # extract info about pattern
-#  sX <- summary(X)
-#  np <- sX$npoints
-#  lengthL <- sX$totlength
   np <- npoints(X)
   # extract linear network
   L <- domain(X)
-  # extract points
-  XP <- as.ppp(X)
-  W <- as.owin(XP)
+  W <- Window(L)
   # determine r values
-  rmaxdefault <- 0.98 * circumradius(L)
+  rmaxdefault <- 0.98 * boundingradius(L)
   breaks <- handle.r.b.args(r, NULL, W, rmaxdefault=rmaxdefault)
   r <- breaks$r
   rmax <- breaks$max
@@ -221,28 +219,23 @@ linearKmultiEngine <- function(X, I, J, ..., r=NULL, reweight=NULL, denom=1,
             c("r", makefvlabel(NULL, "hat", fname)),
             c("distance argument r", "estimated %s"),
             fname = fname)
+    attr(K, "correction") <- correction
     return(K)
   }
   #
-  nI <- sum(I)
-  nJ <- sum(J)
-  whichI <- which(I)
-  whichJ <- which(J)
+  ## nI <- sum(I)
+  ## nJ <- sum(J)
+  ## whichI <- which(I)
+  ## whichJ <- which(J)
   clash <- I & J
   has.clash <- any(clash)
-  # compute pairwise distances
-  if(exists("crossdist.lpp")) {
-    DIJ <- crossdist(X[I], X[J], check=FALSE)
-    if(has.clash) {
-      # exclude pairs of identical points from consideration
-      Iclash <- which(clash[I])
-      Jclash <- which(clash[J])
-      DIJ[cbind(Iclash,Jclash)] <- Inf
-    }
-  } else {
-    D <- pairdist(X)
-    diag(D) <- Inf
-    DIJ <- D[I, J]
+  ## compute pairwise distances
+  DIJ <- crossdist(X[I], X[J], check=FALSE)
+  if(has.clash) {
+    ## exclude pairs of identical points from consideration
+    Iclash <- which(clash[I])
+    Jclash <- which(clash[J])
+    DIJ[cbind(Iclash,Jclash)] <- Inf
   }
   #---  compile into K function ---
   if(correction == "none" && is.null(reweight)) {
@@ -253,27 +246,15 @@ linearKmultiEngine <- function(X, I, J, ..., r=NULL, reweight=NULL, denom=1,
     attr(K, "correction") <- correction
     return(K)
   }
-  if(correction == "none")
+  if(correction == "none") {
      edgewt <- 1
-  else {
-     # inverse m weights (Ang's correction)
-     # compute m[i,j]
-     m <- matrix(1, nI, nJ)
-     XPI <- XP[I]
-     if(!has.clash) {
-       for(k in seq_len(nJ)) {
-         j <- whichJ[k]
-         m[,k] <- countends(L, XPI, DIJ[, k])
-       }
-     } else {
-       # don't count identical pairs
-       for(k in seq_len(nJ)) {
-         j <- whichJ[k]
-         inotj <- (whichI != j)
-         m[inotj, k] <- countends(L, XPI[inotj], DIJ[inotj, k])
-       }
-     }
-     edgewt <- 1/m
+  } else {
+    ## inverse m weights (Ang's correction)
+    ## determine tolerance
+    toler <- default.linnet.tolerance(L)
+    ## compute m[i,j]
+    m <- DoCountCrossEnds(X, I, J, DIJ, toler)
+    edgewt <- 1/m
   }
   # compute K
   wt <- if(!is.null(reweight)) edgewt * reweight else edgewt
@@ -293,5 +274,66 @@ linearKmultiEngine <- function(X, I, J, ..., r=NULL, reweight=NULL, denom=1,
     attr(K, "working") <- list(DIJ=DIJ, wt=wt)
   attr(K, "correction") <- correction
   return(K)
+}
+
+DoCountCrossEnds <- function(X, I, J, DIJ, toler) {
+  stopifnot(is.lpp(X))
+  stopifnot(is.logical(I) && is.logical(J))
+  stopifnot(is.matrix(DIJ))
+  nI <- sum(I)
+  nJ <- sum(J)
+  whichI <- which(I)
+  whichJ <- which(J)
+  m <- matrix(1, nI, nJ)
+  easy <- list(is.connected=TRUE)
+  L <- domain(X)
+  if(is.connected(L)) {
+    ## network is connected
+    for(k in seq_len(nJ)) {
+      j <- whichJ[k]
+      I.j <- (whichI != j)
+      i.j <- setdiff(whichI, j)
+      m[I.j, k] <- countends(L, X[i.j], DIJ[I.j,k],
+                              toler=toler, internal=easy)
+    }
+  } else {
+    ## network is disconnected - split into components
+    vlab <- connected(L, what="labels")
+    subsets <- split(seq_len(nvertices(L)), factor(vlab))
+    for(s in subsets) {
+      ## extract one component and the points falling in it
+      Xs <- thinNetwork(X, retainvertices=s)
+      ns <- npoints(Xs)
+      if(ns >= 2) {
+        Ls <- domain(Xs)
+        ## identify which points of X are involved
+        relevant <- attr(Xs, "retainpoints")
+        Xindex <- which(relevant)
+        ## classify them
+        Isub <- I[relevant]
+        ## Jsub <- J[relevant]
+        ## identify relevant submatrix of DIJ
+        rowsub <- relevant[I]
+        colsub <- relevant[J]
+        ## corresponding indices in X
+        ## rowXindex <- whichI[rowsub]
+        ## colXindex <- whichJ[colsub]
+        ## handle
+        for(k in which(colsub)) {
+          j <- whichJ[k]
+          I.j <- rowsub & (whichI != j)
+          i.j <- Isub & (Xindex != j)
+          m[ I.j, k ] <- countends(Ls, Xs[i.j], DIJ[I.j, k],
+                                   toler=toler,
+                                   internal=easy)
+        }
+      }
+    }
+  }
+  if(any(uhoh <- (m == 0) & is.finite(DIJ))) {
+    warning("Internal error: disc boundary count equal to zero")
+    m[uhoh] <- 1
+  }
+  return(m)
 }
 

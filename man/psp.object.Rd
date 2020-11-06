@@ -54,7 +54,7 @@
 
   Utilities for line segment patterns include
   \code{\link{midpoints.psp}} (to compute the midpoints of each segment),
-  \code{\link{lengths.psp}}, (to compute the length of each segment),
+  \code{\link{lengths_psp}}, (to compute the length of each segment),
   \code{\link{angles.psp}}, (to compute the angle of orientation of
   each segment), and 
   \code{\link{distmap.psp}} to compute the distance map of a
@@ -78,11 +78,11 @@
     b <- a[w]
 # the last two lines are equivalent.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{attribute}

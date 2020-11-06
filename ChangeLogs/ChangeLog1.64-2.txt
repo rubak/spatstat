@@ -1,0 +1,1162 @@
+Change log from spatstat 1.64-1 to spatstat 1.64-2
+==================================================
+
+10 may 2020
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Version 1.64-1.001
+	Nickname changed to 'I eat trolls for breakfast'
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/linalgeb.R
+	More tests.
+	
+11 may 2020
+
+   linalg.R
+	Bug fix in handling NA's in sumouter(w)
+
+   tests/linalgeb.R
+	bug fix in test.
+	
+   tests/indices.R
+   tests/ppp.R
+	Rearranged test files in preparation for splitoff of spatstat.sparse.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.002
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+12 may 2020
+
+   util.R
+   spatstat-internal.Rd
+	New internal function resolve.stringsAsFactors
+	
+   as.im.R
+   as.im.Rd
+   hyperframe.R
+   hyperframe.Rd
+	Default for 'stringsAsFactors' changed to NULL
+	and an explanation given.
+
+   src/PerfectDGS.h
+   src/PerfectDiggleGratton.h
+   src/PerfectPenttinen.h
+	Removed redundant code (cut & paste error)
+   
+   src/PerfectDiggleGratton.h
+   src/PerfectDGS.h
+   src/PerfectHardcore.h
+   src/PerfectPenttinen.h
+   src/PerfectStrauss.h
+   src/PerfectStraussHard.h
+	Tweaked layout to satisfy a very finicky compiler
+
+   src/linScrossdist.c
+   src/linSpairdist.h
+	Removed unused variables
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.003
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+13 may 2020
+
+   DESCRIPTION
+   NAMESPACE
+	spatstat now Imports the new sub-package 'spatstat.sparse'.
+
+   indices.R		[REMOVED FILE]
+   linalg.R		[REMOVED FILE]
+   matrixpower.R	[REMOVED FILE]
+   sparse3Darray.R	[REMOVED FILE]
+   sparsecommon.R	[REMOVED FILE]	
+   sparselinalg.R	[REMOVED FILE]
+
+   linalg.c		[REMOVED FILE]
+   sparselinalg.c	[REMOVED FILE]
+   spasumsymout.h	[REMOVED FILE]
+   sumsymouter.h	[REMOVED FILE]
+
+   sumouter.Rd		[REMOVED FILE]
+   matrixpower.Rd	[REMOVED FILE]
+   	These files are now in the new sub-package 'spatstat.sparse'
+
+   spatstat-internal.Rd
+	Removed references to the code that is now in spatstat.sparse.
+	
+   updates.Rnw
+   inst/doc/spatstatKnetsize.txt [New file]
+   	Add size of spatstat.Knet to the graph of spatstat growth.
+
+   updates.Rnw
+   	Add size of spatstat.sparse to the graph of spatstat growth.
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	More acknowledgements.
+
+   updates.Rnw
+	updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.004
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+16 may 2020
+
+   util.R
+	sessionInfo is more informative.
+
+17 may 2020
+
+   mppm.R
+   anova.mppm.R
+	Bug fixes and workarounds for random-effects models.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.005
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+19 may 2020
+
+   rotmean.R
+   rotmean.Rd
+	The unitname of X is carried over to the result.
+
+22 may 2020
+
+   rotmean.R
+   rotmean.Rd
+	New argument 'adjust'. New default bandwidth for smoothing.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.006
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+08 jun 2020
+
+   domain.Rd
+   density.psp.Rd
+   as.owin.Rd
+   identify.ppp.Rd
+   is.connected.Rd
+   is.marked.ppm.Rd
+   is.multitype.ppp.Rd
+   is.multitype.ppm.Rd
+   is.ppm.Rd
+   is.stationary.Rd
+   marks.tess.Rd
+   model.frame.ppm.Rd
+   model.images.Rd
+   model.matrix.ppm.Rd
+   nobjects.Rd
+   tilenames.Rd
+   pseudoR2.Rd
+   rthin.Rd
+   text.ppp.Rd
+   spatdim.Rd
+   unstack.ppp.Rd
+   WindowOnly.Rd
+   spatstat-internal.Rd
+   spatstat-deprecated.Rd
+	Inserted 'filepp' macros which can switch off the
+	linear networks code (but are currently switched on).
+
+
+10 jun 2020
+
+   density.lpp.R
+   densityHeat.Rd
+	'finespacing' is now a formal argument.
+	The effective default has been changed.
+
+   density.loo.R
+	Internal argument passing improved.
+	
+   density.lpp.R
+	Added more 'verbose' comments.
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Yonatan Rosen.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.007
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+
+11 jun 2020
+
+   minkowski.R
+	Bug fix in MinkowskiSum - erroneous error message
+
+   linim.R
+	Accelerated [.linim in many cases.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.008
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   density.lpp.R
+	resolve.heat.steps does not require dx < min(seglengths)/3
+	when finespacing=FALSE is given.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.009
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+12 jun 2020
+
+   auc.R
+   cdftest.R
+   rhohat.R
+   evalcovar.R
+	Inserted 'filepp' macros which can switch off the
+	linear networks code (but are currently switched on).
+   
+   tests/cdf.test.R
+   tests/cluck.R
+   tests/disconnected.R
+   tests/envelopes.R
+   tests/func.R
+   tests/hypotests.R
+   tests/imageops.R
+   tests/lppmodels.R
+   tests/lppstuff.R
+   tests/segments.R
+   tests/trigraph.R
+   tests/undoc.R
+   tests/updateppm.R
+   tests/xysegment.R
+	Inserted 'filepp' macros which can switch off the
+	linear networks code (but are currently switched on).
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.010
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   auc.Rd
+   cdf.test.Rd
+   rhohat.Rd
+   roc.Rd
+   spatstat-internal.Rd
+	Inserted more 'filepp' macros which can switch off the
+	linear networks code (but are currently switched on).
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.011
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   is.ppm.Rd
+	removed 'filepp' macro so that is.lpp is visible
+
+   bw.ppl.Rd
+   clickdist.Rd
+   connected.Rd
+   diameter.Rd
+   emend.Rd
+   envelope.Rd
+   nndist.Rd
+   pixellate.Rd
+   pseudoR2.Rd
+   rescale.Rd
+   rhohat.Rd
+   subset.ppp.Rd
+   unstack.solist.Rd
+   volume.Rd
+	added 'filepp' macros to suppress cross-references.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.012
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   bermantest.R
+   berman.test.Rd
+   deldir.R
+	Inserted more 'filepp' macros which can switch off the
+	linear networks code (but are currently switched on).
+   
+   boundingcircle.Rd
+   bw.scott.Rd
+   pseudoR2.Rd
+   superimpose.Rd
+   delaunay.Rd
+   delaunayDistance.Rd
+   densityVoronoi.Rd
+   	added 'filepp' macros to suppress cross-references.
+
+   tests/cluck.R
+   tests/mctests.R
+   tests/mppm.R
+	Remove stray 'require(spatstat)'
+
+   psp.R
+   lengths_psp.Rd
+	More filepp macros to switch off legacy code.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.013
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+13 jun 2020
+
+   psp.R
+   plot.psp.R [New file]
+   	Excised plot.psp to a separate file.
+
+   linim.R
+   plot.psp.R
+   spatstat-internal.Rd
+        Moved some internal graphics functions from linim.R to plot.psp.R
+	so they will be available in spatstat.core.
+
+   plot.psp.R
+   plot.psp.Rd
+   spatstat-internal.Rd
+        plot.psp(style="width") no longer uses the linear networks code.
+
+   plot.pppmatching.Rd
+	Delete cross-reference to plot.linim
+	
+   images.R
+   pairs.im.R
+   rhohat.R
+   superimpose.R
+	Inserted 'filepp' macros which add a 'requireNamespace' call
+	if the linear networks code is switched off.
+
+   tests/segments.R
+	Tweak to avoid using linnet code.
+
+   datasets.Rnw
+	Tweaks to reduce file size.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.014
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+14 jun 2020
+
+   evalcovar.R 
+   evalcovarlppm.R [New file]
+   deldir.R
+   deldirnet.R [New file]
+   	Excised linear networks code to separate files.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.015
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   heatapprox.R
+	call to lengths.psp replaced by lengths_psp
+
+16 jun 2020
+
+   lppm.R
+	Bug fix in deviance.lppm
+
+   marks.tess.Rd
+   subset.ppp.Rd
+	Tweaks
+
+   rhohat.R
+   rhohatlpp.R [New file]
+   	 Moved lpp and lppm methods to a separate file.
+
+   subset.R
+	Tweak filepp macro
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to 'Warm Machine Wash'
+	Version 1.64-1.016
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+17 jun 2020
+
+   is.marked.ppm.Rd
+	Added an example.
+
+   model.images.Rd
+	Improved.
+
+   connected.R
+   spatstat-internal.Rd
+	New internal function 'cocoEngine' provides new interface to
+	the existing C function 'cocoGraph'.
+	
+   connected.R
+   linnet.R
+   lintessmakers.R
+   lpp.R
+	Calls to .C("cocoGraph") are now replaced by calls to cocoEngine().
+	
+22 jun 2020
+
+   datasets.Rnw
+	Reduced file size substantially by omitting/simplifying some plots.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.017
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+01 jul 2020
+
+   bw.pcf.Rd
+   pcf.ppp.Rd
+	Tweaks (thanks to Rasmus)
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.018
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+03 jul 2020
+
+   colourtables.R
+	Bug fix in lut
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.019
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+08 jul 2020
+
+   util.R
+	sessionLibs() output is sorted alphabetically.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.020
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+23 jul 2020
+
+   images.R
+	Accelerated integral.im in the case where 'domain' is a tessellation.
+
+   versions.R
+	Tweaked in preparation for package breakup.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.021
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+02 august 2020
+
+   lixel.c
+	Added an extra safety check on validity of 'tp' values
+
+   lixellate.R
+	Minor tweak
+
+   density.lpp.R
+	For efficiency, duplicated points are now detected
+	and their multiplicity is absorbed into the weights argument.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.022
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+05 aug 2020
+
+   Kmulti.inhom.R
+	Implemented correction='none'.
+
+   NEWS
+	Acknowledged Corey Anderson
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.023
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+    First.R
+	Tweak to handle transition to umbrella package.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.024.
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+11 aug 2020
+
+   mppm.R
+   spatstat-internal.Rd
+	New methods is.marked.mppm, is.multitype.mppm
+
+   predictmppm.R
+	Implemented prediction for multitype models.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.025
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+14 aug 2020
+
+   hyperframe.R
+	cbind.hyperframe no longer uses 'make.names' to process the row names.
+
+   anova.mppm.R
+   anova.mppm.Rd
+	random-effects models are currently not supported
+   
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.026
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+15 aug 2020
+
+   hackglmm.R
+	If spatstat.options('developer') = TRUE, the log likelihood
+	will not be reset to NA. 
+	
+   anova.mppm.R
+	If spatstat.options('developer') = TRUE,
+	anova.mppm will accept models with random effects
+	(by hacking everything to override the safety features)
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.027
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+25 aug 2020
+
+    Gest.R
+	Bug fix (thanks to Gopal)
+	correction="rs" produced both 'rs' and 'km' estimates.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.028
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+01 sep 2020
+
+   randomNS.R
+   spatstat-internal.Rd
+	Bug fix in Neyman-Scott functions
+	(didn't save Lambda in degenerate cases)
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.029
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+10 sep 2020
+
+   rmh.ppm.R
+   simulate.ppm.Rd
+	simulate.ppm now recognises argument 'window'
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.030
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+19 sep 2020
+
+++++++++++++++ installed R-4.0.2 ++++++++++++++++++++++++++
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-1.031
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+30 sep 2020
+
+   DESCRIPTION
+   NEWS 
+	spatstat now requires R >= 3.6.1
+
+   versions.R
+	Added robust checks in versioncurrency.spatstat
+	
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Andy Craig.
+	
+   DESCRIPTION
+   NEWS
+	version 1.64-1.032
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   mincontrast.R
+   mincontrast.Rd
+	New argument 'action.bad.values'
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.033
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+07 oct 2020
+
+   mincontrast.R
+	Improved robustness against bad values
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to 'Mild Fantasy Themes'
+	version 1.64-1.034
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   versions.R
+	Tweaked code for version currency.
+	      
+   DESCRIPTION
+   NEWS
+	Reverted to require R >= 3.3.0
+	version 1.64-1.035
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+09 oct 2020
+
+   kppm.R
+   mincontrast.R
+   spatstat-internal.Rd
+	Tweaks to improve numerical robustness
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.036
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+14 oct 2020
+
+   mincontrast.R
+   options.R
+	Implemented trace debugger for mincontrast()
+	activated by spatstat.options("mincon.trace")
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.037
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   mincontrast.R
+	Further tweak for numerical stability
+        Improved debugger output
+	
+   mincontrast.R
+   spatstat-internal.Rd
+	New internal function 'optimConverged'
+	
+   summary.kppm.R
+	Now saves convergence status 
+
+   options.R
+   clusterinfo.R
+   kppm.R
+       Experimental expansion of domain for cluster parameters
+       Activated by spatstat.options(kppm.strict=FALSE)
+	
+   DESCRIPTION
+   NEWS
+	version 1.64-1.038
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+15 oct 2020
+
+   kppm.R
+   mincontrast.R
+   spatstat-internal.Rd
+	More tweaks to improve numerical stability
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.039
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+    objsurf.R
+	Bug fix.
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.040
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+16 oct 2020
+
+   mincontrast.R
+   mincontrast.Rd
+   kppm.R
+   clusterfit.Rd
+   spatstat-internal.Rd
+	internal arguments pint, whiu
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.041
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+18 oct 2020
+
+   kppm.R
+   mincontrast.R
+	Experimental code to save the history of function calls
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.042
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+
+21 oct 2020
+
+   clusterkernel.Rd
+	Typo
+
+22 oct 2020
+
+   summary.kppm.R
+	Prints cluster strength indices
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.043
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+ 23 oct 2020
+
+    rlabel.R
+    rlabel.Rd
+	new argument 'group'
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.044
+
+------------- passed R-4.0.2 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
++++++++++++++ installed R-4.0.3 ++++++++++++++++++++++
+ 30 oct 2020
+
+   fv.R
+   plot.fv.R
+   Gmulti.R
+   Jmulti.R
+   Kmulti.R
+	Ege's bug fixes related to sprintf (bug arises in R-devel)
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.045
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   fv.R
+   spatstat-internal.Rd
+	Improved internal functions for 'rebadging' fv objects
+	
+   Gmulti.R
+   Jmulti.R
+   Kmulti.R
+	Use internal functions to 'rebadge'
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.046
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+31 oct 2020
+
+   mincontrast.R
+   summary.kppm.R
+	Bug fixes and improvements to code for signalling optimization status.
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.047
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   solist.R
+   spatstat-internal.Rd
+	Add minimal support for class 'linimlist'
+	New function as.linimlist
+	
+   Math.linimlist.R [New file]
+   spatstat-internal.Rd
+   	Math and Ops for linimlist
+
+   summary.mppm.R
+	Added more information to summary output
+	
+   rhohat.R
+   hyperframe.R
+   predictmppm.R
+	Bug fixes
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.048
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   predictmppm.R
+   predict.mppm.Rd
+	Improved handling of 'newdata'
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to "My glasses! Without them I'm helpless"
+	version 1.64-1.049
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+............. passed R-devel CMD check ...............
+                (2020-10-29 r79387)
+		
+   DESCRIPTION
+   NEWS
+	Dependence rule changed: R (>= 3.5.0)
+	version 1.64-1.050
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+02 nov 2020
+
+   rhohat.R
+   auc.R
+	Tweaks to filepp commands to facilitate the breakup into sub-packages
+	
+   tests/aucroc.R
+   tests/cdf.test.R
+   tests/cluck.R
+   tests/disconnected.R
+   tests/envelopes.R
+   tests/func.R
+   tests/hypotests.R
+   tests/imageops.R
+   tests/lppmodels.R
+   tests/lppstuff.R
+   tests/segments.R
+   tests/undoc.R
+   tests/updateppm.R
+   tests/xysegment.R
+	Tweaks to filepp commands to facilitate the breakup into sub-packages
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.051
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+04 nov 2020
+
+   tests/mppm.R
+	Added example of anova for models with random effects
+	(from Marcelino de la Cruz)
+
+   anova.mppm.R
+   hackglmm.R
+	Removed dependence on spatstat.options('developer')
+	so that the hack (developer=TRUE) is now executed
+
+   Kmeasure.R
+   spatstat-internal.Rd
+	Dependence on spatstat.options('developer')
+	replaced by an internal argument 'fastgauss'
+
+   density.ppp.R
+   smooth.ppp.R
+   spatstat-internal.Rd
+	Dependence on spatstat.options('developer')
+	replaced by internal argument 'debug'
+	
+   DESCRIPTION
+   NEWS
+	version 1.64-1.052
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   fv.R
+   lintessmakers.R
+	Removed unused variables
+
+   anova.mppm.R
+	Bug fix
+	
+   DESCRIPTION
+   NEWS
+	version 1.64-1.053
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   ppx.R
+   Extract.ppx.Rd
+   inside.boxx.Rd
+   intersect.boxx.Rd [New file]
+   methods.boxx.Rd
+   shift.ppx.Rd [New file]
+   tests/ppx.R
+   spatstat-internal.Rd
+   	New ppx support by Ege
+
+   DESCRIPTION
+   NEWS
+	version 1.64-1.054
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+............. passed 'make bookcheck'  ...............
+
+>>>>>>>>>>   passed R-devel CMD check <<<<<<<<<<<<<<<<
+	     (2020-11-03 r79399)
+
+:::::::::::   tested package split scripts ::::::::::::::::
+   (built and tested sub-packages 'spatstat.core', 'spatstat.linnet')
+
+
+   bugfixes.Rnw
+   updates.Rnw
+	updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to "Keeping up with the K-functions"
+	version 1.64-2
+
+------------- passed R-4.0.3 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------

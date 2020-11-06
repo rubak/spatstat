@@ -132,13 +132,16 @@ describing a window in the two-dimensional plane.
   To disable the repair process, set \code{spatstat.options(fixpolygons=FALSE)}.
 }
 \seealso{
-  \code{\link{square}},
-  \code{\link{disc}},
   \code{\link{owin.object}},
   \code{\link{as.owin}},
   \code{\link{complement.owin}},
   \code{\link{ppp.object}},
   \code{\link{ppp}}
+
+  \code{\link{square}},
+  \code{\link{hexagon}},
+  \code{\link{regularpolygon}}, \code{\link{disc}},
+  \code{\link{ellipse}}. 
 }
 \examples{
   w <- owin()
@@ -165,9 +168,11 @@ describing a window in the two-dimensional plane.
           # discrete approximation to the unit disc
 
   \dontrun{
-  plot(c(0,1),c(0,1),type="n")
-  bdry <- locator()
-  # click the vertices of a polygon (anticlockwise)
+  if(FALSE) {
+    plot(c(0,1),c(0,1),type="n")
+    bdry <- locator()
+    # click the vertices of a polygon (anticlockwise)
+  }
   }
   \testonly{
   bdry <- list(x=c(0.1,0.3,0.7,0.4,0.2),
@@ -189,11 +194,11 @@ describing a window in the two-dimensional plane.
  # display it to check!
  }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{datagen}

@@ -31,7 +31,7 @@ delaunay(X)
   \code{\link{convexhull.xy}},
   \code{\link{ppp}},
   \code{\link{delaunayDistance}},
-  \code{\link{delaunayNetwork}}
+  \code{\link{delaunayNetwork}}.
 }
 \examples{
   X <- runifpoint(42)
@@ -39,13 +39,7 @@ delaunay(X)
   plot(X, add=TRUE)
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{manip}

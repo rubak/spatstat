@@ -55,17 +55,17 @@
    bmina <- complement.owin(a, frame=b)
    # polygonal
    data(demopat)
-   w <- demopat$window
+   w <- Window(demopat)
    outside <- complement.owin(w)
    # mask
-   w <- as.mask(demopat$window)
+   w <- as.mask(Window(demopat))
    outside <- complement.owin(w)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

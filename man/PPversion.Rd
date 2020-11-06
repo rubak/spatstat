@@ -71,22 +71,19 @@ QQversion(f, theo = "theo", columns = ".")
 \author{
   Tom Lawrence
   and Adrian Baddeley.
+  
   Implemented by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{plot.fv}}
 }
 \examples{
+  opa <- par(mar=0.1+c(5,5,4,2))
   G <- Gest(redwoodfull)
   plot(PPversion(G))
   plot(QQversion(G))
+  par(opa)
 }
 \keyword{spatial}
 \keyword{nonparametric}

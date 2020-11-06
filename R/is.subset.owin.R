@@ -1,7 +1,7 @@
 #
 #  is.subset.owin.R
 #
-#  $Revision: 1.13 $   $Date: 2014/10/24 00:22:30 $
+#  $Revision: 1.16 $   $Date: 2019/03/01 06:02:27 $
 #
 #  Determine whether a window is a subset of another window
 #
@@ -25,8 +25,8 @@ is.subset.owin <- local({
     
       # (1) A is also a rectangle
       if(is.rectangle(A)) {
-        xx <- A$xrange[c(1,2,2,1)]
-        yy <- A$yrange[c(1,1,2,2)]
+        xx <- A$xrange[c(1L,2L,2L,1L)]
+        yy <- A$yrange[c(1L,1L,2L,2L)]
         ok <- inside.owin(xx, yy, B)
         return(all(ok))
       } 
@@ -47,23 +47,23 @@ is.subset.owin <- local({
     }
 
     if(!is.mask(A) && !is.mask(B)) {
-      # rectangles or polygonal domains
+      ## rectangles or polygonal domains
       if(!all(inside.owin(vertices(A), , B)))
         return(FALSE)
-      # all vertices of A are inside B.
-      if(is.convex(B))
+      ## all vertices of A are inside B.
+      if(is.convex(B)) return(TRUE)
+      ## check for boundary crossings
+      bx <- crossing.psp(edges(A), edges(B))
+      if(npoints(bx) > 0) return(FALSE)
+      ## Absence of boundary crossings is sufficient if B has no holes
+      if(length(B$bdry) == 1 || !any(sapply(B$bdry, is.hole.xypolygon)))
         return(TRUE)
-      A <- as.polygonal(A)
-      B <- as.polygonal(B)
-      if(length(B$bdry) == 1 && length(A$bdry) == 1) {
-        # two simply-connected sets 
-        # check for boundary crossings
-        bx <- crossing.psp(edges(A), edges(B))
-        return(npoints(bx) == 0)
-      } else {
-        # compare area of intersection with area of A
-        return(overlap.owin(A,B) >= area(A))
-      }
+      ## Compare area of intersection with area of putative subset
+      ## (these are subject to numerical rounding error)
+      areaA <- area(A)
+      if(overlap.owin(A,B) >= areaA ||
+         overlap.owin(B,A) >= areaA) return(TRUE)
+      ## continue...
     }
   
    # Discretise

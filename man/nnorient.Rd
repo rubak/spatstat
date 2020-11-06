@@ -29,6 +29,7 @@
     Character vector specifying edge correction or corrections.
     Options are \code{"none"}, \code{"bord.modif"}, 
     \code{"good"} and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{k}{
     Integer. The \eqn{k}th nearest neighbour will be used.
@@ -97,12 +98,12 @@
   rose(nnorient(redwood, adjust=0.6), col="grey")
   plot(CDF <- nnorient(redwood, cumulative=TRUE))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{\adrian
+  
+  \rolf
+  
+  and \ege
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

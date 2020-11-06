@@ -97,15 +97,15 @@
 }
 \examples{
   # ppp object
-  data(simdat)
+  X <- simdat
   \testonly{
-    simdat <- simdat[seq(1,npoints(simdat), by=4)]
+    X <- X[seq(1,npoints(X), by=4)]
   }
-  p <- pcf(simdat)
+  p <- pcf(X)
   plot(p)
 
   # fv object
-  K <- Kest(simdat)
+  K <- Kest(X)
   p2 <- pcf(K, spar=0.8, method="b")
   plot(p2)
 
@@ -114,11 +114,8 @@
   amap <- pcf(amaK, spar=1, method="b")
   plot(amap)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -1,4 +1,4 @@
-\name{distfun}  %DontDeclareMethods
+\name{distfun}  
 \Rdversion{1.1}
 \alias{distfun}
 \alias{distfun.ppp}
@@ -11,13 +11,13 @@
   Compute the distance function of an object, and return it as a function.
 }
 \usage{
-  distfun(X, ...)
+  distfun(X, \dots)
 
-  \method{distfun}{ppp}(X, ..., k=1)
+  \method{distfun}{ppp}(X, \dots, k=1, undef=Inf)
 
-  \method{distfun}{psp}(X, ...)
+  \method{distfun}{psp}(X, \dots)
 
-  \method{distfun}{owin}(X, ..., invert=FALSE)
+  \method{distfun}{owin}(X, \dots, invert=FALSE)
 }
 \arguments{
   \item{X}{Any suitable dataset representing a two-dimensional
@@ -31,6 +31,10 @@
   \item{k}{
     An integer. The distance to the \code{k}th nearest point
     will be computed.
+  }
+  \item{undef}{
+    The value that should be returned if the distance is undefined
+    (that is, if \code{X} contains fewer than \code{k} points).
   }
   \item{invert}{
     If \code{TRUE}, compute the distance transform of the
@@ -50,7 +54,10 @@
   in the form \code{v <- f(x,y)}, where \code{x} and \code{y}
   are any numeric vectors of equal length containing coordinates of
   spatial locations, yields the values of the distance function at these
-  locations.
+  locations. Alternatively \code{x} can be a
+  point pattern (object of class \code{"ppp"} or \code{"lpp"}) of
+  locations at which the distance function should be computed (and then
+  \code{y} should be missing).
 
   This should be contrasted with the related command \code{\link{distmap}}
   which computes the distance function of \code{X}
@@ -66,13 +73,17 @@
 }
 \value{
   A \code{function} with arguments \code{x,y}.
-  The function also belongs to the class \code{"distfun"} which has
-  a method for \code{print}.
+  The function belongs to the class \code{"distfun"} which has
+  methods for \code{print} and \code{summary}, and for geometric
+  operations like \code{shift}.
   It also belongs to the class \code{"funxy"} which has methods
   for \code{plot}, \code{contour} and \code{persp}.
 }
 \seealso{
   \code{\link{distmap}},
+  \code{\link{summary.distfun}},
+  \code{\link{methods.distfun}},
+  \code{\link{methods.funxy}},
   \code{\link{plot.funxy}}
 }
 \examples{
@@ -88,12 +99,13 @@
    d2 <- distfun(cells, k=2)
    d(0.5, 0.5)
    d2(0.5, 0.5)
+   domain(d)
+   summary(d)
+
+   z <- d(japanesepines)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{math}

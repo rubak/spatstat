@@ -30,10 +30,10 @@
 \details{
   Stoyan and Grabarnik (1991) proposed a diagnostic
   tool for point process models fitted to spatial point pattern data.
-  Each point \eqn{x[i]}{x_i} of the data pattern \eqn{X}
+  Each point \eqn{x_i}{x[i]} of the data pattern \eqn{X}
   is given a `mark' or `weight'
-  \deqn{m[i] = 1/lambda-hat(x[i],X)}{m_i = \frac 1 {\hat\lambda(x_i,X)}}
-  where \eqn{lambda-hat(x[i],X)}{\hat\lambda(x_i,X)}
+  \deqn{m_i = \frac 1 {\hat\lambda(x_i,X)}}{m[i] = 1/\lambda(x[i],X)}
+  where \eqn{\hat\lambda(x_i,X)}{\lambda(x[i],X)}
   is the conditional intensity of the fitted model.
   If the fitted model is correct, then the sum of these marks
   for all points in a region \eqn{B} has expected value equal to the
@@ -72,15 +72,13 @@
     data(cells)
     fit <- ppm(cells, ~x, Strauss(r=0.15))
     ee <- eem(fit)
-    sum(ee)/area(cells$window) # should be about 1 if model is correct
+    sum(ee)/area(Window(cells)) # should be about 1 if model is correct
     Y <- setmarks(cells, ee)
     plot(Y, main="Cells data\n Exponential energy marks")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{models}

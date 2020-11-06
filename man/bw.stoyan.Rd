@@ -28,20 +28,23 @@ bw.stoyan(X, co=0.15)
   
   For the Epanechnikov kernel, the rule of thumb is to set
   the kernel's half-width \eqn{h} to
-  \eqn{0.15/\sqrt{\lambda}}{0.15/sqrt(lambda)} where
-  \eqn{\lambda}{lambda} is the estimated intensity of the point pattern,
+  \eqn{0.15/\sqrt{\lambda}}{0.15/sqrt(\lambda)} where
+  \eqn{\lambda}{\lambda} is the estimated intensity of the point pattern,
   typically computed as the number of points of \code{X} divided by the
   area of the window containing \code{X}.
 
   For a general kernel, the corresponding rule is to set the
   standard deviation of the kernel to
-  \eqn{\sigma = 0.15/\sqrt{5\lambda}}{sigma = 0.15/sqrt(5 * lambda)}.
+  \eqn{\sigma = 0.15/\sqrt{5\lambda}}{\sigma = 0.15/sqrt(5 * \lambda)}.
   
   The coefficient \eqn{0.15} can be tweaked using the
-  argument \code{co}. 
+  argument \code{co}.
+
+  To ensure the bandwidth is finite, an empty point pattern is treated
+  as if it contained 1 point.
 }
 \value{
-  A numerical value giving the selected bandwidth (the standard
+  A finite positive numerical value giving the selected bandwidth (the standard
   deviation of the smoothing kernel).
 }
 \seealso{
@@ -58,11 +61,11 @@ bw.stoyan(X, co=0.15)
   methods of geometrical statistics.
   John Wiley and Sons.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{methods}

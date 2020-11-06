@@ -3,63 +3,81 @@
 #
 #   Estimation of relative risk
 #
-#  $Revision: 1.30 $  $Date: 2015/03/11 10:05:47 $
+#  $Revision: 1.50 $  $Date: 2020/05/09 05:29:13 $
 #
 
 relrisk <- function(X, ...) UseMethod("relrisk")
                                       
 relrisk.ppp <- local({
 
-  relrisk.ppp <- function(X, sigma=NULL, ..., varcov=NULL, at="pixels",
-                      relative=FALSE, se=FALSE,
-                      casecontrol=TRUE, control=1, case) {
+  relrisk.ppp <- function(X, sigma=NULL, ..., 
+                          at=c("pixels", "points"),
+                          weights = NULL, varcov=NULL, 
+                          relative=FALSE,
+                          adjust=1, edge=TRUE, diggle=FALSE, se=FALSE,
+                          casecontrol=TRUE, control=1, case) {
     stopifnot(is.ppp(X))
     stopifnot(is.multitype(X))
     control.given <- !missing(control)
     case.given <- !missing(case)
-    if(!relative && (control.given || case.given)) {
+    at <- match.arg(at)
+    ## evaluate numerical weights (multiple columns not allowed)
+    weights <- pointweights(X, weights=weights, parent=parent.frame())
+    weighted <- !is.null(weights)
+    ## 
+    npts <- npoints(X)
+    marx <- marks(X)
+    imarks <- as.integer(marx)
+    types <- levels(marx)
+    ntypes <- length(types)
+    if(ntypes == 1)
+      stop("Data contains only one type of points")
+    ## 
+    casecontrol <- casecontrol && (ntypes == 2)
+    if((control.given || case.given) && !(casecontrol || relative)) {
       aa <- c("control", "case")[c(control.given, case.given)]
       nn <- length(aa)
       warning(paste(ngettext(nn, "Argument", "Arguments"),
                     paste(sQuote(aa), collapse=" and "),
                     ngettext(nn, "was", "were"),
-                    "ignored, because relative=FALSE"))
+                    "ignored, because relative=FALSE and",
+                    if(ntypes==2) "casecontrol=FALSE" else
+                    "there are more than 2 types of points"))
     }
-    npts <- npoints(X)
-    Y <- split(X)
+    ## prepare for analysis
+    Y <- split(X) 
+    splitweights <- if(weighted) split(weights, marx) else rep(list(NULL), ntypes)
     uX <- unmark(X)
-    types <- names(Y)
-    ntypes <- length(Y)
-    if(ntypes == 1)
-      stop("Data contains only one type of points")
-    marx <- marks(X)
-    imarks <- as.integer(marx)
-    lev <- levels(marx)
-    ## trap arguments
-    dotargs <- list(...)
-    isbwarg <- names(dotargs) %in% c("method", "nh", "hmin", "hmax", "warn")
-    bwargs <- dotargs[isbwarg]
-    dargs  <- dotargs[!isbwarg]
-    ## using edge corrections?
-    edge   <- resolve.1.default(list(edge=TRUE), list(...))
-    diggle <- resolve.1.default(list(diggle=FALSE), list(...))
-    ## bandwidth
-    if(is.null(sigma) && is.null(varcov)) 
-      sigma <- do.call(bw.relrisk, append(list(X), bwargs))
-    SmoothPars <- append(list(sigma=sigma, varcov=varcov, at=at), dargs)
+    ## compute bandwidth (default bandwidth selector is bw.relrisk)
+    ker <- resolve.2D.kernel(...,
+                             sigma=sigma, varcov=varcov, adjust=adjust,
+                             bwfun=bw.relrisk, x=X)
+    sigma <- ker$sigma
+    varcov <- ker$varcov
+
+    ## determine smoothing parameters   
+    if(bandwidth.is.infinite(sigma))
+      edge <- FALSE
+    SmoothPars <- resolve.defaults(list(sigma=sigma, varcov=varcov, at=at,
+                                        edge=edge, diggle=diggle),
+                                   list(...))
+    ## 
     if(se) {
       ## determine other bandwidth for variance estimation
-      if(is.null(varcov)) {
+      VarPars <- SmoothPars
+      if(bandwidth.is.infinite(sigma)) {
+        varconst <- 1
+      } else if(is.null(varcov)) {
         varconst <- 1/(4 * pi * prod(sigma))
-        VarPars <- append(list(sigma=sigma/sqrt(2), at=at), dargs)
+        VarPars$sigma <- sigma/sqrt(2)
       } else {
         varconst <- 1/(4 * pi * sqrt(det(varcov)))
-        VarPars <- append(list(varcov=varcov/2, at=at), dargs)
+        VarPars$varcov <- varcov/2
       }
       if(edge) {
         ## evaluate edge correction weights
-        edgeim <- second.moment.calc(uX, sigma, what="edge", ...,
-                                     varcov=varcov)
+        edgeim <- do.call(second.moment.calc,
+                          append(list(x=uX, what="edge"), SmoothPars))
         if(diggle || at == "points") {
           edgeX <- safelookup(edgeim, uX, warn=FALSE)
           diggleX <- 1/edgeX
@@ -75,30 +93,38 @@ relrisk.ppp <- local({
            pixels = {
              ## intensity estimates of each type
              Deach <- do.call(density.splitppp,
-                              append(list(x=Y), SmoothPars))
+                              append(list(x=Y, weights=splitweights),
+                                     SmoothPars))
              ## compute intensity estimate for unmarked pattern
-             Dall <- Reduce("+", Deach)
+             Dall <- im.apply(Deach, sum, check=FALSE)
+             ## WAS: Dall <- Reduce("+", Deach)
              ## variance terms
              if(se) {
                if(!edge) {
                  ## no edge correction
                  Veach <- do.call(density.splitppp,
-                                  append(list(x=Y), VarPars))
+                                  append(list(x=Y, weights=splitweights),
+                                         VarPars))
                } else if(!diggle) {
                  ## edge correction e(u)
                  Veach <- do.call(density.splitppp,
-                                  append(list(x=Y), VarPars))
-                 Veach <- lapply(Veach, "/", e2=edgeim)
+                                  append(list(x=Y, weights=splitweights),
+                                         VarPars))
+                 #' Ops.imlist not yet working
+                 Veach <- imagelistOp(Veach, edgeim, "/")
                } else {
                  ## Diggle edge correction e(x_i)
-                 Veach <- mapply(density.ppp,
-                                 x=Y,
-                                 weights=split(diggleX, marx),
-                                 MoreArgs=VarPars,
-                                 SIMPLIFY=FALSE)
+                 diggweights <- if(weighted) { diggleX * weights } else diggleX
+                 Veach <- as.solist(mapply(density.ppp,
+                                           x=Y,
+                                           weights=split(diggweights, marx),
+                                           MoreArgs=VarPars,
+                                           SIMPLIFY=FALSE))
                }
-               Veach <- lapply(Veach, "*", varconst)
-               Vall <- Reduce("+", Veach)
+               #' Ops.imlist not yet working
+               Veach <- imagelistOp(Veach, varconst, "*")
+               Vall <- im.apply(Veach, sum, check=FALSE)
+               ## WAS:   Vall <- Reduce("+", Veach)
              }
            },
            points = {
@@ -106,7 +132,8 @@ relrisk.ppp <- local({
              ## dummy variable matrix
              dumm <- matrix(0, npts, ntypes)
              dumm[cbind(seq_len(npts), imarks)] <- 1
-             colnames(dumm) <- lev
+             colnames(dumm) <- types
+             if(weighted) dumm <- dumm * weights
              Deach <- do.call(density.ppp,
                               append(list(x=uX, weights=dumm),
                                      SmoothPars))
@@ -145,7 +172,7 @@ relrisk.ppp <- local({
           icontrol <- control <- as.integer(control)
           stopifnot(control %in% 1:2)
         } else if(is.character(control)) {
-          icontrol <- match(control, levels(marks(X)))
+          icontrol <- match(control, types)
           if(is.na(icontrol)) stop(paste("No points have mark =", control))
         } else
           stop(paste("Unrecognised format for argument", sQuote("control")))
@@ -158,7 +185,7 @@ relrisk.ppp <- local({
           icase <- case <- as.integer(case)
           stopifnot(case %in% 1:2)
         } else if(is.character(case)) {
-          icase <- match(case, levels(marks(X)))
+          icase <- match(case, types)
           if(is.na(icase)) stop(paste("No points have mark =", case))
         } else stop(paste("Unrecognised format for argument", sQuote("case")))
         if(!control.given) 
@@ -188,7 +215,7 @@ relrisk.ppp <- local({
                    Vcase <- Veach[[icase]]
                    NUM <- eval.im(Vcase * (1-2*pcase) + Vall * pcase^2)
                    SE <- eval.im(sqrt(pmax(NUM, 0))/Dall)
-                   result <- list(estimate=pcase, SE=SE)
+                   result <- solist(estimate=pcase, SE=SE)
                  }
                } else {
                  rcase <- eval.im(ifelse(pcase < 1, pcase/(1-pcase), NA))
@@ -200,7 +227,7 @@ relrisk.ppp <- local({
                    Dctrl <- Deach[[icontrol]]
                    NUM <- eval.im(Vcase + Vctrl * rcase^2)
                    SE <- eval.im(sqrt(pmax(NUM, 0))/Dctrl)
-                   result <- list(estimate=rcase, SE=SE)
+                   result <- solist(estimate=rcase, SE=SE)
                  }
                }
              },
@@ -243,14 +270,15 @@ relrisk.ppp <- local({
           icontrol <- control <- as.integer(control)
           stopifnot(control %in% 1:ntypes)
         } else if(is.character(control)) {
-          icontrol <- match(control, levels(marks(X)))
+          icontrol <- match(control, types)
           if(is.na(icontrol)) stop(paste("No points have mark =", control))
         } else
           stop(paste("Unrecognised format for argument", sQuote("control")))
       }
       switch(at,
              pixels={
-               probs <- as.solist(lapply(Deach, "/", e2=Dall))
+               #' Ops.imagelist not yet working
+               probs <- imagelistOp(Deach, Dall, "/")
                ## correct small numerical errors
                probs <- as.solist(lapply(probs, clamp01))
                ## trap NaN values
@@ -281,9 +309,7 @@ relrisk.ppp <- local({
                  }
                } else {
                  risks <- as.solist(lapply(probs,
-                                           function(z, d) {
-                                             eval.im(ifelse(d > 0, z/d, NA))
-                                           },
+                                           divideifpositive,
                                            d = probs[[icontrol]]))
                  if(!se) {
                    result <- risks
@@ -308,7 +334,7 @@ relrisk.ppp <- local({
                probs <- clamp01(probs)
                ## trap NaN values
                bad <- badvalues(probs)
-               badrow <- apply(bad, 1, any)
+               badrow <- matrowany(bad)
                if(any(badrow)) {
                  ## apply l'Hopital's rule
                  typenn <- imarks[nnwhich(X)]
@@ -351,6 +377,8 @@ relrisk.ppp <- local({
   }
 
   reciprocal <- function(x) 1/x
+
+  divideifpositive <- function(z, d) { eval.im(ifelse(d > 0, z/d, NA)) }
   
   relrisk.ppp
 })
@@ -362,7 +390,7 @@ bw.stoyan <- function(X, co=0.15) {
   n <- npoints(X)
   W <- Window(X)
   a <- area(W)
-  stoyan <- co/sqrt(5 * n/a)
+  stoyan <- co/sqrt(5 * max(1,n)/a)
   return(stoyan)
 }
 
@@ -379,6 +407,7 @@ bw.relrisk <- function(X, method="likelihood",
   ntypes <- length(Y)
   if(ntypes == 1)
     stop("Data contains only one type of points")
+  n <- npoints(X)
   marx <- marks(X)
   method <- pickoption("method", method,
                        c(likelihood="likelihood",
@@ -405,7 +434,6 @@ bw.relrisk <- function(X, method="likelihood",
   }
   ## cross-validated bandwidth selection
   ## determine a range of bandwidth values
-  n <- npoints(X)
   if(is.null(hmin) || is.null(hmax)) {
     W <- Window(X)
     a <- area(W)
@@ -424,7 +452,7 @@ bw.relrisk <- function(X, method="likelihood",
     }
   } else stopifnot(hmin < hmax)
   ##
-  h <- exp(seq(from=log(hmin), to=log(hmax), length.out=nh))
+  h <- geomseq(from=hmin, to=hmax, length.out=nh)
   cv <- numeric(nh)
   ## 
   ## compute cross-validation criterion
@@ -449,6 +477,7 @@ bw.relrisk <- function(X, method="likelihood",
            for(i in seq_len(nh)) {
              phat <- Smooth(X01, sigma=h[i], at="points", leaveoneout=TRUE,
                             sorted=TRUE)
+             phat <- as.matrix(phat)
              cv[i] <- mean((y01 - phat)^2)
            }
          },
@@ -458,28 +487,24 @@ bw.relrisk <- function(X, method="likelihood",
            h0 <- bw.relrisk(X, "leastsquares", nh=ceiling(nh/4))
            phat0 <- Smooth(X01, sigma=h0, at="points", leaveoneout=TRUE,
                            sorted=TRUE)
+           phat0 <- as.matrix(phat0)
            var0 <- phat0 * (1-phat0)
            var0 <- pmax.int(var0, 1e-6)
            for(i in seq_len(nh)) {
              phat <- Smooth(X01, sigma=h[i], at="points", leaveoneout=TRUE,
                             sorted=TRUE)
+             phat <- as.matrix(phat)
              cv[i] <- mean((y01 - phat)^2/var0)
            }
          })
   ## optimize
-  iopt <- which.min(cv)
-  ##
-  if(warn && (iopt == nh || iopt == 1)) 
-    warning(paste("Cross-validation criterion was minimised at",
-                  if(iopt == 1) "left-hand" else "right-hand",
-                  "end of interval",
-                  "[", signif(hmin, 3), ",", signif(hmax, 3), "];",
-                  "use arguments hmin, hmax to specify a wider interval"))
-  ##    
-  result <- bw.optim(cv, h, iopt,
+  result <- bw.optim(cv, h, 
                      hname="sigma", 
                      creator="bw.relrisk",
-                     criterion=paste(methodname, "Cross-Validation"))
+                     criterion=paste(methodname, "Cross-Validation"),
+                     warnextreme=warn,
+                     hargnames=c("hmin", "hmax"),
+                     unitname=unitname(X))
   return(result)
 }
 

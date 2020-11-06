@@ -6,18 +6,22 @@
   at a set of irregular locations using inverse-distance weighting.
 }
 \usage{
-idw(X, power=2, at="pixels", ...)
+idw(X, power=2, at=c("pixels", "points"), ..., se=FALSE)
 }
 \arguments{
   \item{X}{A marked point pattern (object of class \code{"ppp"}).}
   \item{power}{Numeric. Power of distance used in the weighting.}
   \item{at}{
-    String specifying whether to compute the intensity values
+    Character string specifying whether to compute the intensity values
     at a grid of pixel locations (\code{at="pixels"}) or
     only at the points of \code{X} (\code{at="points"}).
+    String is partially matched.
   }
   \item{\dots}{Arguments passed to \code{\link{as.mask}}
     to control the pixel resolution of the result.}
+  \item{se}{
+    Logical value specifying whether to calculate a standard error.
+  }
 }
 \details{
   This function performs spatial smoothing of numeric values
@@ -62,6 +66,12 @@ idw(X, power=2, at="pixels", ...)
   at a data point is excluded when calculating the smoothed value
   for that point). 
 
+  An estimate of standard error is also calculated, if \code{se=TRUE}.
+  The calculation assumes that the data point locations are fixed,
+  that is, the standard error only takes into account the variability
+  in the mark values, and not the variability due to randomness of the
+  data point locations.
+  
   An alternative to  inverse-distance weighting is kernel smoothing,
   which is performed by \code{\link{Smooth.ppp}}.
 }
@@ -90,6 +100,9 @@ idw(X, power=2, at="pixels", ...)
     and one column for each column of marks. 
     Entries are values of the interpolated function at the points of \code{X}.
   }
+  If \code{se=TRUE}, then the result is a list
+  with two entries named \code{estimate} and \code{SE}, which
+  each have the format described above.
 }
 \seealso{
   \code{\link{density.ppp}},
@@ -103,15 +116,21 @@ idw(X, power=2, at="pixels", ...)
 }
 \examples{
    # data frame of marks: trees marked by diameter and height
-   data(finpines)
    plot(idw(finpines))
    idw(finpines, at="points")[1:5,]
+   plot(idw(finpines, se=TRUE)$SE)
+   idw(finpines, at="points", se=TRUE)$SE[1:5, ]
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\references{
+  Shepard, D. (1968) A two-dimensional interpolation function for
+  irregularly-spaced data.
+  \emph{Proceedings of the 1968 ACM National Conference},
+  1968, pages 517--524. DOI: 10.1145/800186.810616
+}
+\author{
+  \spatstatAuthors.
+  Variance calculation by Andrew P Wheeler with modifications by
+  Adrian Baddeley.
 }
 \keyword{spatial}
 \keyword{methods}

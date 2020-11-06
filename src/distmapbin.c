@@ -4,9 +4,12 @@
        Distance transform of a discrete binary image
        (8-connected path metric)
        
-       $Revision: 1.6 $ $Date: 2011/11/20 03:34:16 $
+       $Revision: 1.7 $ $Date: 2018/12/18 02:43:11 $
 
        
+  Copyright (C) Adrian Baddeley, Ege Rubak and Rolf Turner 2001-2018
+  Licence: GNU Public Licence >= 2
+
 */
 
 #include <math.h>
@@ -100,18 +103,18 @@ distmap_bin(in, dist)
 /* R interface */
 
 void distmapbin(xmin, ymin, xmax, ymax, nr, nc,
-	   in, distances, boundary)
+		inp, distances, boundary)
 	double *xmin, *ymin, *xmax, *ymax;  	  /* x, y dimensions */
 	int *nr, *nc;	 	                  /* raster dimensions
 				                     EXCLUDING margin of 1 on each side */
-	int   *in;              /* input:  binary image */
+	int   *inp;              /* input:  binary image */
 	double *distances;	/* output: distance to nearest point */
 	double *boundary;       /* output: distance to boundary of rectangle */
 	/* all images must have identical dimensions including a margin of 1 on each side */
 {
 	Raster data, dist, bdist;
 
-	shape_raster( &data, (void *) in, *xmin,*ymin,*xmax,*ymax,
+	shape_raster( &data, (void *) inp, *xmin,*ymin,*xmax,*ymax,
 			    *nr+2, *nc+2, 1, 1);
 	shape_raster( &dist, (void *) distances,*xmin,*ymin,*xmax,*ymax,
 			   *nr+2,*nc+2,1,1);

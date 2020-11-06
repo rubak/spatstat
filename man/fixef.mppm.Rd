@@ -42,20 +42,16 @@
 }
 \author{
   Adrian Baddeley, Ida-Maria Sintorn and Leanne Bischoff.
-  Implemented by 
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  Implemented in \pkg{spatstat} by
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{coef.mppm}}
 }
 \examples{
  H <- hyperframe(Y = waterstriders)
+ # Tweak data to exaggerate differences
+ H$Y[[1]] <- rthin(H$Y[[1]], 0.3)
  m1 <- mppm(Y ~ id,  data=H, Strauss(7))
  fixef(m1)
  m2 <- mppm(Y ~ 1,  random=~1|id, data=H, Strauss(7))

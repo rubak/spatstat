@@ -6,7 +6,7 @@
   The \code{hist} method for class \code{"im"}.
 }
 \usage{
-  \method{hist}{im}(x, \dots, probability=FALSE)
+  \method{hist}{im}(x, \dots, probability=FALSE, xname)
 }
 \arguments{
   \item{x}{A pixel image (object of class \code{"im"}).}
@@ -14,6 +14,9 @@
     or \code{\link{barplot}}.}
   \item{probability}{Logical. If \code{TRUE}, the histogram will be
     normalised to give probabilities or probability densities.
+  }
+  \item{xname}{Optional. Character string to be used as the
+  name of the dataset \code{x}.
   }
 }
 \details{
@@ -49,11 +52,15 @@
 \seealso{
   \code{\link{spatialcdf}} for the cumulative distribution function
   of an image.
-  
+
   \code{\link{hist}},
   \code{\link{hist.default}},
   \code{\link{barplot}}.
 
+  For other statistical graphics such as Q-Q plots,
+  use \code{X[]} to extract the pixel values of image \code{X},
+  and apply the usual statistical graphics commands.
+  
   For information about pixel images see
   \code{\link{im.object}},
   \code{\link{summary.im}}.
@@ -63,11 +70,9 @@
   hist(X)
   hist(cut(X,3))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{methods}

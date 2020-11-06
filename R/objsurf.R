@@ -3,7 +3,7 @@
 #
 #  surface of the objective function for an M-estimator
 #
-#  $Revision: 1.3 $ $Date: 2013/11/12 15:53:11 $
+#  $Revision: 1.6 $ $Date: 2020/10/15 07:48:05 $
 #
 
 objsurf <- function(x, ...) {
@@ -17,13 +17,17 @@ objsurf.kppm <- objsurf.dppm <- function(x, ..., ngrid=32, ratio=1.5, verbose=TR
            result <- objsurf(Fit$mcfit, ...,
                              ngrid=ngrid, ratio=ratio, verbose=verbose)
          },
-         clik = {
+         palm = ,
+         clik2 = {
            optpar  <- x$par
            objfun  <- Fit$objfun
            objargs <- Fit$objargs
            result  <- objsurfEngine(objfun, optpar, objargs, ...,
                                     ngrid=ngrid, ratio=ratio, verbose=verbose)
-         })
+         },
+         stop(paste("Unrecognised fitting method", dQuote(Fit$method)),
+              call.=FALSE)
+         )
   return(result)
 }
 
@@ -58,7 +62,7 @@ objsurfEngine <- function(objfun, optpar, objargs,
   colnames(pargrid) <- names(optpar)
   # evaluate
   if(verbose) cat(paste("Evaluating", nrow(pargrid), "function values..."))
-  values <- do.call("apply",
+  values <- do.call(apply,
                     append(list(pargrid, 1, objfun, objargs=objargs), dotargs))
   if(verbose) cat("Done.\n")
   result <- list(x=xgrid, y=ygrid, z=matrix(values, ngrid[1], ngrid[2]))
@@ -84,7 +88,7 @@ image.objsurf <- plot.objsurf <- function(x, ...) {
   xname <- short.deparse(substitute(x))
   optpar <- attr(x, "optpar")
   nama <- names(optpar)
-  do.call("image",
+  do.call(image,
           resolve.defaults(list(x=unclass(x)),
                            list(...),
                            list(xlab=nama[1], ylab=nama[2], main=xname)))
@@ -97,7 +101,7 @@ contour.objsurf <- function(x, ...) {
   xname <- short.deparse(substitute(x))
   optpar <- attr(x, "optpar")
   nama <- names(optpar)
-  do.call("contour",
+  do.call(contour,
           resolve.defaults(list(x=unclass(x)),
                            list(...),
                            list(xlab=nama[1], ylab=nama[2], main=xname)))
@@ -112,7 +116,7 @@ persp.objsurf <- function(x, ...) {
   optpar <- attr(x, "optpar")
   objname <- attr(x, "objname")
   nama <- names(optpar)
-  r <- do.call("persp",
+  r <- do.call(persp,
                resolve.defaults(list(x=x$x, y=x$y, z=x$z),
                                 list(...),
                                 list(xlab=nama[1], ylab=nama[2],

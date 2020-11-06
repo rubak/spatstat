@@ -1,7 +1,7 @@
 #
 #   unique.ppp.R
 #
-# $Revision: 1.30 $  $Date: 2014/11/11 01:25:17 $
+# $Revision: 1.37 $  $Date: 2019/05/22 09:04:57 $
 #
 # Methods for 'multiplicity' co-authored by Sebastian Meyer
 # Copyright 2013 Adrian Baddeley and Sebastian Meyer 
@@ -21,37 +21,28 @@ duplicated.ppp <- function(x, ...,
   rule <- match.arg(rule)
   if(rule == "deldir")
     return(deldir::duplicatedxy(x))
-  if(rule == "unmark")
-    x <- unmark(x)
   n <- npoints(x)
+  xloc <- unmark(x)
+  if(!anyDuplicated(xloc))
+    return(logical(n)) # i.e. vector of FALSE
+  if(rule == "unmark")
+    x <- xloc
   switch(markformat(x),
          none = {
-           # unmarked points
-           # check for duplication of x and y separately (a necessary condition)
-           xx <- x$x
-           yy <- x$y
-           possible <- duplicated(xx) & duplicated(yy)
-           if(!any(possible))
-             return(possible)
-           # split by x coordinate of duplicated x values
-           result <- possible
-           xvals <- unique(xx[possible])
-           for(xvalue in xvals) {
-             sub <- (xx == xvalue)
-           # compare y values
-             result[sub] <- duplicated(yy[sub])
-           }
+           #' unmarked points
+           u <- uniquemap(x)
+           result <- (u != seq_along(u))
          },
          vector = {
-           # marked points - split by mark value
+           #' marked points - convert mark to integer
            m <- marks(x)
-           um <- if(is.factor(m)) levels(m) else unique(m)
-           xx <- unmark(x)
-           result <- logical(n)
-           for(i in seq_along(um)) {
-             sub <- (m == um[i])
-             result[sub] <- duplicated.ppp(xx[sub])
+           if(is.factor(m)) {
+             marks(x) <- as.integer(m)
+           } else {
+             um <- unique(m)
+             marks(x) <- match(m, um)
            }
+           result <- duplicated(as.data.frame(x))
          },
          dataframe = {
            result <- duplicated(as.data.frame(x))
@@ -69,21 +60,42 @@ duplicated.ppp <- function(x, ...,
 }
 
 anyDuplicated.ppp <- function(x, ...) {
-  anyDuplicated(as.data.frame(x), ...)
+  #' first check duplication of coordinates using fast code
+  n <- npoints(x)
+  if(n <= 1) return(FALSE)
+  xx <- x$x
+  yy <- x$y
+  o <- order(xx, seq_len(n))
+  anydupXY <- .C("anydupxy",
+                 n=as.integer(n),
+                 x=as.double(xx[o]),
+                 y=as.double(yy[o]),
+                 anydup=as.integer(integer(1)),
+                 PACKAGE="spatstat")$anydup
+  anydupXY && (!is.marked(x) || anyDuplicated(as.data.frame(x), ...))
 }
 
 ## utility to check whether two rows are identical
 
-IdenticalRows <- local({
-  id <- function(i,j, a, b=a) {
-    ai <- a[i,]
-    bj <- b[j,]
-    row.names(ai) <- row.names(bj) <- NULL
-    identical(ai, bj)
-  }
-  Vectorize(id, c("i", "j"))
-})
-    
+IdenticalRowPair <- function(i,j, a, b=a) {
+  #' i and j are row indices (single integers)
+  ai <- a[i,]
+  bj <- b[j,]
+  row.names(ai) <- row.names(bj) <- NULL
+  identical(ai, bj)
+}
+
+## vectorised
+
+IdenticalRows <- function(i, j, a, b=a) {
+  #' i and j are row index vectors of equal length
+  #' result[k] = identical( a[i[k],]  , b[j[k],] )
+  Mo <- if(missing(b)) list(a=a) else list(a=a, b=b)
+  mapply(IdenticalRowPair, i=i, j=j, MoreArgs=Mo,
+         SIMPLIFY=TRUE, USE.NAMES=FALSE)
+}
+
+## .......... multiplicity .............
 
 multiplicity <- function(x) {
   UseMethod("multiplicity")
@@ -123,7 +135,7 @@ multiplicity.ppp <- function(x) {
   if(length(I) == 0)
     return(rep.int(1L, np))
   JbyI <- split(J, factor(I, levels=1:np))
-  result <- 1 + sapply(JbyI, length)
+  result <- 1 + lengths(JbyI)
   return(result)
 }
   
@@ -141,9 +153,9 @@ multiplicity.data.frame <- function (x) {
   nu <- nrow(ux)
   nd <- nrow(dx)
   hit <- outer(seq_len(nu), seq_len(nd), IdenticalRows, a=ux, b=dx)
-  counts <- as.integer(1 + .rowSums(hit, nu, nd))
+  counts <- as.integer(1L + .rowSums(hit, nu, nd))
   result[!dup] <- counts
-  dumap <- apply(hit, 2, function(z) min(which(z)))
+  dumap <- apply(hit, 2, match, x=TRUE) # equivalent to min(which(z))
   result[dup] <- counts[dumap]
   return(result)
 }
@@ -155,13 +167,16 @@ multiplicityNumeric <- function(x)
 {
   if (anyDuplicated(x)) {
     distmat <- as.matrix(dist(x, method="manhattan"))  # faster than euclid.
-    as.integer(rowSums(distmat == 0))                  # labels are kept
+    result <- as.integer(rowSums(distmat == 0))        # labels are kept
+    if(is.null(names(result)))
+      names(result) <- seq_along(result)
   } else {                                             # -> vector of 1's
     nx <- NROW(x)
     labels <- if (length(dim(x))) rownames(x) else names(x)
     if (is.null(labels)) labels <- seq_len(nx)
-    setNames(rep.int(1L, nx), labels)
+    result <- setNames(rep.int(1L, nx), labels)
   }
+  return(result)
 }
 
 ### multiplicity method for arrays, data frames, and vectors (including lists)
@@ -188,9 +203,10 @@ multiplicity.default <- function (x) {
   nu <- nrow(ux)
   nd <- nrow(dx)
   hit <- outer(seq_len(nu), seq_len(nd), IdenticalRows, a=ux, b=dx)
-  counts <- as.integer(1 + .rowSums(hit, nu, nd))
-  dumap <- apply(hit, 2, function(z) min(which(z)))
-  result[dup] <- counts[dumap]
+  counts <- as.integer(1L + .rowSums(hit, nu, nd))
+  dumap <- apply(hit, 2, match, x=TRUE) # was: function(z) min(which(z)))
+  result[!dup] <- counts
+  result[dup]  <- counts[dumap]
   return(result)
 }
 

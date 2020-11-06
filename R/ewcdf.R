@@ -1,44 +1,81 @@
 #
 #     ewcdf.R
 #
-#     $Revision: 1.8 $  $Date: 2015/05/17 10:30:37 $
+#     $Revision: 1.19 $  $Date: 2019/10/14 08:40:51 $
 #
 #  With contributions from Kevin Ummel
 #
 
-ewcdf <- function(x, weights=rep(1/length(x), length(x)))
+ewcdf <- function(x, weights=NULL, normalise=TRUE, adjust=1)
 {
-  stopifnot(length(x) == length(weights))
-  # remove NA's together
+  nx <- length(x)
+  nw <- length(weights)
+  weighted <- (nw > 0)
+
+  if(weighted) {
+    check.nvector(weights, things="entries of x", oneok=TRUE)
+    stopifnot(all(weights >= 0))
+    if(nw == 1) 
+      weights <- rep(weights, nx)
+  }
+  
+  ## remove NA's
   nbg <- is.na(x) 
   x <- x[!nbg]
-  weights <- weights[!nbg]
+  if(weighted) weights <- weights[!nbg]
   n <- length(x)
   if (n < 1)
     stop("'x' must have 1 or more non-missing values")
-  stopifnot(all(weights >= 0))
-  # sort in increasing order of x value
-  ox <- fave.order(x)
-  x <- x[ox]
-  w <- weights[ox]
-  # find jump locations and match
-  vals <- sort(unique(x))
-  xmatch <- factor(match(x, vals), levels=seq_along(vals))
-  # sum weight in each interval
-  wmatch <- tapply(w, xmatch, sum)
-  wmatch[is.na(wmatch)] <- 0
+
+  ## sort in increasing order of x value
+  if(!weighted) {
+    x <- sort(x)
+    w <- rep(1, n)
+  } else {
+    ox <- fave.order(x)
+    x <- x[ox]
+    w <- weights[ox]
+  }
+  ## find jump locations and match
+  rl <- rle(x)
+  vals <- rl$values
+  if(!weighted) {
+    wmatch <- rl$lengths
+  } else {
+    nv <- length(vals)
+    wmatch <- .C("tabsumweight",
+                 nx=as.integer(n),
+                 x=as.double(x),
+                 w=as.double(w),
+                 nv=as.integer(nv),
+                 v=as.double(vals),
+                 z=as.double(numeric(nv)),
+                 PACKAGE="spatstat")$z
+  }
+  ## cumulative weight in each interval
   cumwt <- cumsum(wmatch)
-  # make function
+  totwt <- sum(wmatch)
+  ## rescale ?
+  if(normalise) {
+    cumwt <- cumwt/totwt
+    totwt <- 1
+  } else if(adjust != 1) {
+    cumwt <- adjust * cumwt
+    totwt <- adjust * totwt
+  }
+  ## make function
   rval <- approxfun(vals, cumwt,
-                    method = "constant", yleft = 0, yright = sum(wmatch),
+                    method = "constant", yleft = 0, yright = totwt,
                     f = 0, ties = "ordered")
-  class(rval) <- c("ewcdf", "ecdf", "stepfun", class(rval))
+  class(rval) <- c("ewcdf",
+                   if(normalise) "ecdf" else NULL,
+                   "stepfun", class(rval))
   assign("w", w, envir=environment(rval))
   attr(rval, "call") <- sys.call()
   return(rval)
 }
 
-  # Hacked from stats:::print.ewcdf
+  # Hacked from stats:::print.ecdf
 print.ewcdf <- function (x, digits = getOption("digits") - 2L, ...) {
   cat("Weighted empirical CDF \nCall: ")
   print(attr(x, "call"), ...)
@@ -58,21 +95,33 @@ print.ewcdf <- function (x, digits = getOption("digits") - 2L, ...) {
   invisible(x)
 }
 
-quantile.ewcdf <- function(x, probs=seq(0,1,0.25), names=TRUE, ..., type=1) {
+quantile.ewcdf <- function(x, probs=seq(0,1,0.25), names=TRUE, ...,
+                           normalise=TRUE, type=1) {
   trap.extra.arguments(..., .Context="quantile.ewcdf")
   if(!(type %in% c(1,2)))
     stop("Only quantiles of type 1 and 2 are implemented", call.=FALSE)
   env <- environment(x)
   xx <- get("x", envir=env)
-  Fxx <- get("y", envir=env)
   n <- length(xx)
+  Fxx <- get("y", envir=env)
+  maxFxx <- max(Fxx)
   eps <- 100 * .Machine$double.eps
-  if(any((p.ok <- !is.na(probs)) & (probs < -eps | probs > 1 + eps))) 
-    stop("'probs' outside [0,1]")
+  if(normalise) {
+    Fxx <- Fxx/maxFxx
+    maxp <- 1
+  } else {
+    maxp <- maxFxx
+  }
+  if(any((p.ok <- !is.na(probs)) &
+         (probs/maxp < -eps | probs/maxp > 1 + eps))) {
+    allowed <- if(normalise) "[0,1]" else
+               paste("permitted range", prange(c(0, maxp)))
+    stop(paste("'probs' outside", allowed), call.=FALSE)
+  }
   if (na.p <- any(!p.ok)) {
     o.pr <- probs
     probs <- probs[p.ok]
-    probs <- pmax(0, pmin(1, probs))
+    probs <- pmax(0, pmin(maxp, probs))
   }
   np <- length(probs)
   if (n > 0 && np > 0) {
@@ -85,7 +134,7 @@ quantile.ewcdf <- function(x, probs=seq(0,1,0.25), names=TRUE, ..., type=1) {
       for(k in 1:np) {
         pk <- probs[k]
         ik <- min(which(Fxx >= probs[k]))
-        qs[k] <- if(Fxx[ik] > pk) (xx[ik] + xx[ik-1])/2 else xx[ik]
+        qs[k] <- if(Fxx[ik] > pk) (xx[ik] + xx[ik-1L])/2 else xx[ik]
       }
     }
   } else {
@@ -93,14 +142,20 @@ quantile.ewcdf <- function(x, probs=seq(0,1,0.25), names=TRUE, ..., type=1) {
   }
   if (names && np > 0L) {
     dig <- max(2L, getOption("digits"))
-    probnames <-
-      if(np < 100) formatC(100 * probs, format="fg", width=1, digits=dig) else
-      format(100 * probs, trim = TRUE, digits = dig)
-    names(qs) <- paste0(probnames, "%")
+    if(normalise) {
+      probnames <-
+        if(np < 100) formatC(100 * probs, format="fg", width=1, digits=dig) else
+        format(100 * probs, trim = TRUE, digits = dig)
+      names(qs) <- paste0(probnames, "%")
+    } else {
+      names(qs) <-
+        if(np < 100) formatC(probs, format="fg", width=1, digits=dig) else
+        format(probs, trim=TRUE, digits=dig)
+    }
   }
   if (na.p) {
     o.pr[p.ok] <- qs
-    names(o.pr) <- rep("", length(o.pr))
+    names(o.pr) <- rep("NA", length(o.pr))
     names(o.pr)[p.ok] <- names(qs)
     o.pr
   } else qs

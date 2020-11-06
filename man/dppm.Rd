@@ -1,5 +1,7 @@
 \name{dppm}
 \alias{dppm}
+\concept{point process model}
+\concept{determinantal point process}
 \title{Fit Determinantal Point Process Model}
 \description{
   Fit a determinantal point process model to a point pattern.
@@ -168,7 +170,7 @@
       as shown in the Examples.
 
       Additional arguments \code{\dots} will be passed to
-      \code{\link{mincontrast}} to control the minimum contrast fitting
+      \code{\link{clusterfit}} to control the minimum contrast fitting
       algorithm.
     }
     \item{Composite likelihood:}{
@@ -180,9 +182,9 @@
 	- \left( \sum_{i,j} w(d_{ij}) \right)
 	\log \int_D \int_D w(\|u-v\|) \rho(\|u-v\|; \theta)\, du\, dv
       }{
-	sum[i,j] w(d[i,j]) log(rho(d[i,j]; theta))
-	- (sum[i,j] w(d[i,j]))
-	log(integral[D,D] w(||u-v||) rho(||u-v||; theta) du dv)
+	\sum[i,j] w(d[i,j]) log(\rho(d[i,j]; \theta))
+	- (\sum[i,j] w(d[i,j]))
+	log(integral[D,D] w(||u-v||) \rho(||u-v||; \theta) du dv)
       }
       where the sums are taken over all pairs of data points
       \eqn{x_i, x_j}{x[i], x[j]} separated by a distance
@@ -190,16 +192,16 @@
       less than \code{rmax},
       and the double integral is taken over all pairs of locations
       \eqn{u,v} in the spatial window of the data.
-      Here \eqn{\rho(d;\theta)}{rho(d;theta)} is the
+      Here \eqn{\rho(d;\theta)}{\rho(d;\theta)} is the
       pair correlation function of the model with
-      cluster parameters \eqn{\theta}{theta}.
+      cluster parameters \eqn{\theta}{\theta}.
 
       The function \eqn{w} in the composite likelihood
       is a weighting function and may be chosen arbitrarily.
       It is specified by the argument \code{weightfun}.
       If this is missing or \code{NULL} then the default is
       a threshold weight function,
-      \eqn{w(d) = 1(d \le R)}{w(d) = 1(d <= R)}, where \eqn{R} is \code{rmax/2}.
+      \eqn{w(d) = 1(d \le R)}{w(d) = 1(d \le R)}, where \eqn{R} is \code{rmax/2}.
     }
     \item{Palm likelihood:}{
       If \code{method = "palm"} the interaction parameters of the
@@ -209,11 +211,11 @@
 	\sum_{i,j} w(x_i, x_j) \log \lambda_P(x_j \mid x_i; \theta)
 	- \int_D w(x_i, u) \lambda_P(u \mid x_i; \theta) {\rm d} u
       }{
-	sum[i,j] w(x[i], x[j]) log(lambdaP(x[j] | x[i]; theta)
-	- integral[D] w(x[i], u) lambdaP(u | x[i]; theta) du
+	\sum[i,j] w(x[i], x[j]) log(\lambda[P](x[j] | x[i]; \theta)
+	- integral[D] w(x[i], u) \lambda[P](u | x[i]; \theta) du
       }
       with the same notation as above. Here
-      \eqn{\lambda_P(u|v;\theta}{lambdaP(u|v;theta)} is the Palm intensity of
+      \eqn{\lambda_P(u|v;\theta}{\lambda[P](u|v;\theta)} is the Palm intensity of
       the model at location \eqn{u} given there is a point at \eqn{v}.
     }
   }
@@ -246,7 +248,8 @@
   \code{\link{pcfmodel.dppm}}.
 
   Minimum contrast fitting algorithm:
-  \code{\link{mincontrast}}.
+  higher level interface \code{\link{clusterfit}};
+  low-level algorithm \code{\link{mincontrast}}.
 
   Deterimantal point process models:
   \code{\link{dppGauss}},
@@ -264,7 +267,7 @@
   See also \code{\link{ppm}}
 }
 \references{
-  Lavancier, F. \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Rubak, E. (2015)
+  Lavancier, F. \Moller, J. and Rubak, E. (2015)
   Determinantal point process models and statistical inference
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{77}, 853--977.
@@ -287,6 +290,10 @@
 }
 \examples{
   jpines <- residualspaper$Fig1
+  \testonly{
+     # smaller dataset for testing
+    jpines <- jpines[c(TRUE,FALSE)]
+  }
 
   dppm(jpines ~ 1, dppGauss)
 
@@ -307,13 +314,8 @@
   # Fixing the Matern shape parameter to nu=2 rather than estimating it:
   dppm(jpines ~ x, dppMatern(nu=2))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{models}

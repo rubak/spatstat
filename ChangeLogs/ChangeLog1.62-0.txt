@@ -1,0 +1,1239 @@
+Change log from 1.61-0 to 1.62-0
+================================
+
+12 sep 2019
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Version 1.61-0.001
+	Nickname 'Ftang ftang ole biscuit barrel'
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+13 sep 2019
+
+   tess.R
+   lintess.R
+   tilenames.Rd
+	tilenames() and "tilenames<-"() are now generic
+	with methods for 'tess' and 'lintess'
+
+   plot.im.R
+	Improved message when values are interpreted as colours
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tilenames.Rd
+	tweaked example
+
+   marks.R
+   spatstat-internal.Rd
+	New internal function 'markvaluetype'
+
+   lintess.R
+   lintess.Rd
+   marks.tess.Rd
+	lintess objects can have marks
+	New functions marks.lintess, marks<-.lintess, unmark.lintess
+
+   lintess.R
+	Modified print.lintess, summary.lintess, print.summary.lintess
+	to handle marks.
+
+   lintess.R
+   unstack.ppp.Rd
+   spatstat-internal.Rd
+	unstack.lintess now has a non-trivial task
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.002
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   psp.R
+   plot.psp.Rd
+	plot.psp has new argument 'col'
+
+   lintess.R
+	Bug fixes in infrastructure for marks.
+	plot.lintess handles marks.
+	plot.lintess has options: style = c("colour", "width", "image").
+
+   lintess.R
+   nobjects.Rd
+	New method nobjects.lintess
+
+   plot.im.R
+	Suppressed some warnings when do.plot=FALSE
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.003
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+14 sep 2019
+
+   lintess.R
+	Buglet fix in plot method
+
+   lintess.R
+   as.linfun.Rd
+	as.linfun.lintess uses default function values from marks(X)
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.004
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+15 sep 2019
+
+   lpp.R
+	Bug fix in plot.lpp
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.005
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+16 sep 2019
+
+   linim.R
+   plot.linim.Rd
+	plot.linim now has explicit argument 'box' defaulting to FALSE.
+
+   linim.R
+	Buglet fixes
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.006
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   lppm.R
+	Fixed a scoping bug
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.007
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+
+   nnfun.R
+   nnfun.Rd
+   nnfunlpp.R
+   nnfun.lpp.Rd
+	New argument 'value'
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.008
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   lintess.R
+   as.data.frame.lintess.Rd [New file]
+   	Method for as.data.frame
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.009
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+21 sept 2019
+
+   src/ripleypoly.h
+	Repaired a bug/numerical instability
+
+   src/ripleypoly.h
+   edgeRipley.R
+	Changed algorithm to use boundary distances.
+	Accelerated in many cases.
+	
+   edgeRipley.R
+   edge.Ripley.Rd
+	Arguments slightly modified.
+	
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Annie Mollie
+   
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Nickname 'New improved formula'
+	Version 1.61-0.010
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+23 sept 2019
+
+   src/ripleypoly.h
+	Experimental - revert to double precision comparisons
+	but keep new filtering step
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.011
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+25 sept 2019
+
+   src/ripleypoly.h
+	Reinstated floating-point comparisons (and kept filtering step).
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.012
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   linnet.R
+	Buglet fix in shift method.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.013
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+
+26 sept 2019
+
+   lintess.Rd
+   tests/lppstuff.R
+	More test examples of recent code.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.014
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+30 sept 2019
+
+   bw.optim.R
+   spatstat-internal.Rd
+	bw.optim now checks whether criterion is optimised at an endpoint
+
+   relrisk.R
+   smooth.ppp.R
+	Now use internal checking of bw.optim
+	
+   bw.diggle.R
+   bw.diggle.Rd
+   bw.ppl.R
+   bw.ppl.Rd
+   bw.lppl.Rd
+   bw.pcf.R
+   bw.pcf.Rd
+   bw.CvL.R
+   bw.CvL.Rd
+   densitylppVoronoi.R
+   bw.voronoi.Rd
+	New argument 'warn' 
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.015
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+01 oct 2019
+
+   tests/lppstuff.R
+	More tests of strange cases of nnwhich.lpp, nncross.lpp
+
+   tests/randoms.R
+	More tests of cases that produce empty patterns
+
+02 oct 2019
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.016
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   diagnoseppm.R
+	Accelerated diagnose.ppm(type="inverse")
+	for models without a hard core.
+	
+   tests/windows.R
+   tests/diagnostique.R
+	More tests of unusual cases
+
+02 oct 2019
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.017
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+04 oct 2019
+
+   plot.studpermutest.Rd
+   studpermu.test.Rd
+   tests/hypotests.R
+	Test more cases of studpermu.test and plot.studpermutest
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.018
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+05 oct 2019
+
+   tests/formuli.R
+   tests/imageops.R
+   tests/kppm.R
+   tests/lppstuff.R
+   tests/ppp.R
+   tests/prediction.R
+   tests/segments.R
+	Test unusual code cases
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.019
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+07 oct 2019
+
+   util.R
+	Allow 'pkg' to be a character string in requireversion()
+
+   Math.linim.R
+	Bug fix in Complex.linim
+
+   tests/lppstuff.R
+	Test code for complex-valued functions/images
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.020
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+09 oct 2019
+
+   Geyer.Rd
+   BadGey.Rd
+	Added cross-references
+	
+   dclftest.R
+   spatstat-internal.Rd
+	Internal calculations ignore NA's.
+	Added more warnings about NA's.
+	envelopeTest has new internal argument 'badXfatal'
+
+   twostage.R
+   spatstat-internal.Rd
+	Use new internal argument 'badXfatal' in calls to envelopeTest.	
+
+   tests/enveltest.R [New file]
+        Test cases where NA's are produced.
+	
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Nestor Luambua.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.021
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+11 oct 2019
+
+   studpermutest.R
+	Bug fix (crash if sample space is very large)
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.022
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   envelope.R
+   spatstat-internal.Rd
+	envelopeEngine has argument 'rejectNA' which will reject
+	a simulated pattern if the function values are all non-finite
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.023
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/dominic.R
+	Test more code blocks
+
+   vcov.ppm.R
+   vcov.ppm.Rd
+	Now checks whether the model coefficients are finite.
+	New argument 'nacoef.action'
+
+   vcov.mppm.R
+   vcov.mppm.Rd
+	Now checks whether the model coefficients are finite.
+	Recognises argument 'nacoef.action'
+
+   summary.ppm.R
+	Bug fix in handling invalid models
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.024
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+13 oct 2019
+
+   tests/Kfuns.R
+	Test some cases of Kinhom
+
+14 oct 2019
+
+   envelope.R
+   envelope.Rd
+	New formal arguments 'rejectNA' and 'silent'
+	for envelope.ppp, envelope.ppm, envelope.kppm
+	
+   envelope3.R
+   envelope.pp3.Rd
+	New formal arguments 'rejectNA' and 'silent'
+	for envelope.pp3
+
+   envelopelpp.R
+   envelope.lpp.Rd
+	New formal arguments 'maxnerr', 'rejectNA' and 'silent'
+	for envelope.lpp, envelope.lppm
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.025
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   plot.pp3.Rd
+	Tweaked example to test the case 'type="h"'
+
+   tests/contact.R
+	Test internal checking code of exactdt
+
+   ewcdf.R
+	Tweak behaviour when NA present
+	
+   tests/NAinCov.R
+	Test handling of NA in quantile.ewcdf
+
+   GmultiInhom.Rd
+	Tweak example
+	
+16 oct 2019
+
+   studpermutest.R
+	Bug fix (incompatible edge corrections)
+
+   tests/hypotests.R
+	Check validity of bug fix
+
+   Kest.R
+   Kinhom.R
+   Kmulti.R
+   Kmulti.inhom.R
+   Lest.Rd
+   Linhom.Rd
+   Lcross.Rd
+   Ldot.Rd
+   Lcross.inhom.Rd
+   Ldot.inhom.Rd
+	Lest, Linhom, Ldot, Lcross, Ldot.inhom, Lcross.inhom
+	now have explicit argument 'correction'.
+
+   Kinhom.R
+	Handles correction=NULL
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.026
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+17 oct 2019
+
+   quantess.R
+	Bug fix (labels could be non-unique)
+	
+   DESCRIPTION
+   NEWS
+	spatstat depends on spatstat.utils 1.15-0
+	Version 1.61-0.027
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/tessera.R
+	Added test of aforementioned bug.
+
+   quantess.R
+	Tweaked labels to improve consistency.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.028
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/prediction.R
+	More tests of predict.ppm
+
+   clusterfunctions.R
+   reach.kppm.Rd [New file]
+   	New method reach.kppm
+
+   reach.Rd
+	Added cross-references.
+
+   dppmclass.R
+   repul.Rd [New file]
+   	New generic 'repul' and method 'repul.dppm'
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.029
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+18 oct 2019
+
+   summary.dppm.R [New file]
+   summary.dppm.Rd [New file]
+       Summary method for dppm
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.030
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   envelope.R
+	Tweaked error messages about maxnerr
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.031
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+20 oct 2019
+
+   tests/rmhMulti.R
+	repaired a test that wasn't testing the desired code.
+
+21 oct 2019
+
+   distanxD.R
+	New C functions knnXwMD, knnXxMD
+
+   nncross.ppx.Rd [New file]
+   	New function nncross.ppx
+
+   Perfect.cc
+	Commented-out the Print function.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.032
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   distanxD.R
+	Bug fix
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.033
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+22 oct 2019
+
+   rmh.default.R
+   rmhcontrol.R
+   rmhcontrol.Rd
+	nsave can be a vector.
+
+   rmh.ppm.R
+	Consequential adjustment to simulate.ppm
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.034
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   plot3d.R
+	Bug fix in handling vector-valued 'col', etc
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.035
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+23 oct 2019
+
+   tests/rmhBasic.R
+	Added tests of new options for nsave, nburn
+
+   bugtable.R
+   bugfixes.Rd
+	Accepts sinceversion="book" or sincedate="book".
+
+   updates.Rnw
+	Updated to cover all the above.
+
+25 oct 2019
+
+   lixel.c
+	Bug fix
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.036
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   bugfixes.Rnw
+	Updated to cover all the above.
+
+28 oct 2019
+
+   closepairs.R
+   close3Dpairs.R
+	Added undocumented option to test memory overflow code.
+	
+   tests/closeshave.R
+	Test memory overflow code.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.037
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+29 oct 2019
+
+   linnet.R
+	Bug fix in as.linnet.psp
+
+   linnetsurgery.R
+	Minor improvement to thinNetwork.
+	
+   linnetsurgery.R
+   repairNetwork.Rd [New file]
+   	New function repairNetwork.
+
+   lpp.R
+   linnet.R
+	Now use 'repairNetwork' in [.linnet and [.lpp
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.038
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   uniquemap.R
+	Faster algorithm for uniquemap.data.frame in some cases
+	relevant to networks.
+
+   tests/duplicity.R
+	Added test of validity for uniquemap.data.frame
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.039
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+30 oct 2019
+
+   uniquemap.R
+   uniquemap.default.Rd
+	New method uniquemap.matrix
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.040
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+31 oct 2019
+
+   Fest.R
+   Jest.R
+   Jmulti.R
+   Hest.R
+   Iest.R
+   metricPdt.R [function rectcontact()]
+	Bug fix arising in envelope() with these summary functions.
+	Each function now recognises the undocumented argument 'checkspacing',
+	and returns attr(, "conserve") = list(checkspacing=FALSE)
+
+   envelope.R
+	Bug fix.
+	attr(fun(X),"conserve") is passed back to the summary function 'fun'
+	when applying it to simulated patterns
+
+   eval.fv.R
+	attr(,"conserve") is conserved
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.041
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+01 nov 2019
+
+   Jmulti.R
+	Fix bug causing errors about spacing of r values.
+
+   tests/fvproblems.R
+	Test an example of this bug.
+
+   Fest.R
+   Hest.R
+   Jmulti.R
+   metricPdt.R
+	Inserted precautionary test code.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.042
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/fvproblems.R
+	Extend the bug test.
+
+   logLik.kppm.Rd
+   logLik.ppm.Rd
+	Added a section about model comparison/selection.
+
+   Kmeasure.R
+   spatstat-internal.Rd
+	Buglet fix
+
+   tests/density.R
+	Test bugs in second.moment.calc
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.043
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   rcellpp.R      [New file]
+   rcellpp.Rd     [New file]
+   rSwitzerlpp.Rd [New file]
+
+   lintessmakers.R [New file]
+   intersect.lintess.Rd [New file]
+   chop.linnet.Rd [New file]
+
+   lintess.R
+   lintessmakers.R
+	Moved 'divide.linnet' to lintessmakers.R
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.044
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+03 nov 2019
+
+   tests/polygons.R
+	Further test of xypolyselfint
+
+   tests/ppmclass.R
+	Further tests of emend.ppm
+
+04 nov 2019
+
+   psp.R
+	Bug fix in handling 'col' when style = "width"
+
+   plot.psp.Rd
+	Improved explanation
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.045
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   window.R
+      Tweak: remove 'names' from 'xrange', etc
+
+   rmhsnoop.R
+      Tweaked header
+      
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.046
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+07 nov 2019
+
+   window.R
+	print.summary.owin prints the side lengths of the Frame
+	
+   linim.R
+   spatstat-internal.R
+	New internal function drawWidthMap
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.047
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+08 nov 2019
+
+   hyperframe.R
+	cbind and rbind methods retain row.names
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.048
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+11 nov 2019
+
+   window.R
+	Buglet fix
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.049
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+12 nov 2019
+
+   linim.R
+	Bug fixes in integral.linim and plot.linim.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.050
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   density.lpp.R
+   spatstat-internal.Rd
+	Bug fix in passing argument 'iterMax'.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.051
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+15 nov 2019
+
+   lineardisc.R
+   clickppp.R
+	More messages to user
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.052
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+18 nov 2019
+
+   psp.R
+	append.psp now handles NULL arguments.
+
+   rshift.psp.R
+	Bug fix thanks to Ute Hahn
+
+   tests/segments.R
+	Added Ute's example
+
+   psp.R
+	as.psp no longer coerces a 1-column data frame of marks to a vector.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.053
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+22 nov 2019
+
+   infline.Rd
+	minor correction by Ute 
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.054
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+24 nov 2019
+
+   tests/ppmtricks.R
+	Test internals of mpl.R
+
+   bugfixes.Rnw
+   updates.Rnw
+	updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.055
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+27 nov 2019
+
+   plot.im.R
+	Bug fix
+
+   tests/imageops.R
+	Tests of code in plot.im
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.056
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+28 nov 2019
+
+   sparse3Darray.R
+   indices.R
+	Bug fixes in sparse 3D array code
+
+   sparse3Darray.R
+   spatstat-internal.Rd
+	Implemented complex operations for sparse3Darray
+	Support printing of complex-valued sparse 3D arrays.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.057
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+29 nov 2019
+
+   mincontrast.R
+	Bug fix in experimental code.
+   
+   tests/kppm.R
+	Test experimental code
+
+   lineardisc.c
+	Unused code commented out.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.058
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   versions.R
+   First.R
+   tests/undoc.R
+	Reorganised code for checking version currency.
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.059
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+02 dec 2019
+
+   envelope.R
+	Bug fixes in envelope.matrix
+
+   tests/envelopes.R
+	Test for bugs in envelope.matrix
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.060
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/envelopes.R
+	Additional test for pool.envelope
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.061
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+03 dec 2019
+
+   tests/ppp.R
+	More tests of handling rejected points.
+
+   kppm.R
+	Bug fix in experimental code.
+
+   tests/testparres.R
+	Test some quirks in parres code
+
+   tests/imageops.R
+	Various tests
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.062
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+04 dec 2019
+
+   distanxD.R
+	Corrected an error message.
+
+   tests/nndist.R
+	More checks for nndist.ppx, nnwhich.pps, nncross.ppx
+	
+   Numerous Rd files
+	Minor corrections/improvements
+
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.063
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+06 dec 2019
+
+   circarcs.R
+	Bug fix in circunion for the case where 0 is an endpoint
+	
+   envelope.R
+   First.R
+   sparse3Darray.R
+   summary.dppm.R
+	Tweaks to satisfy codetools usage checker
+
+   requireversion.Rd
+   tests/aucroc.R
+   tests/circular.R
+   tests/duplicity.R
+   tests/fvproblems.R
+   tests/randoms.R
+   tests/package.R [New file]
+	More tests of code cases
+	
+   DESCRIPTION
+   NEWS
+	spatstat requires goftest 1.2-2 or later.
+	Version 1.61-0.064
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+   
+
+   mppm.R
+   mppm.Rd
+	Added 'weights' argument for case weights.
+
+   tests/mppm.R
+	Test 'weights' argument.
+
+   updates.Rnw
+	updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.61-0.065
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+   
+08 dec 2019
+
+   Kscaled.R
+	Bug fix
+
+   tests/Kfuns.R
+   tests/segments.R
+   tests/xysegment.R
+	More checks
+
+   updates.Rnw
+	minor correction
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname: 'An update which will live in infamy'
+	Version 1.62-0
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+
+............. passed 'make bookcheck' ................
++++++++++++++ passed R-devel CMD check +++++++++++++++
+               (2019-12-04 r77519)
+............. built release version    ...............
+------------- uploaded to github       ---------------

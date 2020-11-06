@@ -1,0 +1,1133 @@
+Change log from 1.55-1 to 1.56-0
+================================
+
+05 april 2018
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Initialised as version 1.55-1.001
+	Nicknamed 'Supermarket Kiss'
+
+   dfbetas.ppm.Rd
+	Polished examples
+
+06 april 2018
+
+   ppmInfluence.Rd
+	Polished examples
+
+   tests/leverinf.R
+	Added tests of other methods.
+
+   pairwise.family.R
+	delta2() algorithm now returns sparse matrices/arrays, if asked.
+
+   sparse3Darray.R
+	buglet fix in trivial case
+	
+   DESCRIPTION
+	date incremented
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   sparse3Darray.R
+	buglet fix in trivial case
+	
+   tests/sparse3Darrays.R
+	more tests of trivial cases
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.002
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+ 09 april 2018
+
+   tests/leverinf.R
+	tweak
+
+   densityfun.R [New file]
+   densityfun.Rd [New file]
+   as.im.Rd
+   spatstat-internal.Rd
+	New generic 'densityfun' with method for ppp
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.003
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/leverinf.R
+	Added tests for other code blocks, not elsewhere tested
+
+   nnfun.R
+   smoothfun.R
+   densityfun.R
+   as.im.Rd
+	These functions have an argument 'approx'
+	controlling whether the exact or approximate algorithm is used.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.004
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+
+11 apr 2018
+
+   indices.R
+	bug fix in grokIndexVector
+
+   tests/sparse3Darrays.R
+	Added many more checks of different dimensional cases
+	
+   linim.R
+	buglet fix in plot method
+	[spotted by Suman]
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname "The Salmon Mousse"
+	version 1.55-1.005
+        Acknowledged Suman.
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 apr 2018
+
+   images.R
+	Bug fix in raster.xy
+	
+   tests/closeshave.R
+   tests/envelopes.R
+   tests/leverinf.R
+   tests/imageops.R
+	Added tests of code blocks not yet covered.
+
+   plot.im.R
+	Improved behaviour when all pixel values are NA.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.006
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 apr 2018
+
+   tests/fastK.R
+	Added tests of code blocks not yet covered.
+
+   fv.R
+   fvnames.Rd
+	Buglet fixes and tweaks.
+
+   as.im.R
+   as.im.Rd
+	as.im.function now handles matrix-valued functions
+	and has new argument 'drop'.
+	
+   smoothfun.R
+	as.im.smoothfun now handles multiple columns of marks.
+
+   smooth.ppp.R
+	Bug fixes
+
+   tests/density.R
+	More tests of Smooth.ppp and Smoothfun.ppp
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.007
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 apr 2018
+
+   measures.R
+   spatstat-internal.Rd
+	New method update.msr to reconcile the internal data in a measure.
+	
+   measures.R
+   measureContinuous.Rd [New file]
+   	New functions measureDiscrete() and measureContinuous()
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname "Untethered"
+	version 1.55-1.008
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   msr.Rd
+   with.msr.Rd
+	Added cross-references.
+
+   tess.R
+	Bug fixes in tiles() and plot.tess()
+
+   tess.Rd
+   plot.tess.Rd
+   tests/tessera.R [New file]
+   	More examples and tests of tessellation code.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.009
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+16 apr 2018
+
+   vignettes/getstart.Rnw
+   vignettes/replicated.Rnw
+	Updated
+
+   README.md
+	Changed badge link
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.010
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/leverinf.R
+	Corrected/improved the tests of the irregular parameter case.
+
+   mincontrast.R
+	Buglet fix in print method
+
+   clusterfit.Rd
+	More examples
+	
+   tests/kppm.R
+	More checks
+
+   README.md
+	removed Depsy link - no longer supported.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.011
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/density.R
+   tests/randoms.R
+   tests/leverinf.R
+	More tests.
+
+   tests/leverinf.R
+	set seed in randomised example
+
+   measures.R
+	msr() and augment.msr() now detect Inf and NA increments
+	and set them to zero with a warning.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.012
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+17 apr 2018
+
+   psp.R
+   plot.psp.Rd
+	plot.psp now has option style="width"
+	
+   pppmatch.R
+        plot.pppmatching uses plot.psp(style="w")
+
+   pppmatching.Rd
+   matchingdist.Rd
+	Tweaked examples, to cover more code
+
+   predict.ppm.Rd
+	Added example of prediction intervals for tiles of a tessellation
+	Added example of confidence interval images
+
+   predict.ppm.R
+	Bug fix
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.013
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+	
+18 apr 2018
+
+    tess.R
+	Bug fix
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.014
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    tess.R
+    connected.tess.Rd [New file]
+    	New method 'connected.tess'
+
+    tess.R
+	Tweak to plot method
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.015
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    tests/kppm.R
+	More tests
+
+    dilation.Rd
+    closing.Rd
+	More examples
+
+    tests/mctests.R [New file]
+    	Tests of dclf.test, mad.test, envelopeTest, etc
+
+    tests/cdf.test.R
+	More tests
+
+    spatialcdf.R
+    spatstat-internal.Rd
+	spatialCDFframe() now jitters the U values as well
+	(avoids warnings about tied values)
+
+   pcfinhom.R
+	Handles correction='good'
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.016
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    dffit.R [New file]
+    dffit.Rd [New file]
+    	Moved dffit() from leverage paper to spatstat.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.017
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tess.R
+	Bug fix in tess() when the tiles are masks.
+	Improved algorithm for connected.tess
+
+   measures.R
+	Bug fix in subset operator.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname "For Predictable Relief"
+	version 1.55-1.018
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+20 apr 2018
+
+   tests/density.R
+   tests/imageops.R
+	More tests
+
+
+23 apr 2018
+
+   distfun.R
+   distfunlpp.R
+   methods.distfun.Rd [New file]
+   distfun.Rd
+	Modified internal format of distfun objects.
+	New methods for shift, rotate, etc
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.019
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+26 apr 2018
+
+   tests/ppp.R [New file]
+   	Tests of ppp() and related code not covered elsewhere.
+
+27 apr 2018
+
+   tests/undoc.R
+   tests/envelopes.R
+	More tests.
+
+   plot.studpermutest.Rd [New file]
+   spatstat-internal.Rd
+	Documented this existing function, with examples.
+
+   lurking.Rd
+	Tweak examples
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Einstein Visa'
+	version 1.55-1.020
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   methods.linim.Rd
+        More examples
+	
+   tests/undoc.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.021
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+29 apr 2018
+
+   resid4plot.R
+   parres.R
+	Minor bug fixes
+
+   tests/lppstuff.R
+   tests/resid.R
+   tests/dominic.R [New file]
+	More tests
+
+   affine.lpp.Rd
+   connected.lpp.Rd
+   text.ppp.Rd
+	Improved examples
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.022
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   DESCRIPTION
+   NEWS
+	aaaaarrrrrrrgghhhhh
+	version 1.55-1.023
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+30 apr 2018
+
+   tests/lppstuff.R
+   tests/prediction.R
+	Yet more tests
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.024
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   plot3d.R
+	Buglet fix.
+
+   tests/imageops.R
+   tests/ppx.R
+	And more tests 
+
+01 may 2018
+
+   kppm.R
+	print method now reports if the model was fitted to a subset.
+
+   tests/kppm.R
+   tests/leverinf.R
+	And still more tests
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.025
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+02 may 2018
+
+   lppm.R
+	Bug fixes in model.images.lppm
+
+   tests/lppmodels.R [New file]
+   	Tests of lppm and class infrastructure
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.026
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   colourtables.R
+	Bug fixes
+
+   strausshard.R
+	Bug fix in delta2
+
+   tests/segments.R
+   tests/colour.R
+   tests/envelopes.R
+   tests/leverinf.R
+   tests/imageops.R
+   tests/windows.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nicknamed "This nickname intentionally left blank"
+	version 1.55-1.027
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+03 may 2018
+
+   digestCovariates.R
+   util.R
+	Bug fixes
+
+   Kcross.inhom.Rd
+	Typo
+
+   tests/undoc.R
+   tests/Kfuns.R [New file]
+   bugfixes.Rd
+	More examples + tests
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.028
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 may 2018
+
+   sparse3Darray.R
+	Bug fixes in subset operator
+
+   tests/sparse3Darrays.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.029
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+05 may 2018
+
+   tests/sparse3Darrays.R
+   tests/ppp.R
+   tests/ppmtricks.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.030
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+06 may 2018
+
+   util.R
+	Bug fix in rastersample
+
+   tests/fvproblems.R
+   tests/Kfuns.R
+   tests/kppm.R
+   tests/ppp.R
+   tests/segments.R
+   tests/tessera.R
+        More tests.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname "Glasgow Kiss"
+	version 1.55-1.031
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
++++++++++++++ installed R-3.5.0        +++++++++++++++
+------------- passed R-3.5.0 CMD check ---------------
+
+07 may 2018
+
+   solist.R
+   solist.Rd
+	New argument ".NameBase"
+
+   random.R
+   randomlpp.R
+   randommk.R
+   randomNS.R
+   randomonlines.R
+	Adapted to use .NameBase
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.032
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   random.R
+   spatstat-internal.Rd
+	New function 'simulationresult'
+	
+   random.R
+   randomlpp.R
+   randommk.R
+   randomNS.R
+   randomonlines.R
+	Adapted to use 'simulationresult'
+
+   randomonlines.R
+   runifpointOnLines.Rd
+   runifpoisppOnLines.Rd
+   spatstat-internal.Rd
+	runifpointOnLines, rpoisppOnLines, runifpoisppOnLines
+	have new argument 'drop'
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.033
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+11 may 2018
+
+   tests/ppmtricks.R
+   tests/density.R
+   tests/lppstuff.R
+   tests/rhohat.R
+   tests/rmhBasic.R
+	Tweaks and additions
+
+   tests/*.R
+	All scripts which invoke spatstat.options() at any point
+	are now ended with reset.spatstat.options() for safety.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.034
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 may 2018
+
+   tests/closeshave.R
+	More tests
+
+   rmh.default.R
+   rmh.ppm.R
+   simulatelppm.R
+   slrm.R
+   kppm.R
+	simulation methods use simulationresult()
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.035
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   plot.ppm.Rd
+   tests/sdr.R [New file]
+   tests/morpho.R [New file]
+	More examples and tests
+
+   indicator.R
+   spatstat-internal.Rd
+	New method plot.indicfun
+
+13 may 2018
+
+   leverage.R
+	Influence code has new option: what="all"
+
+   morphology.R
+	Bug fix in dilation.ppp
+
+   evalcovar.R
+	Bug fix and improvements in evalCovar.lpp
+	
+   tests/leverinf.R
+   tests/morpho.R
+   tests/lppstuff.R
+   tests/lppmodels.R
+   tests/xysegment.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.036
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 may 2018
+
+   tests/aucroc.R [New file]
+   tests/kppm.R
+   	More tests
+
+15 may 2018
+
+   distbdry.R
+	Accelerated bdist.points in polygonal case
+	(thanks to Sebastian Meyer).
+
+   nncross.R
+	Bug fix 
+	(thanks to Sebastian Meyer).
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.037
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/hyperframe.R
+	More tests
+	
+17 may 2018
+
+   leverage.R
+   spatstat-internal.Rd
+	New methods for 'Smooth' and 'integral'
+	for leverage.ppm and influence.ppm
+
+   tests/leverinf.R
+	Tests of new methods.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.038
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+22 may 2018
+
+   tests/diagnostique.R [New file]
+   tests/windows.R
+	More tests
+
+24 may 2018
+
+   leverage.R
+   spatstat-internal.Rd
+	New method mean.leverage.ppm
+
+   influence.ppm.Rd
+   leverage.ppm.Rd
+   msr.Rd
+	Improved documentation.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.039
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+25 may 2018
+
+   influence.ppm.Rd
+   leverage.ppm.Rd
+	Improved documentation.
+
+26 may 2018
+
+   slrm.Rd
+	Improved examples.
+
+27 may 2018
+
+   methods.lpp.Rd
+   tests/lppstuff.R
+   tests/imageops.R
+   tests/rmhBasic.R
+   tests/rmh.ppm.R
+	Tweaks and additions.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.040
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+28 may 2018
+
+   deldir.R
+   spatstat-internal.Rd
+	Internal function to set internal options (for testing)
+
+   tests/closeshave.R
+   tests/trigraph.R [New file]
+	More tests, to cover all C code.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'antic-lockwise'
+	version 1.55-1.041
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   src/metricPdt.h [New file]
+   src/metricPdt.c [New file]
+   metricPdt.R [New file]
+   rectdistmap.Rd [New file]
+   	Experimental distmap for rectangular metric.
+
+   metricPdt.R
+   rectcontact.Rd [New file]
+        Experimental contact distribution function for rectangular metric.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.042
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+29 may 2018
+
+   tess.R
+   plot.tess.Rd
+	Now generates a separate plot panel for each column of marks
+	if do.col=TRUE.
+	New argument 'multiplot'.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.043
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tess.R
+	Bug fix.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.044
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+30 may 2018
+
+   metricPdt.R
+   rectcontact.Rd
+	Tweaked arguments
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.045
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+2 jun 2018
+
+  Kest.R
+	rmax.rule allows missing arguments
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.046
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+3 jun 2018
+
+   ppp.R
+	Bug fix in subset operator
+
+   tests/ppp.R
+	More tests of subset operator
+
+   tests/lppstuff.R
+	More tests of linim()
+	
+   scanpp.Rd
+	Added examples.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname: "Wee Cooper of Fyfe"
+	version 1.55-1.047
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+6 jun 2018
+
+  tests/threedee.R [New file]
+      Tests of C code for 3D
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.048
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+7 jun 2018
+
+   options.R
+   closepairs.R
+   tests/closeshave.R
+	Test of alternative C code for closepairs
+
+   simplepanel.Rd
+	More examples.
+
+   kernels.R
+	Bug fix.
+	
+   tests/density.R
+	Added tests of code in kernels.R
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.049
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 jun 2018
+
+   options.R
+   edges2triangles.R
+   tests/trigraph.R
+	More coverage of code in trigraf.c
+
+   tests/colour.R
+	tweak
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname "Long Tube Full of Demons"
+	version 1.55-1.050
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+11 jun 2018
+
+   tests/quadschemes.R [New file]
+   	Tests of code for class 'quad'
+	
+   relrisk.ppm.R
+	Buglet fix
+
+   progressreport.Rd
+   sessionLibs.Rd
+   tests/density.R
+   tests/markcor.R
+   tests/resid.R
+	More examples and tests
+
+   DESCRIPTION
+        requires spatstat.data >= 1.3-0
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.051
+        
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   shapefiles.Rnw
+	Added note about new warnings in maptools
+
+12 jun 2018
+
+   linnet.R
+	linnet() checks for duplicated segments in 'edges'
+
+   linnetsurgery.R
+   joinVertices.Rd [New file]
+   	Add new segments to a network
+
+   linnet.Rd
+   methods.linnet.Rd
+   thinNetwork.Rd
+	added cross-references.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.052
+        
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   updates.Rnw
+	Updated to cover all of the above.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-1.053
+        
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 june 2018
+
+   tests/funnymarks.R
+   tests/lppstuff.R
+	More tests
+
+   man/sdr.Rd
+	Bug fix in table layout
+
+   DESCRIPTION
+   spatstat-package.Rd
+	Added mention of sdr()
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-1.054
+
++++++++++++ installed spatstat.utils 1.8-2 +++++++++++
++++++++++++++ installed polyclip 1.9-0 +++++++++++++++
++++++++++++++ installed tkrplot 0.0-23 +++++++++++++++
++++++++++++++  installed rpanel 1.1-4  +++++++++++++++
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+............. passed 'make bookcheck'  ...............
+
+------------- passed R-devel CMD check (2018-06-13 r74894) ................
+
+
+15 jun 2018
+
+   Nickname.txt
+	Version nickname 'Bondi Tram'
+	
+   DESCRIPTION
+   NEWS
+   updates.Rnw
+	version 1.56-0
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+

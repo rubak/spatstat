@@ -3,7 +3,7 @@
 #
 # mark connection function & mark equality function for linear networks
 #
-# $Revision: 1.2 $ $Date: 2015/02/25 06:22:30 $
+# $Revision: 1.4 $ $Date: 2017/02/07 08:12:05 $
 #
 
 linearmarkconnect <- function(X, i, j, r=NULL, ...) {
@@ -11,9 +11,9 @@ linearmarkconnect <- function(X, i, j, r=NULL, ...) {
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i) || is.null(i)) i <- lev[1] else
+  if(missing(i) || is.null(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))
-  if(missing(j) || is.null(j)) j <- lev[2] else
+  if(missing(j) || is.null(j)) j <- lev[2L] else
     if(!(j %in% lev)) stop(paste("j = ", j , "is not a valid mark"))
 
   # ensure distance information is present
@@ -34,22 +34,30 @@ linearmarkconnect <- function(X, i, j, r=NULL, ...) {
   return(result)
 }
 
-linearmarkequal <- function(X, r=NULL, ...) {
-  if(!is.multitype(X, dfok=FALSE)) 
-	stop("Point pattern must be multitype")
+linearmarkequal <- local({
   
-  # ensure distance information is present
-  X <- as.lpp(X, sparse=FALSE)
+  linearmarkequal <- function(X, r=NULL, ...) {
+    if(!is.multitype(X, dfok=FALSE)) 
+      stop("Point pattern must be multitype")
+  
+    ## ensure distance information is present
+    X <- as.lpp(X, sparse=FALSE)
 
-  lev <- levels(marks(X))
-  v <- list()
-  for(l in lev) v[[l]] <- linearmarkconnect(X, l, l, r=r, ...)
+    lev <- levels(marks(X))
+    v <- list()
+    for(l in lev) v[[l]] <- linearmarkconnect(X, l, l, r=r, ...)
 
-  result <- Reduce("+", v)
-  result <-rebadge.fv(result, 
-                      quote(p[L](r)),
-                      new.fname=c("p", "L"))
-  attr(result, "labl") <- attr(v[[1]], "labl")
-  return(result)
-}
+    result <- Reduce(addfuns, v)
+    result <-rebadge.fv(result, 
+                        quote(p[L](r)),
+                        new.fname=c("p", "L"))
+    attr(result, "labl") <- attr(v[[1L]], "labl")
+    return(result)
+  }
+
+  addfuns <- function(f1, f2) eval.fv(f1 + f2)
+
+  linearmarkequal
+})
+
 

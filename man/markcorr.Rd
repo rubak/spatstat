@@ -11,7 +11,7 @@
 markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
          correction=c("isotropic", "Ripley", "translate"),
          method="density", \dots, weights=NULL,
-         f1=NULL, normalise=TRUE, fargs=NULL)
+         f1=NULL, normalise=TRUE, fargs=NULL, internal=NULL)
 }
 \arguments{
   \item{X}{The observed point pattern.
@@ -32,6 +32,7 @@ markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
     options \code{"isotropic"}, \code{"Ripley"}, \code{"translate"},
     \code{"translation"}, \code{"none"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{method}{
     A character vector indicating the user's choice of
@@ -47,7 +48,11 @@ markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
     selected by \code{method}.
   }
   \item{weights}{
-    Optional numeric vector of weights for each data point in \code{X}.
+    Optional. Numeric weights for each data point in \code{X}.
+    A numeric vector, a pixel image, or a \code{function(x,y)}.
+    Alternatively, an \code{expression} to be evaluated to yield the
+    weights; the expression may involve the variables
+    \code{x,y,marks} representing the coordinates and marks of\code{X}. 
   }
   \item{f1}{
     An alternative to \code{f}. If this argument is given,
@@ -63,6 +68,7 @@ markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
     Optional. A list of extra arguments to be passed to the function
     \code{f} or \code{f1}.
   }
+  \item{internal}{Do not use this argument.}
 }
 \value{
   A function value table (object of class \code{"fv"})
@@ -192,7 +198,7 @@ markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape.
 
   Biases due to edge effects are
@@ -273,7 +279,7 @@ markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
 
     # (2) simulated data with independent marks
     X <- rpoispp(100)
-    X <- X \%mark\% runif(X$n)
+    X <- X \%mark\% runif(npoints(X))
     \dontrun{
     Xc <- markcorr(X)
     plot(Xc)
@@ -300,7 +306,8 @@ markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
 
    \testonly{
     niets <- markcorr(amacrine, function(m1,m2){m1 == m2}, method="loess")
-    niets <- markcorr(X, correction="isotropic", method="smrep", hmult=2)
+    if(require(sm))
+      niets <- markcorr(X, correction="isotropic", method="smrep", hmult=2)
     }
 
    # weighted mark correlation
@@ -308,11 +315,8 @@ markcorr(X, f = function(m1, m2) { m1 * m2}, r=NULL,
    a <- marks(betacells)$area
    v <- markcorr(Y, weights=a)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{nonparametric}

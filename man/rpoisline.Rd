@@ -21,6 +21,11 @@
 }
 \value{
   A line segment pattern (an object of class \code{"psp"}).
+
+  The result also has an attribute called \code{"lines"} (an object of
+  class \code{"infline"} specifying the original infinite random lines)
+  and an attribute \code{"linemap"} (an integer vector mapping the line
+  segments to their parent lines).
 }
 \details{
   This algorithm generates a realisation
@@ -42,11 +47,9 @@
  # clipped to the unit square
  rpoisline(10)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{datagen}

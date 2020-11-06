@@ -2,7 +2,7 @@
 #
 #    triplets.R
 #
-#    $Revision: 1.14 $	$Date: 2014/10/24 00:22:30 $
+#    $Revision: 1.18 $	$Date: 2018/03/15 07:37:41 $
 #
 #    The triplets interaction
 #
@@ -78,7 +78,7 @@ Triplets <- local({
     tcount <- .rowSums(tcount, nrow(tcount), ncol(tcount))
     # select triangles consisting only of data points
     triX <- matrix(mapUX[tri], nrow=nrow(tri))
-    isX <- apply(!is.na(triX), 1, all)
+    isX <- matrowall(!is.na(triX))
     triX <- triX[isX, , drop=FALSE]
     #
     if(nrow(triX) > 0) {
@@ -110,6 +110,7 @@ Triplets <- local({
          pot      = TripletPotential,
          par      = list(r=NULL), # filled in later
          parnames = "interaction distance",
+         hasInf   = FALSE,
          init     = function(self) {
                       r <- self$par$r
                       if(!is.numeric(r) || length(r) != 1 || r <= 0)
@@ -133,7 +134,7 @@ Triplets <- local({
          },
          irange = function(self, coeffs=NA, epsilon=0, ...) {
            r <- self$par$r
-           if(any(is.na(coeffs)))
+           if(anyNA(coeffs))
              return(r)
            loggamma <- coeffs[1]
            if(abs(loggamma) <= epsilon)

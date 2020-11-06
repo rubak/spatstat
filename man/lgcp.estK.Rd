@@ -40,9 +40,13 @@ lgcp.estK(X, startpar=c(var=1,scale=1),
   }
 }
 \details{
-  This algorithm fits a log-Gaussian Cox point process model
-  to a point pattern dataset
-  by the Method of Minimum Contrast, using the K function.
+  This algorithm fits a log-Gaussian Cox point process (LGCP) model
+  to a point pattern dataset by the Method of Minimum Contrast,
+  using the K function of the point pattern.
+
+  The shape of the covariance of the LGCP must be specified:
+  the default is the exponential covariance function,
+  but other covariance models can be selected.
 
   The argument \code{X} can be either
   \describe{
@@ -68,7 +72,7 @@ lgcp.estK(X, startpar=c(var=1,scale=1),
   see \code{\link{mincontrast}}.
 
   The model fitted is a stationary, isotropic log-Gaussian Cox process
-  (\ifelse{latex}{\out{M\o ller}}{Moller} and Waagepetersen, 2003, pp. 72-76).
+  (\Moller and Waagepetersen, 2003, pp. 72-76).
   To define this process we start with
   a stationary Gaussian random field \eqn{Z} in the two-dimensional plane,
   with constant mean \eqn{\mu}{mu} and covariance function \eqn{C(r)}.
@@ -133,7 +137,7 @@ lgcp.estK(X, startpar=c(var=1,scale=1),
   For a list of available models see 
   \code{\link[RandomFields]{RMmodel}} in the
   \pkg{RandomFields} package. For example the
-  Matern covariance with exponent \eqn{\nu=0.3}{nu = 0.3} is specified
+  \Matern covariance with exponent \eqn{\nu=0.3}{nu = 0.3} is specified
   by \code{covmodel=list(model="matern", nu=0.3)} corresponding
   to the function \code{RMmatern} in the \pkg{RandomFields} package.
   
@@ -176,11 +180,11 @@ lgcp.estK(X, startpar=c(var=1,scale=1),
   by setting \code{spatstat.options(fastK.lgcp=TRUE)}. 
 }
 \references{
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J, Syversveen, A. and Waagepetersen, R. (1998)
+  \Moller, J, Syversveen, A. and Waagepetersen, R. (1998)
   Log Gaussian Cox Processes.
   \emph{Scandinavian Journal of Statistics} \bold{25}, 451--482.
   
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2003).
+  \Moller, J. and Waagepetersen, R. (2003).
   Statistical Inference and Simulation for Spatial Point Processes.
   Chapman and Hall/CRC, Boca Raton.
 
@@ -192,11 +196,11 @@ lgcp.estK(X, startpar=c(var=1,scale=1),
 \author{
   Rasmus Waagepetersen
   \email{rw@math.auc.dk}.
-  Adapted for \pkg{spatstat} by Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  Adapted for \pkg{spatstat} by \adrian
+  
+  
   Further modifications by Rasmus Waagepetersen
-  and Shen Guochun, and by Ege Rubak.
+  and Shen Guochun, and by \ege.
 }
 \seealso{
   \code{\link{lgcp.estpcf}} for alternative method of fitting LGCP.
@@ -225,11 +229,11 @@ lgcp.estK(X, startpar=c(var=1,scale=1),
 
     \testonly{
       if(require(RandomFields)) {
-      K <- Kest(redwood, r=seq(0, 0.1, length=9))
-      op <- spatstat.options(fastK.lgcp=TRUE)
-      lgcp.estK(K, covmodel=list(model="matern", nu=0.3),
-                control=list(maxit=2))
-      spatstat.options(op)
+        K <- Kest(redwood, r=seq(0, 0.1, length=9))
+        op <- spatstat.options(fastK.lgcp=TRUE)
+        lgcp.estK(K, covmodel=list(model="matern", nu=0.3),
+                  control=list(maxit=2))
+        spatstat.options(op)
       }
     }
     if(FALSE) {

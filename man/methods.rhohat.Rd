@@ -3,6 +3,7 @@
 \alias{print.rhohat}
 \alias{plot.rhohat}
 \alias{predict.rhohat}
+\alias{simulate.rhohat}
 \title{
   Methods for Intensity Functions of Spatial Covariate
 }
@@ -11,8 +12,13 @@
 }
 \usage{
 \method{print}{rhohat}(x, ...)
+
 \method{plot}{rhohat}(x, ..., do.rug=TRUE)
-\method{predict}{rhohat}(object, ..., relative=FALSE)
+
+\method{predict}{rhohat}(object, ..., relative=FALSE,
+             what=c("rho", "lo", "hi", "se"))
+
+\method{simulate}{rhohat}(object, nsim=1, ..., drop=TRUE)
 }
 \arguments{
   \item{x,object}{
@@ -32,12 +38,29 @@
     or the relative risk (\code{relative=TRUE}) in the case
     of a relative risk estimate.
   }
+  \item{nsim}{
+    Number of simulations to be generated.
+  }
+  \item{drop}{
+    Logical value indicating what to do when \code{nsim=1}.
+    If \code{drop=TRUE} (the default), a point pattern is returned.
+    If \code{drop=FALSE}, a list of length 1 containing a point pattern
+    is returned.
+  }
+  \item{what}{
+    Optional character string (partially matched) specifying which
+    value should be calculated: either the function estimate (\code{what="rho"},
+    the default), the lower or upper end of the confidence interval
+    (\code{what="lo"} or \code{what="hi"}) or the standard error
+    (\code{what="se"}).
+  }	 
 }
 \details{
   These functions are methods for the generic commands
   \code{\link{print}},
-  \code{\link{plot}} and
-  \code{\link{predict}}
+  \code{\link[graphics]{plot}},
+  \code{\link[stats]{predict}} and
+  \code{\link[stats]{simulate}}
   for the class \code{"rhohat"}.
 
   An object of class \code{"rhohat"} is an estimate
@@ -51,16 +74,20 @@
   The method \code{predict.rhohat} computes a pixel image of the
   intensity \eqn{\rho(Z(u))}{rho(Z(u))} at each spatial location
   \eqn{u}, where \eqn{Z} is the spatial covariate.
+
+  The method \code{simulate.rhohat} invokes \code{predict.rhohat}
+  to determine the predicted intensity, and then simulates a
+  Poisson point process with this intensity.
 }
 \value{
   For \code{predict.rhohat} the value is a pixel image
-  (object of class \code{"im"}). 
+  (object of class \code{"im"} or \code{"linim"}).
+  For \code{simulate.rhohat} the value is a point pattern
+  (object of class \code{"ppp"} or \code{"lpp"}).
   For other functions, the value is \code{NULL}.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
 }
 \seealso{
   \code{\link{rhohat}}
@@ -72,13 +99,15 @@
   plot(rho)
   Y <- predict(rho)
   plot(Y)
+  plot(simulate(rho), add=TRUE)
   # 
   fit <- ppm(X, ~x)
   rho <- rhohat(fit, "y")
   opa <- par(mfrow=c(1,2))
   plot(predict(rho))
   plot(predict(rho, relative=TRUE))
-  par(opa)  
+  par(opa)
+  plot(predict(rho, what="se"))
 }
 \keyword{spatial}
 \keyword{methods}

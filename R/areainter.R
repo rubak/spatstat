@@ -2,7 +2,7 @@
 #
 #    areainter.R
 #
-#    $Revision: 1.35 $	$Date: 2014/12/22 04:37:56 $
+#    $Revision: 1.48 $	$Date: 2018/03/15 07:07:19 $
 #
 #    The area interaction
 #
@@ -15,10 +15,13 @@
 
 AreaInter <- local({
 
-  # area-interaction conditional intensity potential
-  #     corresponds to potential -C(x) = n(x) - A(x)/\pi r^2
+  #' area-interaction conditional intensity potential
+  #'     corresponds to potential -C(x) = n(x) - A(x)/\pi r^2
+
   areapot <- 
     function(X,U,EqualPairs,pars,correction, ..., W=as.owin(X)) {
+      #' W is the window to which computations of area will be clipped.
+      #' W=NULL is permissible, meaning no clipping.
       uhoh <- !(correction %in% c("border", "none"))
       if(any(uhoh)) {
         nuh <- sum(uhoh)
@@ -30,14 +33,30 @@ AreaInter <- local({
       }
       r <- pars$r
       if(is.null(r)) stop("internal error: r parameter not found")
+      #'
+      if(Poly <- spatstat.options('areainter.polygonal')) {
+        if(is.mask(W)) W <- as.polygonal(W)
+        if(is.mask(Window(X))) Window(X) <- as.polygonal(Window(X))
+        if(is.mask(Window(U))) Window(U) <- as.polygonal(Window(U))
+      }
       n <- U$n
       areas <- numeric(n)
-      dummies <- !(seq_len(n) %in% EqualPairs[,2])
-      if(sum(dummies) > 0)
-        areas[dummies] <- areaGain(U[dummies], X, r, W=W)
-      ii <- EqualPairs[,1]
-      jj <- EqualPairs[,2]
-      areas[jj] <- areaLoss(X, r, subset=ii, W=W)
+      #' dummy points
+      dummies <- setdiff(seq_len(n), EqualPairs[,2L])
+      if(length(dummies)) 
+        areas[dummies] <- areaGain(U[dummies], X, r, W=W, exact=Poly)
+      #' data points represented in U
+      ii <- EqualPairs[,1L]
+      jj <- EqualPairs[,2L]
+      inborder <- (bdist.points(X[ii]) <= r) # sic
+      #' points in border region need clipping
+      if(any(inborder))
+        areas[jj[inborder]] <- areaLoss(X, r, subset=ii[inborder], exact=Poly)
+      #' points in eroded region do not necessarily
+      if(any(ineroded <- !inborder)) {
+        areas[jj[ineroded]] <-
+          areaLoss(X, r, subset=ii[ineroded], W=W, exact=Poly)
+      }
       return(1 - areas/(pi * r^2))
     }
 
@@ -56,6 +75,7 @@ AreaInter <- local({
          pot      = areapot,
          par      = list(r = NULL), # to be filled in
          parnames = "disc radius",
+         hasInf   = FALSE,
          init     = function(self) {
                       r <- self$par$r
                       if(!is.numeric(r) || length(r) != 1 || r <= 0)
@@ -93,7 +113,7 @@ AreaInter <- local({
                        "reference value 1"),
                      unitname=unitz)
            if(plotit)
-             do.call("plot.fv",
+             do.call(plot.fv,
                      resolve.defaults(list(fun),
                                       list(...),
                                       list(ylim=range(0,1,y))))
@@ -101,7 +121,7 @@ AreaInter <- local({
          },
          #' end of function 'plot'
          interpret =  function(coeffs, self) {
-           logeta <- as.numeric(coeffs[1])
+           logeta <- as.numeric(coeffs[1L])
            eta <- exp(logeta)
            return(list(param=list(eta=eta),
                        inames="interaction parameter eta",
@@ -118,21 +138,21 @@ AreaInter <- local({
          },
          irange = function(self, coeffs=NA, epsilon=0, ...) {
            r <- self$par$r
-           if(any(is.na(coeffs)))
+           if(anyNA(coeffs))
              return(2 * r)
-           logeta <- coeffs[1]
+           logeta <- coeffs[1L]
            if(abs(logeta) <= epsilon)
              return(0)
            else
              return(2 * r)
          },
-         delta2 = function(X, inte, correction) {
+         delta2 = function(X, inte, correction, ..., sparseOK=FALSE) {
            # Sufficient statistic for second order conditional intensity
            # Area-interaction model 
            if(!(correction %in% c("border", "none")))
              return(NULL)
            r <- inte$par$r
-           areadelta2(X, r)
+           areadelta2(X, r, sparseOK=sparseOK)
          },
        version=NULL # to be added
   )
@@ -150,21 +170,25 @@ AreaInter <- local({
 
 areadelta2 <- local({
 
-  areadelta2 <- function(X, r, ...) {
+  areadelta2 <- function(X, r, ..., sparseOK=FALSE) {
     # Sufficient statistic for second order conditional intensity
     # Area-interaction model 
-    if(is.ppp(X)) return(areadelppp(X, r, ...)) else
-    if(inherits(X, "quad")) return(areadelquad(X, r)) else
+    if(is.ppp(X)) return(areadelppp(X, r, ..., sparseOK=sparseOK)) else
+    if(is.quad(X)) return(areadelquad(X, r, sparseOK=sparseOK)) else
     stop("internal error: X should be a ppp or quad object")
   }
 
-  areadelppp <- function(X, r, algorithm=c("C", "nncross", "nnmap")) {
+  areadelppp <- function(X, r, algorithm=c("C", "nncross", "nnmap"),
+                         sparseOK=FALSE) {
     # Evaluate \Delta_{x_i} \Delta_{x_j} S(x) for data points x_i, x_j
     # i.e.  h(X[i]|X) - h(X[i]|X[-j])
     #       where h is first order cif statistic
     algorithm <- match.arg(algorithm)
     nX <- npoints(X)
-    result <- matrix(0, nX, nX)
+    sparseOK <- sparseOK
+    result <- if(!sparseOK) matrix(0, nX, nX) else
+              sparseMatrix(i=integer(0), j=integer(0), x=numeric(0),
+                           dims=c(nX,nX))
     if(nX < 2)
       return(result)
     if(algorithm == "C") {
@@ -172,7 +196,7 @@ areadelta2 <- local({
       # called once for each interacting pair of points
       xx <- X$x
       yy <- X$y
-      cl <- closepairs(X, 2 * r, what="indices", ordered=FALSE)
+      cl <- closepairs(X, 2 * r, what="indices", twice=FALSE, neat=FALSE)
       I <- cl$i
       J <- cl$j
       eps <- r/spatstat.options("ngrid.disc")
@@ -196,23 +220,25 @@ areadelta2 <- local({
                 yother = as.double(yy[K]),
                 radius = as.double(r),
                 epsilon = as.double(eps),
-                pixcount = as.integer(integer(1)))
+                pixcount = as.integer(integer(1L)),
+                PACKAGE = "spatstat")
         result[i,j] <- result[j,i] <- z$pixcount
       }
       # normalise
       result <- result * (eps^2)/(pi * r^2)
       return(result)
     }
-    # remove any non-interacting points
+
+    # non-C algorithms
+    # confine attention to points which are interacting
     relevant <- (nndist(X) <= 2 * r)
     if(!all(relevant)) {
-      answer <- matrix(0, nX, nX)
       if(any(relevant)) {
         # call self on subset
-        Dok <- areadelppp(X[relevant], r, algorithm)
-        answer[relevant,relevant] <- Dok
+        Dok <- areadelppp(X[relevant], r, algorithm, sparseOK=sparseOK)
+        result[relevant,relevant] <- Dok
       }
-      return(answer)
+      return(result)
     }
 
     # .............. algorithm using interpreted code ...........
@@ -240,8 +266,8 @@ areadelta2 <- local({
       ntile0 <- ceiling(npix/(2^20))
       tile0area <- area(B)/ntile0
       tile0side <- sqrt(tile0area)
-      nx <- ceiling(sidelengths(B)[1]/tile0side)
-      ny <- ceiling(sidelengths(B)[2]/tile0side)
+      nx <- ceiling(sidelengths(B)[1L]/tile0side)
+      ny <- ceiling(sidelengths(B)[2L]/tile0side)
       tile <- tiles(quadrats(B, nx, ny))
     }
            
@@ -261,8 +287,8 @@ areadelta2 <- local({
         if(any(ok)) {
           v <- v[ok, , drop=FALSE]
           # accumulate pixel counts -> areas
-          counts <- with(v, table(i=factor(which.1, levels=1:nX),
-                                  j=factor(which.2, levels=1:nX)))
+          counts <- with(v, table(i=factor(which.1, levels=1L:nX),
+                                  j=factor(which.2, levels=1L:nX)))
           pixarea <- with(Z, xstep * ystep)
           result <- result + pixarea * (counts + t(counts))
         }
@@ -272,16 +298,16 @@ areadelta2 <- local({
         stuff <- nnmap(X, k=1:3, W=Wi, eps=eps,
                        is.sorted.X=TRUE, sortby="x",
                        outputarray=TRUE)
-        dist.2 <- stuff$dist[2,,]
-        dist.3 <- stuff$dist[3,,]
-        which.1 <- stuff$which[1,,]
-        which.2 <- stuff$which[2,,]
+        dist.2 <- stuff$dist[2L,,]
+        dist.3 <- stuff$dist[3L,,]
+        which.1 <- stuff$which[1L,,]
+        which.2 <- stuff$which[2L,,]
         ok <- (dist.3 > r & dist.2 <= r)
         if(any(ok)) {
           which.1 <- as.vector(which.1[ok])
           which.2 <- as.vector(which.2[ok])
-          counts <- table(i=factor(which.1, levels=1:nX),
-                          j=factor(which.2, levels=1:nX))
+          counts <- table(i=factor(which.1, levels=1L:nX),
+                          j=factor(which.2, levels=1L:nX))
           pixarea <- attr(stuff, "pixarea")
           result <- result + pixarea * (counts + t(counts))
         }
@@ -296,7 +322,7 @@ areadelta2 <- local({
     return(result)
   }
 
-  areadelquad <- function(Q, D, r) {
+  areadelquad <- function(Q, r, sparseOK=FALSE) {
     # Sufficient statistic for second order conditional intensity
     # Area-interaction model 
     # Evaluate \Delta_{u_j} \Delta_{u_i} S(x) for quadrature points 
@@ -309,13 +335,15 @@ areadelta2 <- local({
     yy <- U$y
     # identify all close pairs of quadrature points
     cl <- closepairs(U, 2 * r, what="indices")
-    I <- b$i
-    J <- b$j
+    I <- cl$i
+    J <- cl$j
     # find neighbours in X of each quadrature point
     zJ <- Z[J]
-    neigh <- split(J[zJ], factor(I[zJ], levels=1:nU))
+    neigh <- split(J[zJ], factor(I[zJ], levels=1L:nU))
     # 
-    result <- matrix(0, nU, nU)
+    result <- if(!sparseOK) matrix(0, nU, nU) else
+              sparseMatrix(i=integer(0), j=integer(0), x=numeric(0),
+                           dims=c(nU,nU))
     eps <- r/spatstat.options("ngrid.disc")
     #
     for(k in seq_along(I)) {
@@ -338,7 +366,8 @@ areadelta2 <- local({
             yother = as.double(yy[K]),
             radius = as.double(r),
             epsilon = as.double(eps),
-            pixcount = as.integer(integer(1)))
+            pixcount = as.integer(integer(1L)),
+            PACKAGE = "spatstat")
       result[i,j] <- z$pixcount
     }
     # normalise

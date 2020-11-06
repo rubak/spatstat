@@ -3,24 +3,24 @@
 ##
 ## Methods for 'subset'
 ##
-##   $Revision: 1.3 $  $Date: 2015/07/09 03:15:37 $
+##   $Revision: 1.7 $  $Date: 2020/06/16 03:19:55 $
 
 subset.ppp <- function(x, subset, select, drop=FALSE, ...) {
   stopifnot(is.ppp(x))
   w <- as.owin(x)
   y <- as.data.frame(x)
-  r <- if (missing(subset)) 
+  r <- if (missing(subset)) {
     rep_len(TRUE, nrow(y))
-  else {
+  } else {
     e <- substitute(subset)
     r <- eval(e, y, parent.frame())
-    if (!is.logical(r)) 
-      stop("'subset' must be logical")
+    if(!is.logical(r))
+      r <- ppsubset(x, r, "subset", fatal=TRUE)
     r & !is.na(r)
   }
-  vars <- if (missing(select)) 
+  vars <- if (missing(select)) {
     TRUE
-  else {
+  } else {
     ## create an environment in which column names are mapped to their positions
     nl <- as.list(seq_along(y))
     names(nl) <- names(y)
@@ -43,15 +43,17 @@ subset.ppp <- function(x, subset, select, drop=FALSE, ...) {
   return(out)
 }
 
-subset.pp3 <- subset.lpp <- subset.ppx <- function(x, subset, select, drop=FALSE, ...) {
+subset.pp3 <- 
+subset.lpp <-
+subset.ppx <- function(x, subset, select, drop=FALSE, ...) {
   y <- as.data.frame(x)
   r <- if (missing(subset)) 
     rep_len(TRUE, nrow(y))
   else {
     e <- substitute(subset)
     r <- eval(e, y, parent.frame())
-    if (!is.logical(r)) 
-      stop("'subset' must be logical")
+    if(!is.logical(r))
+      r <- ppsubset(x, r, "subset", fatal=TRUE)
     r & !is.na(r)
   }
   vars <- if (missing(select)) 
@@ -83,3 +85,40 @@ subset.pp3 <- subset.lpp <- subset.ppx <- function(x, subset, select, drop=FALSE
   return(out)
 }
 
+subset.psp <- function(x, subset, select, drop=FALSE, ...) {
+  stopifnot(is.psp(x))
+  w <- Window(x)
+  y <- as.data.frame(x)
+  r <- if (missing(subset)) {
+    rep_len(TRUE, nrow(y))
+  } else {
+    e <- substitute(subset)
+    r <- eval(e, y, parent.frame())
+    if(!is.logical(r))
+      stop("Argument 'subset' should be a logical vector", call.=FALSE)
+    r & !is.na(r)
+  }
+  vars <- if (missing(select)) {
+    TRUE
+  } else {
+    ## create an environment in which column names are mapped to their positions
+    nl <- as.list(seq_along(y))
+    names(nl) <- names(y)
+    if(length(nl) > 3) {
+      ## multiple columns of marks: add the name 'marks'
+      nl <- append(nl, list(marks=3:length(nl)))
+    }
+    eval(substitute(select), nl, parent.frame())
+  }
+  ## ensure columns include coordinates
+  nama <- names(y)
+  names(nama) <- nama
+  vars <- union(c("x0", "y0", "x1", "y1"), nama[vars])
+  ## take subset
+  z <- y[r, vars, drop = FALSE]
+  ## reinstate as line segment pattern
+  out <- as.psp(z, window=w, check=FALSE)
+  if(drop)
+    out <- out[drop=TRUE]
+  return(out)
+}

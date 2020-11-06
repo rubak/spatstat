@@ -3,7 +3,7 @@
 #
 #   Allard-Fraley estimator of cluster region
 #
-#   $Revision: 1.10 $  $Date: 2014/10/24 00:22:30 $
+#   $Revision: 1.12 $  $Date: 2016/02/16 01:39:12 $
 #
 
 clusterset <- function(X, what=c("marks", "domain"),
@@ -35,7 +35,7 @@ clusterset <- function(X, what=c("marks", "domain"),
     if(verbose) cat("done.\n")
     D <- tiles(d)
     suppressWarnings(id <- as.integer(names(D)))
-    if(any(is.na(id)) && ("marks" %in% what))
+    if(anyNA(id) && ("marks" %in% what))
       stop("Unable to map Dirichlet tiles to data points")
     A <- area(W)
     a <- unlist(lapply(D, area))
@@ -63,7 +63,7 @@ clusterset <- function(X, what=c("marks", "domain"),
   if("domain" %in% what) {
     if(verbose) cat("Computing cluster set...")
     if(exact) {
-      domain <- do.call("union.owin", unname(D[is.picked]))
+      domain <- do.call(union.owin, unname(D[is.picked]))
       domain <- rebound.owin(domain, as.rectangle(W))
     } else {
       domain <- eval.im(is.picked[cellid])
@@ -71,6 +71,6 @@ clusterset <- function(X, what=c("marks", "domain"),
     out$domain <- domain
     if(verbose) cat("done.\n")
   }
-  out <- if(length(what) == 1) out[[what]] else out
+  out <- if(length(what) == 1L) out[[what]] else out
   return(out)
 }

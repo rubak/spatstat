@@ -2,7 +2,7 @@
 #
 #    hybrid.R
 #
-#    $Revision: 1.5 $	$Date: 2014/12/17 10:54:07 $
+#    $Revision: 1.9 $	$Date: 2018/03/15 07:37:41 $
 #
 #    Hybrid of several interactions
 #
@@ -36,19 +36,24 @@ Hybrid <- local({
       i <- min(which(ishybrid))
       n <- length(interlist)
       expandi <- interlist[[i]]$par
-      interlist <- c(if(i > 1) interlist[1:(i-1)] else NULL,
+      interlist <- c(if(i > 1) interlist[1:(i-1L)] else NULL,
                      expandi,
-                     if(i < n) interlist[(i+1):n] else NULL)
+                     if(i < n) interlist[(i+1L):n] else NULL)
     }
     #' 
     ncomponents <- length(interlist)
     if(ncomponents == 1) {
       #' single interaction - return it
-      return(interlist[[1]])
+      return(interlist[[1L]])
     }
     #' ensure all components have names
     names(interlist) <- good.names(names(interlist),
                                    "HybridComponent", 1:ncomponents)
+    #' check for infinite potential values
+    haveInf <- lapply(interlist, getElement, name="hasInf")
+    haveInf <- !sapply(haveInf, identical, y=FALSE)
+    hasInf <- any(haveInf)
+    #' build object
     out <- 
       list(
         name     = "Hybrid interaction",
@@ -57,6 +62,7 @@ Hybrid <- local({
         pot      = NULL,
         par      = interlist,
         parnames = names(interlist),
+        hasInf   = hasInf,
         selfstart = function(X, self) {
           ilist <- self$par
           sslist <- lapply(ilist, getElement, name="selfstart")
@@ -166,7 +172,7 @@ Hybrid <- local({
               nproj[i] <- 0
             } else if(is.interact(p)) {
               p <- list(p)
-              nproj[i] <- 1
+              nproj[i] <- 1L
             } else if(is.list(p) && all(unlist(lapply(p, is.interact)))) {
               nproj[i] <- length(p)
             } else
@@ -180,7 +186,7 @@ Hybrid <- local({
             #' Single interaction required.
             #' Extract first entry from each list
             #' (there should be only one entry, but...)
-            qlist <- lapply(projlist, function(z) z[[1]])
+            qlist <- lapply(projlist, "[[", i=1L)
             #' replace NULL entries by corresponding original interactions
             isnul <- unlist(lapply(qlist, is.null))
             if(all(isnul))
@@ -189,7 +195,7 @@ Hybrid <- local({
               qlist[isnul] <- interlist[isnul]
             names(qlist) <- names(interlist)
             #' build hybrid and return
-            result <- do.call("Hybrid", qlist)
+            result <- do.call(Hybrid, qlist)
             return(result)
           } 
           #' Full case
@@ -208,14 +214,14 @@ Hybrid <- local({
                 h <- Poisson()
               } else {
                 if(any(ispois)) qlist <- qlist[!ispois]
-                h <- do.call("Hybrid", qlist)
+                h <- do.call(Hybrid, qlist)
               }
               result <- append(result, list(h))
             }
           }
           #' 'result' is a list of interactions, each a hybrid
           if(length(result) == 1)
-            result <- result[[1]]
+            result <- result[[1L]]
           return(result)
         },
         irange = function(self, coeffs=NA, epsilon=0, ...) {

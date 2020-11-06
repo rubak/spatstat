@@ -1,7 +1,7 @@
 ##
 ## spatialcdf.R
 ##
-##  $Revision: 1.2 $ $Date: 2014/10/24 00:22:30 $
+##  $Revision: 1.5 $ $Date: 2019/03/12 11:45:26 $
 ##
 
 spatialcdf <- function(Z, weights=NULL, normalise=FALSE, ...,
@@ -26,23 +26,29 @@ spatialcdf <- function(Z, weights=NULL, normalise=FALSE, ...,
     loc <- as.ppp(Q)
     df <- mpl.get.covariates(list(Z=Z), loc, covfunargs=list(...))
     df$wt <- fitted(weights) * w.quad(Q)
+    G <- with(df, ewcdf(Z, wt, normalise=normalise))
     wtname <- if(normalise) "fraction of points" else "number of points"
   } else {
     if(is.null(W)) W <- as.owin(weights, fatal=FALSE)
     if(is.null(W)) W <- as.owin(Z, fatal=FALSE)
     if(is.null(W)) stop("No information specifying the spatial window")
-    if(is.null(weights)) weights <- 1
     M <- as.mask(W, ...)
     loc <- rasterxy.mask(M, drop=TRUE)
-    df <- mpl.get.covariates(list(Z=Z, weights=weights), loc,
-                             covfunargs=list(...))
     pixelarea <- with(unclass(M), xstep * ystep)
-    df$wt <- rep(pixelarea, nrow(df))
-    wtname <- if(normalise) "fraction of weight" else "weight"
+    if(is.null(weights)) {
+      df <- mpl.get.covariates(list(Z=Z),
+                               loc,
+                               covfunargs=list(...))
+      G <- with(df, ewcdf(Z, normalise=normalise, adjust=pixelarea))
+      wtname <- if(normalise) "fraction of area" else "area"
+    } else {
+      df <- mpl.get.covariates(list(Z=Z, wt=weights),
+                               loc,
+                               covfunargs=list(...))
+      G <- with(df, ewcdf(Z, wt, normalise=normalise, adjust=pixelarea))
+      wtname <- if(normalise) "fraction of weight" else "weight"
+    }
   }
-  if(normalise) 
-    df$wt <- with(df, wt/sum(wt))
-  G <- with(df, ewcdf(Z, wt))
   class(G) <- c("spatialcdf", class(G))
   attr(G, "call") <- sys.call()
   attr(G, "Zname") <- Zname
@@ -55,6 +61,10 @@ plot.spatialcdf <- function(x, ..., xlab, ylab) {
     xlab <- attr(x, "Zname")
   if(missing(ylab) || is.null(ylab))
     ylab <- attr(x, "ylab")
-  plot.ecdf(x, ..., xlab=xlab, ylab=ylab)
+  if(inherits(x, "ecdf")) {
+    plot.ecdf(x, ..., xlab=xlab, ylab=ylab)
+  } else {
+    plot.stepfun(x, ..., xlab=xlab, ylab=ylab)
+  }
 }
 

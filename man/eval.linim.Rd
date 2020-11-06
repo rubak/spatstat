@@ -6,7 +6,7 @@
   on a linear network, and returns a pixel image on the same linear network.
 }
 \usage{
-  eval.linim(expr, envir, harmonize=TRUE)
+  eval.linim(expr, envir, harmonize=TRUE, warn=TRUE)
 }
 \arguments{
   \item{expr}{An expression in the \R language,
@@ -16,6 +16,10 @@
   \item{harmonize}{
     Logical. Whether to resolve inconsistencies between
     the pixel grids.
+  }
+  \item{warn}{
+    Logical. Whether to issue a warning if the pixel grids were
+    inconsistent.
   }
 }
 \details{
@@ -52,9 +56,10 @@
   There must be at least one linear pixel image in the expression.
 
   All images must have compatible dimensions.
-  If \code{harmonize=TRUE}, images that have incompatible dimensions
-  will be resampled so that they are compatible.
   If \code{harmonize=FALSE}, images that are incompatible will cause an error.
+  If \code{harmonize=TRUE}, images that have incompatible dimensions
+  will be resampled so that they are compatible; if \code{warn=TRUE},
+  a warning will be issued.
 }
 \value{
   An image object of class \code{"linim"}.
@@ -64,20 +69,22 @@
   \code{\link{linim}}
 }
 \examples{
-  example(linim)
+  M <- as.mask.psp(as.psp(simplenet))
+  Z <- as.im(function(x,y) {x-y}, W=M)
+  X <- linim(simplenet, Z)
+  X
 
-  Y <- linim(letterA, as.im(function(x,y){y^2+x}, W=M))
+  Y <- linfun(function(x,y,seg,tp){y^2+x}, simplenet)
+  Y <- as.linim(Y)
   
   eval.linim(X + 3)
   eval.linim(X - Y)
   eval.linim(abs(X - Y))
   Z <- eval.linim(sin(X * pi) + Y)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{manip}

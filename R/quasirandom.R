@@ -3,7 +3,7 @@
 ##
 ##  Quasi-random sequence generators
 ##
-##  $Revision: 1.5 $   $Date: 2014/10/24 00:22:30 $
+##  $Revision: 1.6 $   $Date: 2017/06/05 10:31:58 $
 ##
 
 vdCorput <- function(n, base) {
@@ -11,7 +11,8 @@ vdCorput <- function(n, base) {
   z <- .C("Corput",
           base=as.integer(base),
           n=as.integer(n),
-          result=as.double(numeric(n)))
+          result=as.double(numeric(n)),
+          PACKAGE = "spatstat")
   return(z$result)
 }
 

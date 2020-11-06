@@ -2,7 +2,7 @@
 #
 #    pairwise.S
 #
-#    $Revision: 1.9 $	$Date: 2014/10/24 00:22:30 $
+#    $Revision: 1.12 $	$Date: 2019/02/20 03:32:22 $
 #
 #    Pairwise()    create a user-defined pairwise interaction process
 #                 [an object of class 'interact']
@@ -15,8 +15,8 @@ Pairwise <- function(pot, name = "user-defined pairwise interaction process",
                      printfun) {
 
   fop <- names(formals(pot))
-  if(!identical(all.equal(fop, c("d", "par")), TRUE)
-     && !identical(all.equal(fop, c("d", "tx", "tu", "par")), TRUE))
+  if(!isTRUE(all.equal(fop, c("d", "par")))
+     && !isTRUE(all.equal(fop, c("d", "tx", "tu", "par"))))
     stop(paste("Formal arguments of pair potential function",
                sQuote("pot"),
                "must be either (d, par) or (d, tx, tu, par)"))
@@ -50,6 +50,7 @@ Pairwise <- function(pot, name = "user-defined pairwise interaction process",
          pot      = pot,
          par      = par,
          parnames = parnames,
+         hasInf   = NA,
          init     = NULL,
          update   = function(self, ...){
            do.call(Pairwise,

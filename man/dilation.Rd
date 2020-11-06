@@ -1,4 +1,4 @@
-\name{dilation} %DontDeclareMethods
+\name{dilation} 
 \alias{dilation}
 \alias{dilation.owin}
 \alias{dilation.ppp}
@@ -23,7 +23,8 @@
   \item{r}{positive number: the radius of dilation.}
   \item{\dots}{extra arguments passed to \code{\link{as.mask}}
     controlling the pixel resolution, if the pixel approximation is
-    used.
+    used; or passed to \code{\link{disc}} if the polygonal approximation
+    is used.
   }
   \item{polygonal}{
     Logical flag indicating whether to compute a polygonal
@@ -62,22 +63,25 @@
 \seealso{
   \code{\link{erosion}} for the opposite operation.
   
+  \code{\link{dilationAny}} for morphological dilation using any shape.
+  
   \code{\link{owin}},
   \code{\link{as.owin}}
 }
 \examples{
+  plot(dilation(redwood, 0.05))
+  points(redwood)
+
   plot(dilation(letterR, 0.2))
   plot(letterR, add=TRUE, lwd=2, border="red")
 
   X <- psp(runif(10), runif(10), runif(10), runif(10), window=owin())
   plot(dilation(X, 0.1))
   plot(X, add=TRUE, col="red")
+
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{math}

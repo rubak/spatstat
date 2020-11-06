@@ -1,18 +1,10 @@
 ##
 ## bw.diggle.R
 ##
-## bandwidth selection rules bw.diggle and bw.scott (for density.ppp)
+## bandwidth selection rule bw.diggle (for density.ppp)
 ##
-## $Revision: 1.4 $ $Date: 2015/04/02 02:01:01 $
+## $Revision: 1.7 $ $Date: 2019/09/30 07:45:33 $
 ##
-
-bw.scott <- function(X) {
-  stopifnot(is.ppp(X))
-  n <- npoints(X)
-  sdx <- sqrt(var(X$x))
-  sdy <- sqrt(var(X$y))
-  return(c(sdx, sdy) * n^(-1/6))
-}
 
 bw.diggle <- local({
 
@@ -27,7 +19,8 @@ bw.diggle <- local({
   mf <- function(..., method=c("C", "interpreted")) { match.arg(method) }
 
   
-  bw.diggle <- function(X, ..., correction="good", hmax=NULL, nr=512) {
+  bw.diggle <- function(X, ..., correction="good", hmax=NULL,
+                        nr=512, warn=TRUE) {
     stopifnot(is.ppp(X))
     method <- mf(...)
     W <- Window(X)
@@ -40,15 +33,15 @@ bw.diggle <- local({
     ## check that K values can be passed to C code
     if(any(bad <- !is.finite(K[[yname]]))) {
       ## throw out bad values
-      lastgood <- min(which(bad)) - 1
-      if(lastgood < 2)
+      lastgood <- min(which(bad)) - 1L
+      if(lastgood < 2L)
         stop("K function yields too many NA/NaN values")
       K <- K[1:lastgood, ]
     }
     rvals <- K$r
     ## evaluation of M(r) requires K(2r)
     rmax2 <- max(rvals)/2
-    if(!is.null(alim <- attr(K, "alim"))) rmax2 <- min(alim[2], rmax2)
+    if(!is.null(alim <- attr(K, "alim"))) rmax2 <- min(alim[2L], rmax2)
     ok <- (rvals <= rmax2)
     switch(method,
            interpreted = {
@@ -69,7 +62,8 @@ bw.diggle <- local({
                      nr=as.integer(nr),
                      nrmax=as.integer(nrmax),
                      ndK=as.integer(ndK),
-                     J=as.double(numeric(nrmax)))
+                     J=as.double(numeric(nrmax)),
+                     PACKAGE = "spatstat")
              J <- z$J
              rvals <- rvals[ok]
            })
@@ -82,7 +76,10 @@ bw.diggle <- local({
                        creator="bw.diggle",
                        criterion="Berman-Diggle Cross-Validation",
                        J=J,
-                       lambda=lambda)
+                       lambda=lambda,
+                       warnextreme=warn,
+                       hargnames="hmax",
+                       unitname=unitname(X))
     return(result)
   }
 

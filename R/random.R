@@ -3,7 +3,7 @@
 ##
 ##    Functions for generating random point patterns
 ##
-##    $Revision: 4.86 $   $Date: 2015/10/15 14:21:10 $
+##    $Revision: 4.97 $   $Date: 2019/04/05 03:41:12 $
 ##
 ##
 ##    runifpoint()      n i.i.d. uniform random points ("binomial process")
@@ -31,47 +31,50 @@
 ##          plot(rMaternII(100, 0.05))
 ##
 
+simulationresult <- function(resultlist, nsim, drop, NameBase="Simulation") {
+  if(nsim == 1 && drop)
+    return(resultlist[[1L]])
+  #' return 'solist' if appropriate, otherwise 'anylist'
+  return(as.solist(resultlist, .NameBase=NameBase, demote=TRUE))
+}
+
 runifrect <- function(n, win=owin(c(0,1),c(0,1)), nsim=1, drop=TRUE)
 {
   ## no checking
   xr <- win$xrange
   yr <- win$yrange
-  if(nsim == 1) {
-    x <- runif(n, min=xr[1], max=xr[2])
-    y <- runif(n, min=yr[1], max=yr[2])
-    X <- ppp(x, y, window=win, check=FALSE)
-    return(if(drop) X else solist(X))
-  } 
   result <- vector(mode="list", length=nsim)
   for(isim in 1:nsim) {
     x <- runif(n, min=xr[1], max=xr[2])
     y <- runif(n, min=yr[1], max=yr[2])
     result[[isim]] <- ppp(x, y, window=win, check=FALSE)
   }
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 runifdisc <- function(n, radius=1, centre=c(0,0), ..., nsim=1, drop=TRUE)
 {
   ## i.i.d. uniform points in the disc of radius r and centre (x,y)
-  disque <- disc(centre=centre, radius=radius, ...)
-  if(nsim == 1) {
-    theta <- runif(n, min=0, max= 2 * pi)
-    s <- sqrt(runif(n, min=0, max=radius^2))
-    X <- ppp(centre[1] + s * cos(theta),
-             centre[2] + s * sin(theta),
-             window=disque, check=FALSE)
-    return(if(drop) X else solist(X))
+  check.1.real(radius)
+  stopifnot(radius > 0)
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
   }
+  disque <- disc(centre=centre, radius=radius, ...)
+  twopi <- 2 * pi
+  rad2 <- radius^2
   result <- vector(mode="list", length=nsim)
   for(isim in 1:nsim) {
-    theta <- runif(n, min=0, max= 2 * pi)
-    s <- sqrt(runif(n, min=0, max=radius^2))
+    theta <- runif(n, min=0, max=twopi)
+    s <- sqrt(runif(n, min=0, max=rad2))
     result[[isim]] <- ppp(centre[1] + s * cos(theta),
                           centre[2] + s * sin(theta),
                           window=disque, check=FALSE)
   }
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 
@@ -79,6 +82,11 @@ runifpoint <- function(n, win=owin(c(0,1),c(0,1)),
                        giveup=1000, warn=TRUE, ...,
                        nsim=1, drop=TRUE, ex=NULL)
 {
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
+  
   if(missing(n) && missing(win) && !is.null(ex)) {
     stopifnot(is.ppp(ex))
     n <- npoints(ex)
@@ -90,11 +98,10 @@ runifpoint <- function(n, win=owin(c(0,1),c(0,1)),
   }
 
   if(n == 0) {
-    emp <- ppp(numeric(0), numeric(0), window=win)
-    if(nsim == 1) return(emp)
+    emp <- ppp(window=win)
     result <- rep(list(emp), nsim)
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
+    result <- simulationresult(result, nsim, drop)
+    return(result)
   }
 
   if(warn) {
@@ -108,7 +115,7 @@ runifpoint <- function(n, win=owin(c(0,1),c(0,1)),
 
   switch(win$type,
          rectangle = {
-           return(runifrect(n, win, nsim=nsim))
+           return(runifrect(n, win, nsim=nsim, drop=drop))
          },
          mask = {
            dx <- win$xstep
@@ -169,10 +176,8 @@ runifpoint <- function(n, win=owin(c(0,1),c(0,1)),
          )
   
   ## list of point patterns produced.
-  if(nsim == 1 && drop)
-    return(result[[1]])
-  names(result) <- paste("Simulation", 1:nsim)
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 runifpoispp <- function(lambda, win = owin(c(0,1),c(0,1)), ...,
@@ -181,31 +186,23 @@ runifpoispp <- function(lambda, win = owin(c(0,1),c(0,1)), ...,
   if(!is.numeric(lambda) || length(lambda) > 1 ||
      !is.finite(lambda) || lambda < 0)
     stop("Intensity lambda must be a single finite number >= 0")
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
 
   if(lambda == 0) {
     ## return empty pattern
-    emp <- ppp(numeric(0), numeric(0), window=win)
-    if(nsim == 1 && drop) return(emp)
+    emp <- ppp(window=win)
     result <- rep(list(emp), nsim)
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
+    result <- simulationresult(result, nsim, drop)
+    return(result)
   }
 
   ## will generate Poisson process in enclosing rectangle and trim it
   box <- boundingbox(win)
   meanN <- lambda * area(box)
   
-  if(nsim == 1) {
-    n <- rpois(1, meanN)
-    if(!is.finite(n))
-      stop(paste("Unable to generate Poisson process with a mean of",
-                 meanN, "points"))
-    X <- runifpoint(n, box)
-    ## trim to window
-    if(win$type != "rectangle")
-      X <- X[win]
-    return(if(drop) X else solist(X))
-  }
   result <- vector(mode="list", length=nsim)
   for(isim in 1:nsim) {
     n <- rpois(1, meanN)
@@ -218,8 +215,8 @@ runifpoispp <- function(lambda, win = owin(c(0,1),c(0,1)), ...,
       X <- X[win]
     result[[isim]] <- X
   }
-  names(result) <- paste("Simulation", 1:nsim)
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 rpoint <- function(n, f, fmax=NULL,
@@ -235,17 +232,21 @@ rpoint <- function(n, f, fmax=NULL,
     stop(paste(sQuote("f"),
                "must be either a function or an",
                sQuote("im"), "object"))
+
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
   
   if(is.im(f)) {
     ## ------------ PIXEL IMAGE ---------------------
     wf <- as.owin(f)
     if(n == 0) {
       ## return empty pattern(s)
-      emp <- ppp(numeric(0), numeric(0), window=wf)
-      if(nsim == 1 && drop) return(emp)
+      emp <- ppp(window=wf)
       result <- rep(list(emp), nsim)
-      names(result) <- paste("Simulation", 1:nsim)
-      return(as.solist(result))
+      result <- simulationresult(result, nsim, drop)
+      return(result)
     }
     w <- as.mask(wf)
     M <- w$m
@@ -257,15 +258,6 @@ rpoint <- function(n, f, fmax=NULL,
     ypix <- rxy$y
     ppix <- as.vector(f$v[M]) ## not normalised - OK
     ##
-    if(nsim == 1) {
-      ## select pixels
-      id <- sample(length(xpix), n, replace=TRUE, prob=ppix)
-      ## extract pixel centres and randomise within pixels
-      x <- xpix[id] + runif(n, min= -dx/2, max=dx/2)
-      y <- ypix[id] + runif(n, min= -dy/2, max=dy/2)
-      X <- ppp(x, y, window=wf, check=FALSE)
-      return(if(drop) X else solist(X))
-    }
     result <- vector(mode="list", length=nsim)
     for(isim in 1:nsim) {
       ## select pixels
@@ -275,8 +267,8 @@ rpoint <- function(n, f, fmax=NULL,
       y <- ypix[id] + runif(n, min= -dy/2, max=dy/2)
       result[[isim]] <- ppp(x, y, window=wf, check=FALSE)
     }
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
+    result <- simulationresult(result, nsim, drop)
+    return(result)
   }
 
   ## ------------ FUNCTION  ---------------------  
@@ -286,11 +278,10 @@ rpoint <- function(n, f, fmax=NULL,
 
   if(n == 0) {
     ## return empty pattern(s)
-    emp <- ppp(numeric(0), numeric(0), window=win)
-    if(nsim == 1 && drop) return(emp)
+    emp <- ppp(window=win)
     result <- rep(list(emp), nsim)
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
+    result <- simulationresult(result, nsim, drop)
+    return(result)
   }
   
   if(is.null(fmax)) {
@@ -351,9 +342,8 @@ rpoint <- function(n, f, fmax=NULL,
                    X$n, "points accepted"))
     }
   }
-  if(nsim == 1 && drop) return(result[[1]])
-  names(result) <- paste("Simulation", 1:nsim)
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 rpoispp <- function(lambda, lmax=NULL, win = owin(), ...,
@@ -365,6 +355,11 @@ rpoispp <- function(lambda, lmax=NULL, win = owin(), ...,
   ##   ...       arguments passed to lambda(x, y, ...)
   ##     nsim    number of replicate simulations
 
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
+  
   if(missing(lambda) && is.null(lmax) && missing(win) && !is.null(ex)) {
     lambda <- intensity(unmark(ex))
     win <- Window(ex)
@@ -405,26 +400,21 @@ rpoispp <- function(lambda, lmax=NULL, win = owin(), ...,
 
   if(is.function(lambda)) {
     ## function lambda
-    if(nsim == 1) {
-      X <- runifpoispp(lmax, win)  ## includes sanity checks on `lmax'
-      if(X$n == 0) return(X)
-      prob <- lambda(X$x, X$y, ...)/lmax
-      u <- runif(X$n)
-      retain <- (u <= prob)
-      X <- X[retain, ]
-      return(if(drop) X else solist(X))
-    } 
+    #'      runifpoispp checks 'lmax'
     result <- runifpoispp(lmax, win, nsim=nsim, drop=FALSE)
+    #'      result is a 'ppplist' with appropriate names
     for(isim in 1:nsim) {
       X <- result[[isim]]
       if(X$n > 0) {
         prob <- lambda(X$x, X$y, ...)/lmax
         u <- runif(X$n)
         retain <- (u <= prob)
-        result[[isim]] <- X[retain, ]
+        result[[isim]] <- X[retain]
       }
     }
-    return(as.solist(result))
+    if(nsim == 1 && drop)
+       result <- result[[1L]]
+    return(result)
   }
 
   if(is.im(lambda)) {
@@ -449,18 +439,10 @@ rpoispp <- function(lambda, lmax=NULL, win = owin(), ...,
         yy <- df$y[ii] + runif(ni, -dy, dy)
         result[[isim]] <- ppp(xx, yy, window=win, check=FALSE)
       }
-      if(nsim == 1 && drop) return(result[[1]]) else return(as.solist(result))
+      result <- simulationresult(result, nsim, drop)
+      return(result)
     } else {
       ## old code: thinning
-      if(nsim == 1) {
-        X <- runifpoispp(lmax, win)
-        if(X$n == 0) return(X)
-        prob <- lambda[X]/lmax
-        u <- runif(X$n)
-        retain <- (u <= prob)
-        X <- X[retain, ]
-        return(if(drop) X else solist(X))
-      }
       result <- runifpoispp(lmax, win, nsim=nsim, drop=FALSE)
       for(isim in 1:nsim) {
         X <- result[[isim]]
@@ -468,10 +450,12 @@ rpoispp <- function(lambda, lmax=NULL, win = owin(), ...,
           prob <- lambda[X]/lmax
           u <- runif(X$n)
           retain <- (u <= prob)
-          result[[isim]] <- X[retain, ]
+          result[[isim]] <- X[retain]
         }
       }
-      return(as.solist(result))
+      if(nsim == 1 && drop)
+         return(result[[1L]])
+      return(result)
     }
   }
   stop(paste(sQuote("lambda"), "must be a constant, a function or an image"))
@@ -499,26 +483,30 @@ rMaternInhibition <- function(type,
                               ..., nsim=1, drop=TRUE) {
   stopifnot(is.numeric(r) && length(r) == 1)
   stopifnot(type %in% c(1,2))
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
   ## Resolve window class
-  if(!inherits(win, c("owin", "boxx"))) {
+  if(!inherits(win, c("owin", "box3", "boxx"))) {
     givenwin <- win
     win <- try(as.owin(givenwin), silent = TRUE)
     if(inherits(win, "try-error"))
       win <- try(as.boxx(givenwin), silent = TRUE)
     if(inherits(win, "try-error"))
-      stop("Could not coerce argument win to owin or boxx class.")
+      stop("Could not coerce argument win to a window (owin, box3 or boxx).")
   }
-  ## Pick 2-d or general function to grow domain
-  growfun <- if(is.owin(win)) grow.rectangle else grow.boxx
-  ## Enlarge bounding box for simulation if requested
-  bigbox <- if(stationary) growfun(win, r) else win
-  ## Simulate
-  X <- if(is.owin(win)){
-    rpoispp(kappa, win = bigbox, nsim = nsim)
-  } else{
-    rpoisppx(kappa, domain = bigbox, nsim = nsim)
+  dimen <- spatdim(win)
+  if(dimen == 2) {
+    bigbox <- if(stationary) grow.rectangle(win, r) else win
+    result <- rpoispp(kappa, win = bigbox, nsim = nsim, drop=FALSE)
+  } else if(dimen == 3) {
+    bigbox <- if(stationary) grow.box3(win, r) else win
+    result <- rpoispp3(kappa, domain = bigbox, nsim = nsim, drop=FALSE)
+  } else {
+    bigbox <- if(stationary) grow.boxx(win, r) else win
+    result <- rpoisppx(kappa, domain = bigbox, nsim = nsim, drop=FALSE)
   }
-  result <- if(nsim == 1) list(X) else X
   for(isim in 1:nsim) {
     Y <- result[[isim]]
     nY <- npoints(Y)
@@ -547,9 +535,9 @@ rMaternInhibition <- function(type,
       Y <- Y[win]
     result[[isim]] <- Y
   }
-  if(nsim == 1 && drop) return(result[[1]])
+  if(nsim == 1 && drop) return(result[[1L]])
   if(is.owin(win))
-    result <- as.solist(result)
+    result <- as.ppplist(result)
   return(result)
 }
 
@@ -561,6 +549,11 @@ rSSI <- function(r, n=Inf, win = square(1),
   win.given <- !missing(win) && !is.null(win)
   stopifnot(is.numeric(r) && length(r) == 1 && r >= 0)
   stopifnot(is.numeric(n) && length(n) == 1 && n >= 0)
+  must.reach.n <- is.finite(n)
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
   ##
   if(!is.null(f)) {
     stopifnot(is.numeric(f) || is.im(f) || is.function(f))
@@ -568,21 +561,9 @@ rSSI <- function(r, n=Inf, win = square(1),
       fmax <- if(is.im(f)) max(f) else max(as.im(f, win))
   }
   ##
-  if(nsim > 1) {
-    result <- vector(mode="list", length=nsim)
-    if(!win.given) win <- square(1)
-    pstate <- list()
-    for(isim in 1:nsim) {
-      pstate <- progressreport(isim, nsim, state=pstate)
-      result[[isim]] <- rSSI(r=r, n=n, win=win, giveup=giveup, x.init=x.init,
-                             f=f, fmax=fmax)
-    }
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
-  }
-  ## Simple Sequential Inhibition process
-  ## fixed number of points
-  ## Naive implementation, proposals are uniform
+  result <- vector(mode="list", length=nsim)
+  if(!win.given) win <- square(1)
+  ## validate initial state
   if(is.null(x.init)) {
     ## start with empty pattern in specified window
     win <- as.owin(win)
@@ -616,34 +597,49 @@ rSSI <- function(r, n=Inf, win = square(1),
     if(n == npoints(x.init)) {
       warning(paste("Initial state x.init already contains", n, "points;",
                     "no further points were added"))
-      return(if(drop) x.init else solist(x.init))
+      result <- rep(list(x.init), nsim)
+      result <- simulationresult(result, nsim, drop)
+      return(result)
     }
   }
-  X <- x.init
+  #' validate radius
   r2 <- r^2
   if(!is.infinite(n) && (n * pi * r2/4  > area(win)))
-    warning(paste("Window is too small to fit", n, "points",
-               "at minimum separation", r))
-  ntries <- 0
-  while(ntries < giveup) {
-    ntries <- ntries + 1
-    qq <- if(is.null(f)) runifpoint(1, win) else rpoint(1, f, fmax, win)
-    dx <- qq$x[1] - X$x
-    dy <- qq$y[1] - X$y
-    if(all(dx^2 + dy^2 > r2))
-      X <- superimpose(X, qq, W=win, check=FALSE)
-    if(X$n >= n)
-      return(if(drop) X else solist(X))
+      warning(paste("Window is too small to fit", n, "points",
+                    "at minimum separation", r))
+  #' start simulation 		    
+  pstate <- list()
+  for(isim in 1:nsim) {
+    if(nsim > 1) pstate <- progressreport(isim, nsim, state=pstate)
+    ## Simple Sequential Inhibition process
+    ## fixed number of points
+    ## Naive implementation, proposals are uniform
+    X <- x.init
+    ntries <- 0
+    while(ntries < giveup) {
+      ntries <- ntries + 1
+      qq <- if(is.null(f)) runifpoint(1, win) else rpoint(1, f, fmax, win)
+      dx <- qq$x[1] - X$x
+      dy <- qq$y[1] - X$y
+      if(all(dx^2 + dy^2 > r2)) {
+        X <- superimpose(X, qq, W=win, check=FALSE)
+        ntries <- 0
+      }
+      if(X$n >= n)
+        break
+    }
+    if(must.reach.n && X$n < n)
+      warning(paste("Gave up after", giveup,
+                    "attempts with only", X$n, "points placed out of", n))
+    result[[isim]] <- X
   }
-  if(!is.infinite(n))
-    warning(paste("Gave up after", giveup,
-                  "attempts with only", X$n, "points placed out of", n))
-  return(if(drop) X else solist(X))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 rPoissonCluster <-
   function(kappa, expand, rcluster, win = owin(c(0,1),c(0,1)), ...,
-           lmax=NULL, nsim=1, drop=TRUE)
+           lmax=NULL, nsim=1, drop=TRUE, saveparents=TRUE)
 {
   ## Generic Poisson cluster process
   ## Implementation for bounded cluster radius
@@ -663,6 +659,11 @@ rPoissonCluster <-
   }
   win <- as.owin(win)
   
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
+
   ## Generate parents in dilated window
   frame <- boundingbox(win)
   dilated <- owin(frame$xrange + c(-expand, expand),
@@ -712,17 +713,17 @@ rPoissonCluster <-
       parentid <- integer(0)
     }
 
-    attr(result, "parents") <- parents
-    attr(result, "parentid") <- parentid
-    attr(result, "expand") <- expand
-
+    if(saveparents) {
+      attr(result, "parents") <- parents
+      attr(result, "parentid") <- parentid
+      attr(result, "expand") <- expand
+    }
+    
     resultlist[[isim]] <- result
   }
 
-  if(nsim == 1 && drop) return(resultlist[[1]])
-
-  names(resultlist) <- paste("Simulation", 1:nsim)
-  return(as.solist(resultlist))
+  result <- simulationresult(resultlist, nsim, drop)
+  return(result)
 }  
 
 rGaussPoisson <- local({
@@ -753,11 +754,9 @@ rstrat <- function(win=square(1), nx, ny=nx, k=1, nsim=1, drop=TRUE) {
   win <- as.owin(win)
   stopifnot(nx >= 1 && ny >= 1)
   stopifnot(k >= 1)
-  if(nsim == 1) {
-    xy <- stratrand(win, nx, ny, k)
-    Xbox <- ppp(xy$x, xy$y, win$xrange, win$yrange, check=FALSE)
-    X <- Xbox[win]
-    return(if(drop) X else solist(X))
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
   }
   result <- vector(mode="list", length=nsim)
   for(isim in 1:nsim) {
@@ -765,8 +764,8 @@ rstrat <- function(win=square(1), nx, ny=nx, k=1, nsim=1, drop=TRUE) {
     Xbox <- ppp(xy$x, xy$y, win$xrange, win$yrange, check=FALSE)
     result[[isim]] <- Xbox[win]
   }
-  names(result) <- paste("Simulation", 1:nsim)
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 xy.grid <- function(xr, yr, nx, ny, dx, dy) {
@@ -803,6 +802,10 @@ xy.grid <- function(xr, yr, nx, ny, dx, dy) {
   
 rsyst <- function(win=square(1), nx=NULL, ny=nx, ..., dx=NULL, dy=dx,
                   nsim=1, drop=TRUE) {
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
   win <- as.owin(win)
   xr <- win$xrange
   yr <- win$yrange
@@ -816,14 +819,6 @@ rsyst <- function(win=square(1), nx=NULL, ny=nx, ..., dx=NULL, dy=dx,
   dy <- g$dy
   ## assemble grid and randomise location
   xy0 <- expand.grid(x=x0, y=y0)
-  if(nsim == 1) {
-    x <- xy0$x + runif(1, min = 0, max = dx)
-    y <- xy0$y + runif(1, min = 0, max = dy)
-    Xbox <- ppp(x, y, xr, yr, check=FALSE)
-    ## trim to window
-    X <- Xbox[win]
-    return(if(drop) X else solist(X))
-  }
   result <- vector(mode="list", length=nsim)
   for(isim in 1:nsim) {
     x <- xy0$x + runif(1, min = 0, max = dx)
@@ -832,25 +827,54 @@ rsyst <- function(win=square(1), nx=NULL, ny=nx, ..., dx=NULL, dy=dx,
     ## trim to window
     result[[isim]] <- Xbox[win]
   }
-  names(result) <- paste("Simulation", 1:nsim)
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
-rcellnumber <- function(n, N=10) {
-  if(!missing(N)) {
-    if(round(N) != N) stop("N must be an integer")
-    stopifnot(is.finite(N))
-    stopifnot(N > 1)
+rcellnumber <- local({
+
+  rcellnumber <- function(n, N=10, mu=1) {
+    if(missing(mu) || mu == 1) {
+      z <- rCellUnit(n=n, N=N)
+    } else {
+      z <- replicate(n, rCellCumul(x=mu, N=N))
+    }
+    return(z)
   }
-  u <- runif(n, min=0, max=1)
-  p0 <- 1/N
-  pN <- 1/(N * (N-1))
-  k <- ifelse(u < p0, 0, ifelse(u < (1 - pN), 1, N))
-  return(k)
-}
+  
+  rCellUnit <- function(n, N=10) {
+    if(!missing(N)) {
+      if(round(N) != N) stop("N must be an integer")
+      stopifnot(is.finite(N))
+      stopifnot(N > 1)
+    }
+    u <- runif(n, min=0, max=1)
+    p0 <- 1/N
+    pN <- 1/(N * (N-1))
+    k <- ifelse(u < p0, 0, ifelse(u < (1 - pN), 1, N))
+    return(k)
+  }
+  
+  rCellCumul <- function(x, N=10) {
+    check.1.real(x)
+    n <- ceiling(x)
+    if(n <= 0) return(0)
+    y <- rCellUnit(n=n, N=N)
+    if(n == x) return(sum(y))
+    p <- x - (n-1)
+    z <- sum(y[-1]) + rbinom(1, size=y[1], prob=p)
+    return(z)
+  }
+
+  rcellnumber
+})
 
 rcell <- function(win=square(1), nx=NULL, ny=nx, ...,
                   dx=NULL, dy=dx, N=10, nsim=1, drop=TRUE) {
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
   win <- as.owin(win)
   xr <- win$xrange
   yr <- win$yrange
@@ -878,9 +902,8 @@ rcell <- function(win=square(1), nx=NULL, ny=nx, ...,
     Xbox <- ppp(x, y, xr, yr, check=FALSE)
     result[[isim]] <- Xbox[win]
   }
-  if(nsim == 1 && drop) return(result[[1]])
-  names(result) <- paste("Simulation", 1:nsim)
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 
@@ -889,22 +912,33 @@ thinjump <- function(n, p) {
   stopifnot(length(p) == 1)
   if(p <= 0) return(integer(0))
   if(p >= 1) return(seq_len(n))
-  if(p > 0.5) return(-thinjump(n, 1-p))
+  if(p > 0.5) {
+    #' for retention prob > 0.5 we find the ones to discard instead
+    discard <- thinjump(n, 1-p)
+    retain <- if(length(discard)) -discard else seq_len(n)
+    return(retain)
+  }
   guessmaxlength <- ceiling(n * p + 2 * sqrt(n * p * (1-p)))
   i <- .Call("thinjumpequal",
-             n, p, guessmaxlength)
+             n, p, guessmaxlength,
+             PACKAGE = "spatstat")
   return(i)
 }
-  
-rthin <- function(X, P, ..., nsim=1, drop=TRUE) {
-  verifyclass(X, "ppp")
 
-  nX <- npoints(X)
+rthin <- function(X, P, ..., nsim=1, drop=TRUE) {
+  if(!(is.ppp(X) || is.lpp(X) || is.pp3(X) || is.ppx(X) || is.psp(X)))
+    stop(paste("X should be a point pattern (class ppp, lpp, pp3 or ppx)",
+               "or a line segment pattern (class psp)"),
+         call.=FALSE)
+  if(!missing(nsim)) {
+    check.1.integer(nsim)
+    stopifnot(nsim >= 1)
+  }
+  nX <- nobjects(X)
   if(nX == 0) {
-    if(nsim == 1 && drop) return(X)
     result <- rep(list(X), nsim)
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
+    result <- simulationresult(result, nsim, drop)
+    return(result)
   }
 
   if(is.numeric(P) && length(P) == 1 && spatstat.options("fastthin")) {
@@ -918,8 +952,7 @@ rthin <- function(X, P, ..., nsim=1, drop=TRUE) {
         attr(Y, "parentid") <- parentid[retain]
       result[[isim]] <- Y
     }
-    if(nsim == 1 && drop)
-      result <- result[[1]]
+    result <- simulationresult(result, nsim, drop)
     return(result)
   }
 
@@ -932,23 +965,31 @@ rthin <- function(X, P, ..., nsim=1, drop=TRUE) {
       else 
         stop("Length of vector P does not match number of points of X")
     }
-    if(any(is.na(pX)))
+    if(anyNA(pX))
       stop("P contains NA's")
   } else if(is.function(P)) {
     ## function - evaluate it at points of X
-    pX <- P(X$x, X$y, ...)
+    if(!(is.ppp(X) || is.lpp(X)))
+      stop(paste("Don't know how to apply a function to an object of class",
+                 commasep(sQuote(class(X)))),
+           call.=FALSE)
+    pX <- if(inherits(P, c("linfun", "funxy"))) P(X, ...) else P(X$x, X$y, ...)
     if(length(pX) != nX)
       stop("Function P returned a vector of incorrect length")
     if(!is.numeric(pX))
       stop("Function P returned non-numeric values")
-    if(any(is.na(pX)))
+    if(anyNA(pX))
       stop("Function P returned some NA values")
   } else if(is.im(P)) {
     ## image - look it up
+    if(!(is.ppp(X) || is.lpp(X)))
+      stop(paste("Don't know how to apply image values to an object of class",
+                 commasep(sQuote(class(X)))),
+           call.=FALSE)
     if(!(P$type %in% c("integer", "real")))
       stop("Values of image P should be numeric")
     pX <- P[X, drop=FALSE]
-    if(any(is.na(pX)))
+    if(anyNA(pX))
       stop("some points of X lie outside the domain of image P")
   } else
   stop("Unrecognised format for P")
@@ -956,14 +997,6 @@ rthin <- function(X, P, ..., nsim=1, drop=TRUE) {
   if(min(pX) < 0) stop("some probabilities are negative")
   if(max(pX) > 1) stop("some probabilities are greater than 1")
 
-  if(nsim == 1) {
-    retain <- (runif(length(pX)) < pX)
-    Y <- X[retain]
-    ## also handle offspring-to-parent map if present
-    if(!is.null(parentid <- attr(X, "parentid")))
-      attr(Y, "parentid") <- parentid[retain]
-    return(if(drop) Y else solist(Y))
-  }
   result <- vector(mode="list", length=nsim)
   for(isim in 1:nsim) {
     retain <- (runif(length(pX)) < pX)
@@ -973,8 +1006,8 @@ rthin <- function(X, P, ..., nsim=1, drop=TRUE) {
       attr(Y, "parentid") <- parentid[retain]
     result[[isim]] <- Y
   }
-  names(result) <- paste("Simulation", 1:nsim)
-  return(as.solist(result))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 
 
@@ -983,45 +1016,52 @@ rthin <- function(X, P, ..., nsim=1, drop=TRUE) {
 rjitter <- function(X, radius, retry=TRUE, giveup=10000, ...,
                     nsim=1, drop=TRUE) {
   verifyclass(X, "ppp")
-  if(missing(radius) || is.null(radius))
-    radius <- bw.stoyan(X)
-  if(nsim > 1) {
-    result <- vector(mode="list", length=nsim)
-    for(isim in 1:nsim)
-      result[[isim]] <- rjitter(X, radius=radius,
-                                retry=retry, giveup=giveup, ...)
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
-  }
+  check.1.integer(nsim)
+  stopifnot(nsim >= 1)
   nX <- npoints(X)
-  if(nX == 0) return(X)
-  W <- X$window
-  if(!retry) {
-    ## points outside window are lost
-    D <- runifdisc(nX, radius=radius)
-    xnew <- X$x + D$x
-    ynew <- X$y + D$y
-    ok <- inside.owin(xnew, ynew, W)
-    return(ppp(xnew[ok], ynew[ok], window=W))
+  if(nX == 0) {
+    result <- rep(list(X), nsim)
+    result <- simulationresult(result, nsim, drop)
+    return(result)
   }
-  ## retry = TRUE: condition on points being inside window
-  undone <- rep.int(TRUE, nX)
-  while(any(undone)) {
-    giveup <- giveup - 1
-    if(giveup <= 0)
-      return(X)
-    Y <- X[undone]
-    D <- runifdisc(Y$n, radius=radius)
-    xnew <- Y$x + D$x
-    ynew <- Y$y + D$y
-    ok <- inside.owin(xnew, ynew, W)
-    if(any(ok)) {
-      changed <- seq_len(nX)[undone][ok]
-      X$x[changed] <- xnew[ok]
-      X$y[changed] <- ynew[ok]
-      undone[changed] <- FALSE
+  W <- X$window
+  if(missing(radius) || is.null(radius))
+    radius <- min(bw.stoyan(X), shortside(Frame(W)))
+  
+  result <- vector(mode="list", length=nsim)
+  for(isim in 1:nsim) {
+    if(!retry) {
+      ## points outside window are lost
+      D <- runifdisc(nX, radius=radius)
+      xnew <- X$x + D$x
+      ynew <- X$y + D$y
+      ok <- inside.owin(xnew, ynew, W)
+      result[[isim]] <- ppp(xnew[ok], ynew[ok], window=W, check=FALSE)
+    } else {
+      ## retry = TRUE: condition on points being inside window
+      undone <- rep.int(TRUE, nX)
+      triesleft <- giveup
+      Xshift <- X
+      while(any(undone)) {
+        triesleft <- triesleft - 1
+        if(triesleft <= 0) 
+	  break
+        Y <- Xshift[undone]
+        D <- runifdisc(Y$n, radius=radius)
+        xnew <- Y$x + D$x
+        ynew <- Y$y + D$y
+        ok <- inside.owin(xnew, ynew, W)
+        if(any(ok)) {
+          changed <- which(undone)[ok]
+          Xshift$x[changed] <- xnew[ok]
+          Xshift$y[changed] <- ynew[ok]
+          undone[changed] <- FALSE
+        }
+      }
+      result[[isim]] <- Xshift
     }
   }
-  return(if(drop) X else solist(X))
+  result <- simulationresult(result, nsim, drop)
+  return(result)
 }
 

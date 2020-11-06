@@ -1,4 +1,4 @@
-\name{connected}  %DontDeclareMethods
+\name{connected}  
 \Rdversion{1.1}
 \alias{connected}
 \alias{connected.im}
@@ -31,14 +31,18 @@ connected(X, \dots)
     or \code{"interpreted"}. See Details.
   }
   \item{\dots}{
-    Other arguments, not recognised by these methods.
+    Arguments passed to \code{\link{as.mask}} to determine the
+    pixel resolution.
   }
 }
 \details{
   The function \code{connected} is generic, with methods
   for pixel images (class \code{"im"}) and windows (class \code{"owin"})
-  described here. There is also a method for point patterns
-  described in \code{\link{connected.ppp}}.
+  described here. There are also methods for
+  tessellations (\code{\link{connected.tess}}),
+  point patterns (\code{\link{connected.ppp}} and
+  \code{\link{connected.lpp}}),
+  and linear networks (\code{\link{connected.linnet}}).
   
   The functions described here compute the connected component transform
   (Rosenfeld and Pfalz, 1966)
@@ -83,6 +87,9 @@ connected(X, \dots)
 }
 \seealso{
   \code{\link{connected.ppp}},
+  \code{\link{connected.tess}},
+  \code{\link{connected.lpp}},
+  \code{\link{connected.linnet}},
   \code{\link{im.object}}, 
   \code{\link{tess}}
 }
@@ -96,12 +103,13 @@ connected(X, \dots)
   the connected components include a large number of pixels).
 }
 \examples{
-  data(cells)
   d <- distmap(cells, dimyx=256)
-  X <- levelset(d, 0.06)
+  X <- levelset(d, 0.07)
   plot(X)
   Z <- connected(X)
   plot(Z)
+  # or equivalently
+  Z <- connected(d <= 0.07)
 
   # number of components
   nc <- length(levels(Z))
@@ -114,11 +122,8 @@ connected(X, \dots)
 \author{
   Original \R code by Julian Burgos, University of Washington.
   Adapted for \pkg{spatstat} by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+  \adrian
+  and \rolf.
 }
 \keyword{spatial}
 \keyword{math}

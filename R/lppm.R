@@ -3,7 +3,7 @@
 #
 #  Point process models on a linear network
 #
-#  $Revision: 1.33 $   $Date: 2015/10/16 05:00:05 $
+#  $Revision: 1.45 $   $Date: 2020/06/16 02:54:55 $
 #
 
 lppm <- function(X, ...) {
@@ -28,8 +28,8 @@ lppm.formula <- function(X, interaction=NULL, ..., data=NULL) {
   ## check formula has LHS and RHS. Extract them
   if(length(formula) < 3)
     stop(paste("Formula must have a left hand side"))
-  Yexpr <- formula[[2]]
-  trend <- formula[c(1,3)]
+  Yexpr <- formula[[2L]]
+  trend <- formula[c(1L,3L)]
   
   ## FIT #######################################
   thecall <- call("lppm", X=Yexpr, trend=trend,
@@ -41,7 +41,8 @@ lppm.formula <- function(X, interaction=NULL, ..., data=NULL) {
     thecall[ncall + 1:nargh] <- argh
     names(thecall)[ncall + 1:nargh] <- names(argh)
   }
-  result <- eval(thecall, parent.frame())
+  callenv <- list2env(as.list(data), parent=parent.frame())
+  result <- eval(thecall, envir=callenv)
 
   result$call <- cl
   result$callstring <- callstring
@@ -49,7 +50,7 @@ lppm.formula <- function(X, interaction=NULL, ..., data=NULL) {
   return(result)
 }
 
-lppm.lpp <- function(X, ..., eps=NULL, nd=1000) {
+lppm.lpp <- function(X, ..., eps=NULL, nd=1000, random=FALSE) {
   Xname <- short.deparse(substitute(X))
   callstring <- paste(short.deparse(sys.call()), collapse = "")
   cl <- match.call()
@@ -60,7 +61,7 @@ lppm.lpp <- function(X, ..., eps=NULL, nd=1000) {
                   commasep(sQuote(resv[clash])),
                   "must not be used"))
   stopifnot(inherits(X, "lpp"))
-  Q <- linequad(X, eps=eps, nd=nd)
+  Q <- linequad(X, eps=eps, nd=nd, random=random)
   fit <- ppm(Q, ..., method="mpl", forcefit=TRUE)
   if(!is.poisson.ppm(fit))
     warning("Non-Poisson models currently use Euclidean distance")
@@ -71,9 +72,14 @@ lppm.lpp <- function(X, ..., eps=NULL, nd=1000) {
 
 is.lppm <- function(x) { inherits(x, "lppm") }
 
-fitted.lppm <- function(object, ..., dataonly=FALSE, new.coef=NULL) {
+# undocumented
+as.ppm.lppm <- function(object) { object$fit }
+
+fitted.lppm <- function(object, ..., dataonly=FALSE, new.coef=NULL,
+                        leaveoneout=FALSE) {
   pfit <- object$fit
-  v <- fitted(pfit, dataonly=dataonly, new.coef=new.coef)
+  v <- fitted(pfit, dataonly=dataonly, new.coef=new.coef,
+              leaveoneout=leaveoneout)
   return(v)
 }
   
@@ -87,7 +93,8 @@ predict.lppm <- function(object, ...,
   L <- as.linnet(X)
 
   if(!is.null(locations)) {
-    # locations given; return a vector of predicted values
+    #' locations given; return a vector/matrix of predicted values
+    if(is.lpp(locations)) locations <- as.ppp(locations)
     values <- predict(fit, locations=locations, type=type, new.coef=new.coef)
     return(values)
   }
@@ -118,7 +125,7 @@ predict.lppm <- function(object, ...,
     Z[pixelcentres] <- values
     # attach exact line position data
     df <- cbind(projdata, values)
-    out <- linim(L, Z, df=df)
+    out <- linim(L, Z, df=df, restrict=FALSE)
   } else {
     # predict for each type
     lev <- levels(marks(data.ppm(fit)))
@@ -130,10 +137,10 @@ predict.lppm <- function(object, ...,
       Z <- lineimage
       Z[pixelcentres] <- values
       df <- cbind(projdata, values)
-      out[[k]] <- linim(L, Z, df=df)
+      out[[k]] <- linim(L, Z, df=df, restrict=FALSE)
     }
+    out <- as.solist(out)
     names(out) <- as.character(lev)
-    class(out) <- as.solist(out)
   }
   return(out)
 }
@@ -167,7 +174,7 @@ summary.lppm <- function(object, ...) {
 plot.lppm <- function(x, ..., type="trend") {
   xname <- short.deparse(substitute(x))
   y <- predict(x, type=type)
-  do.call("plot", resolve.defaults(list(y),
+  do.call(plot, resolve.defaults(list(y),
                                    list(...),
                                    list(main=xname)))
 }
@@ -179,9 +186,10 @@ anova.lppm <- function(object, ..., test=NULL) {
     stuff <- stuff[-hit]
   }
   #' extract ppm objects where appropriate
-  stuff <- lapply(stuff, function(z) { if(inherits(z, "lppm")) z$fit else z })
+  mod <- sapply(stuff, is.lppm)
+  stuff[mod] <- lapply(stuff[mod], getElement, name="fit")
   #' analysis of deviance or adjusted composite deviance
-  do.call("anova.ppm", append(stuff, list(test=test)))
+  do.call(anova.ppm, append(stuff, list(test=test)))
 }
 
 update.lppm <- function(object, ...) {
@@ -189,24 +197,38 @@ update.lppm <- function(object, ...) {
   X <- object$X
   fit <- object$fit
   Xname <- object$Xname
+  callframe <- environment(formula(fit))
   aargh <- list(...)
-  islpp <- unlist(lapply(aargh, inherits, what="lpp"))
-  if(!any(islpp)) {
-    # pass arguments through to update.ppm
-    newfit <- do.call("update.ppm", append(list(fit), aargh))
-    newX <- X
-  } else {
+  islpp <- sapply(aargh, is.lpp)
+  if(any(islpp)) {
     # trap point pattern argument & convert to quadscheme
-    if((npp <- sum(islpp)) > 1)
+    ii <- which(islpp)
+    if((npp <- length(ii)) > 1)
       stop(paste("Arguments not understood:", npp, "lpp objects given"))
-    newX <- aargh[[which(islpp)]]
-    newQ <- linequad(newX)
-    newfit <- do.call("update.ppm",
-                      append(list(fit, newQ), aargh[!islpp]))
-  } 
+    X <- aargh[[ii]]
+    aargh[[ii]] <- linequad(X)
+  }
+  isfmla <- sapply(aargh, inherits, what="formula")
+  if(any(isfmla)) {
+    # trap formula pattern argument, update it, evaluate LHS if required
+    jj <- which(isfmla)
+    if((nf <- length(jj)) > 1)
+      stop(paste("Arguments not understood:", nf, "formulae given"))
+    fmla <- aargh[[jj]]
+    fmla <- update(formula(object), fmla)
+    if(!is.null(lhs <- lhs.of.formula(fmla))) {
+      X <- eval(lhs, envir=list2env(list("."=X), parent=callframe))
+      Qpos <- if(any(islpp)) ii else (length(aargh) + 1L)
+      aargh[[Qpos]] <- linequad(X)
+    }
+    aargh[[jj]] <- rhs.of.formula(fmla)
+  }
+  newfit <- do.call(update.ppm,
+                    append(list(fit), aargh),
+                    envir=callframe)
   if(!is.poisson.ppm(newfit))
     warning("Non-Poisson models currently use Euclidean distance")
-  out <- list(X=newX, fit=newfit, Xname=Xname)
+  out <- list(X=X, fit=newfit, Xname=Xname)
   class(out) <- "lppm"
   return(out)
 }
@@ -220,12 +242,21 @@ logLik.lppm <- function(object, ...) {
 }
 
 deviance.lppm <- function(object, ...) {
-  as.numeric(-2 * logLik(object, ...))
+  deviance(object$fit, ...)
 }
 
-pseudoR2.lppm <- function(object, ...) {
+pseudoR2.lppm <- function(object, ..., keepoffset=TRUE) {
   dres <- deviance(object, ..., warn=FALSE)
-  nullmod <- update(object, . ~ 1)
+  nullfmla <- . ~ 1
+  if(keepoffset && has.offset.term(object)) {
+    off <- attr(model.depends(object), "offset")
+    offterms <- row.names(off)[apply(off, 1, any)]
+    if(length(offterms)) {
+      nullrhs <- paste(offterms, collapse=" + ") 
+      nullfmla <- as.formula(paste(". ~ ", nullrhs))
+    }
+  } 
+  nullmod <- update(object, nullfmla, forcefit=TRUE)
   dnul <- deviance(nullmod, warn=FALSE)
   return(1 - dres/dnul)
 }
@@ -245,39 +276,56 @@ as.owin.lppm <- function(W, ..., fatal=TRUE) {
 
 Window.lppm <- function(X, ...) { as.owin(X) }
 
+data.lppm <- function(object) { object$X }
 
-model.images.lppm <- function(object, L=as.linnet(object), ...) {
-  stopifnot(inherits(object, "lppm"))
-  stopifnot(inherits(L, "linnet"))
-  m <- model.images(object$fit, W=as.rectangle(L), ...)
-  if(length(m) > 0) {
-    ## restrict images to L
-    rasta <- as.mask(m[[1]])
-    DL <- as.mask.psp(as.psp(L), xy=rasta)
-    ZL <- as.im(DL)
-    if(!is.hyperframe) {
-      ## list of images
-      m <- lapply(m, function(x, Z) eval.im(x * Z), Z=ZL)
-      ## convert to linim
-      m <- lapply(m, function(x, L) linim(L,x), L=L)
-      return(as.solist(m))
-    } else {
-      ## hyperframe, each column being a list of images
-      mm <- lapply(as.list(m),
-                   function(a) {
-                     b <- lapply(a, function(x, Z) eval.im(x * Z), Z=ZL)
-                     b <- lapply(b, function(x, L) linim(L,x), L=L)
-                     return(as.solist(b))
-                   })
-      m <- do.call(hyperframe, mm)
+model.images.lppm <- local({
+
+  model.images.lppm <- function(object, L=as.linnet(object), ...) {
+    stopifnot(inherits(object, "lppm"))
+    stopifnot(inherits(L, "linnet"))
+    m <- model.images(object$fit, W=as.rectangle(L), ...)
+    if(length(m)) {
+      ## restrict images to L
+      type <- if(is.hyperframe(m)) "hyperframe" else
+              if(is.imlist(m)) "imlist" else
+              if(is.list(m) && all(sapply(m, is.im))) "imlist" else
+              stop("Internal error: model.images not understood", call.=FALSE)
+      switch(type,
+             imlist = {
+               ## list of images: convert to list of linims
+               ZL <- netmask(L, template=m[[1L]])
+               m <- tolinims(m, L=L, imL=ZL)
+             },
+             hyperframe = {
+               ## hyperframe, each column being a list of images
+               ## extract columns
+               rownam <- row.names(m)
+               m <- as.list(m)
+               ZL <- netmask(L, template=m[[1L]][[1L]])
+               mm <- lapply(m, tolinims, L=L, imL=ZL)
+               m <- do.call(hyperframe, mm)
+               row.names(m) <- rownam
+             })
     }
+    return(m)
   }
-  return(m)
-}
+
+  netmask <- function(L, template) {
+    as.im(as.mask.psp(as.psp(L), xy=as.mask(template)))
+  }
+    
+  tolinim <- function(x, L, imL) linim(L, eval.im(x * imL), restrict=FALSE)
+  tolinims <- function(x, L, imL) solapply(x, tolinim, L=L, imL=imL)
+
+  model.images.lppm
+})
+
   
-model.matrix.lppm <- function(object, data=model.frame(object),
+model.matrix.lppm <- function(object,
+                              data=model.frame(object, na.action=NULL),
                              ..., keepNA=TRUE) {
-  stopifnot(inherits(object, "lppm"))
+  stopifnot(is.lppm(object))
+  if(missing(data)) data <- NULL
   model.matrix(object$fit, data=data, ..., keepNA=keepNA)
 }
 
@@ -317,4 +365,3 @@ emend.lppm <- function(object, ...) {
   return(object)
 }
 
-  

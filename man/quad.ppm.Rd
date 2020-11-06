@@ -78,18 +78,17 @@
   \code{\link{ppm}}
 }
 \examples{
- data(cells)
- fit <- ppm(cells, ~1, Strauss(r=0.1))
+ fit <- ppm(cells ~1, Strauss(r=0.1))
  Q <- quad.ppm(fit)
  \dontrun{plot(Q)}
- Q$data$n
- Q$dummy$n
+ npoints(Q$data)
+ npoints(Q$dummy)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{manip}

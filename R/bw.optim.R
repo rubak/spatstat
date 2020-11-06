@@ -4,24 +4,48 @@
 #  Class of optimised bandwidths
 #  Plotting the object displays the optimisation criterion
 #
-#  $Revision: 1.22 $  $Date: 2015/03/16 10:39:38 $
+#  $Revision: 1.32 $  $Date: 2020/04/11 05:29:57 $
 #
 
-bw.optim <- function(cv, h, iopt=which.min(cv), ...,
+bw.optim <- function(cv, h,
+                     iopt=if(optimum == "min") which.min(cv) else which.max(cv),
+                     ...,
                      cvname, hname,
-                     criterion="cross-validation") {
+                     criterion="cross-validation",
+                     optimum = c("min", "max"), 
+                     warnextreme=TRUE, hargnames=NULL,
+                     unitname=NULL) {
   if(missing(cvname) || is.null(cvname)) cvname <- deparse(substitute(cv))
   if(missing(hname) || is.null(hname)) hname <- deparse(substitute(h))
   stopifnot(is.numeric(cv))
   stopifnot(is.numeric(h))
   stopifnot(length(h) == length(cv))
+  optimum <- match.arg(optimum)
   result <- h[iopt]
+  if(warnextreme) {
+    optimised <- switch(optimum, min="minimised", max="maximised")
+    if(is.infinite(result)) {
+      warning(paste(criterion, "criterion was", optimised, "at",
+                    hname, "=", as.numeric(result)),
+              call.=FALSE)
+    } else if((iopt == length(h) || iopt == 1)) {
+      warning(paste(criterion, "criterion was", optimised, "at",
+                    if(iopt == 1) "left-hand" else "right-hand",
+                    "end of interval",
+                    paste0(prange(signif(range(h[is.finite(h)]), 3)), ";"), 
+                    "use", ngettext(length(hargnames), "argument", "arguments"),
+                    paste(sQuote(hargnames), collapse=", "),
+                    "to specify a wider interval for bandwidth", sQuote(hname)),
+              call.=FALSE)
+    }
+  }
   attr(result, "cv") <- cv
   attr(result, "h") <- h
   attr(result, "iopt") <- iopt
   attr(result, "labels") <- list(hname=hname, cvname=cvname)
   attr(result, "info") <- list(...)
   attr(result, "criterion") <- criterion
+  attr(result, "units") <- unitname
   class(result) <- "bw.optim"
   return(result)
 }
@@ -41,8 +65,8 @@ as.data.frame.bw.optim <- function(x, ...) {
   colnames(df) <- labels[c("hname", "cvname")]
   info <- attr(x, "info")
   if(length(info) > 0) {
-    lengths <- unlist(lapply(info, length))
-    if(any(ok <- (lengths == nrow(df)))) {
+    lenfs <- lengths(info)
+    if(any(ok <- (lenfs == nrow(df)))) {
       df <- cbind(df, as.data.frame(info[ok]))
     }
   }
@@ -53,13 +77,13 @@ as.fv.bw.optim <- function(x) {
   # convert to fv object
   df <- as.data.frame(x)
   dfnames <- colnames(df)
-  hname <- dfnames[1]
-  cvname <- dfnames[2]
+  hname <- dfnames[1L]
+  cvname <- dfnames[2L]
   descrip <- c("smoothing parameter",
                paste(attr(x, "criterion"), "criterion"))
   if(ncol(df) > 2)
     descrip <- c(descrip, paste("Additional variable", sQuote(dfnames[-(1:2)])))
-  labl <- c(hname, paste0(dfnames[-1], paren(hname)))
+  labl <- c(hname, paste0(dfnames[-1L], paren(hname)))
   yexp <- substitute(CV(h), list(CV=as.name(cvname), h=as.name(hname)))
   xfv <- fv(df,
             argu=hname,
@@ -70,6 +94,7 @@ as.fv.bw.optim <- function(x) {
             fname=cvname,
             yexp=yexp)
   fvnames(xfv, ".") <- cvname
+  unitname(xfv) <- unitname(x)
   return(xfv)
 }
 
@@ -79,7 +104,7 @@ plot.bw.optim <- function(x, ...,
   # convert to fv object
   xfv <- as.fv(x)
   # plot cross-validation criterion
-  out <- do.call("plot.fv",
+  out <- do.call(plot.fv,
                  resolve.defaults(list(x=xfv),
                                   list(...),
                                   list(main=xname)))
@@ -99,7 +124,7 @@ plot.bw.optim <- function(x, ...,
     hoptim <- as.numeric(x)
     if(spatstat.options('monochrome'))
       optargs <- col.args.to.grey(optargs)
-    do.call("abline", append(list(v=hoptim), optargs))
+    do.call(abline, append(list(v=hoptim), optargs))
   }
   if(is.null(out)) return(invisible(NULL))
   return(out)

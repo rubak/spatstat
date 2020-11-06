@@ -9,7 +9,7 @@
   rThomas(kappa, scale, mu, win = owin(c(0,1),c(0,1)),
           nsim=1, drop=TRUE, 
           saveLambda=FALSE, expand = 4*scale, ...,
-          poisthresh=1e-6)
+          poisthresh=1e-6, saveparents=TRUE)
 }
 \arguments{
   \item{kappa}{
@@ -53,6 +53,10 @@
   \item{poisthresh}{
     Numerical threshold below which the model will be treated
     as a Poisson process. See Details.
+  }
+  \item{saveparents}{
+    Logical value indicating whether to save the locations of the
+    parent points as an attribute.
   }
 }
 \value{
@@ -168,11 +172,11 @@
   Z <- as.im(function(x,y){ 5 * exp(2 * x - 1) }, owin())
   Y <- rThomas(10, 0.2, Z)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{datagen}

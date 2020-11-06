@@ -1,7 +1,7 @@
 #
 # linearpcfmulti.R
 #
-# $Revision: 1.6 $ $Date: 2015/02/25 06:22:40 $
+# $Revision: 1.15 $ $Date: 2020/01/11 04:36:59 $
 #
 # pair correlation functions for multitype point pattern on linear network
 #
@@ -12,7 +12,7 @@ linearpcfdot <- function(X, i, r=NULL, ..., correction="Ang") {
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i) || is.null(i)) i <- lev[1] else
+  if(missing(i) || is.null(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))  
   I <- (marx == i)
   J <- rep(TRUE, npoints(X))  # i.e. all points
@@ -21,6 +21,7 @@ linearpcfdot <- function(X, i, r=NULL, ..., correction="Ang") {
   correction <- attr(result, "correction")
   type <- if(correction == "Ang") "L" else "net"
   result <- rebadge.as.dotfun(result, "g", type, i)
+  attr(result, "correction") <- correction
   return(result)
 }
 
@@ -29,9 +30,9 @@ linearpcfcross <- function(X, i, j, r=NULL, ..., correction="Ang") {
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i) || is.null(i)) i <- lev[1] else
+  if(missing(i) || is.null(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))
-  if(missing(j) || is.null(j)) j <- lev[2] else
+  if(missing(j) || is.null(j)) j <- lev[2L] else
     if(!(j %in% lev)) stop(paste("j = ", j , "is not a valid mark"))
   #
   if(i == j) {
@@ -45,6 +46,7 @@ linearpcfcross <- function(X, i, j, r=NULL, ..., correction="Ang") {
   correction <- attr(result, "correction")
   type <- if(correction == "Ang") "L" else "net"
   result <- rebadge.as.crossfun(result, "g", type, i, j)
+  attr(result, "correction") <- correction
   return(result)
 }
 
@@ -57,9 +59,8 @@ linearpcfmulti <- function(X, I, J, r=NULL, ..., correction="Ang") {
                            multi=FALSE)
   
   # extract info about pattern
-  sX <- summary(X)
-  np <- sX$npoints
-  lengthL <- sX$totlength
+  np <- npoints(X)
+  lengthL <- volume(domain(X))
   # validate I, J
   if(!is.logical(I) || !is.logical(J))
     stop("I and J must be logical vectors")
@@ -94,7 +95,7 @@ linearpcfdot.inhom <- function(X, i, lambdaI, lambdadot,
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i)) i <- lev[1] else
+  if(missing(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))  
   I <- (marx == i)
   J <- rep(TRUE, npoints(X))  # i.e. all points
@@ -105,6 +106,7 @@ linearpcfdot.inhom <- function(X, i, lambdaI, lambdadot,
   correction <- attr(result, "correction")
   type <- if(correction == "Ang") "L, inhom" else "net, inhom"
   result <- rebadge.as.dotfun(result, "g", type, i)
+  attr(result, "correction") <- correction
   return(result)
 }
 
@@ -115,9 +117,9 @@ linearpcfcross.inhom <- function(X, i, j, lambdaI, lambdaJ,
 	stop("Point pattern must be multitype")
   marx <- marks(X)
   lev <- levels(marx)
-  if(missing(i)) i <- lev[1] else
+  if(missing(i)) i <- lev[1L] else
     if(!(i %in% lev)) stop(paste("i = ", i , "is not a valid mark"))
-  if(missing(j)) j <- lev[2] else
+  if(missing(j)) j <- lev[2L] else
     if(!(j %in% lev)) stop(paste("j = ", j , "is not a valid mark"))
   #
   if(i == j) {
@@ -135,12 +137,14 @@ linearpcfcross.inhom <- function(X, i, j, lambdaI, lambdaJ,
   correction <- attr(result, "correction")
   type <- if(correction == "Ang") "L, inhom" else "net, inhom"
   result <- rebadge.as.crossfun(result, "g", type, i, j)
+  attr(result, "correction") <- correction
   return(result)
 }
 
 linearpcfmulti.inhom <- function(X, I, J, lambdaI, lambdaJ,
                                r=NULL, ...,
-                               correction="Ang", normalise=TRUE) {
+                               correction="Ang",
+                               normalise=TRUE) {
   stopifnot(inherits(X, "lpp"))
   correction <- pickoption("correction", correction,
                            c(none="none",
@@ -149,9 +153,8 @@ linearpcfmulti.inhom <- function(X, I, J, lambdaI, lambdaJ,
                            multi=FALSE)
   
   # extract info about pattern
-  sX <- summary(X)
-  np <- sX$npoints
-  lengthL <- sX$totlength
+  np <- npoints(X)
+  lengthL <- volume(domain(X))
   # validate I, J
   if(!is.logical(I) || !is.logical(J))
     stop("I and J must be logical vectors")
@@ -162,12 +165,12 @@ linearpcfmulti.inhom <- function(X, I, J, lambdaI, lambdaJ,
   if(!any(I)) stop("no points satisfy I")
 
   # validate lambda vectors
-  lambdaI <- getlambda.lpp(lambdaI, X[I], ...)
-  lambdaJ <- getlambda.lpp(lambdaJ, X[J], ...)
+  lambdaI <- getlambda.lpp(lambdaI, X, subset=I, ...)
+  lambdaJ <- getlambda.lpp(lambdaJ, X, subset=J, ...)
 
   # compute pcf
   weightsIJ <- outer(1/lambdaI, 1/lambdaJ, "*")
-  denom <- if(!normalise) lengthL else sum(1/lambdaI)
+  denom <- if(!normalise) lengthL else sum(1/lambdaI) 
   g <- linearPCFmultiEngine(X, I, J, r=r,
                             reweight=weightsIJ, denom=denom,
                             correction=correction, ...)
@@ -188,17 +191,12 @@ linearPCFmultiEngine <- function(X, I, J, ..., r=NULL, reweight=NULL, denom=1,
   # ensure distance information is present
   X <- as.lpp(X, sparse=FALSE)
   # extract info about pattern
-#  sX <- summary(X)
-#  np <- sX$npoints
-#  lengthL <- sX$totlength
   np <- npoints(X)
   # extract linear network
-  L <- X$domain
-  # extract points
-  XP <- as.ppp(X)
-  W <- as.owin(XP)
+  L <- domain(X)
+  W <- Window(L)
   # determine r values
-  rmaxdefault <- 0.98 * circumradius(L)
+  rmaxdefault <- 0.98 * boundingradius(L)
   breaks <- handle.r.b.args(r, NULL, W, rmaxdefault=rmaxdefault)
   r <- breaks$r
   rmax <- breaks$max
@@ -225,25 +223,19 @@ linearPCFmultiEngine <- function(X, I, J, ..., r=NULL, reweight=NULL, denom=1,
     return(g)
   }
   #
-  nI <- sum(I)
-  nJ <- sum(J)
-  whichI <- which(I)
-  whichJ <- which(J)
+  ##  nI <- sum(I)
+  ## nJ <- sum(J)
+  ## whichI <- which(I)
+  ## whichJ <- which(J)
   clash <- I & J
   has.clash <- any(clash)
-  # compute pairwise distances
-  if(exists("crossdist.lpp")) {
-    DIJ <- crossdist(X[I], X[J], check=FALSE)
-    if(has.clash) {
-      # exclude pairs of identical points from consideration
-      Iclash <- which(clash[I])
-      Jclash <- which(clash[J])
-      DIJ[cbind(Iclash,Jclash)] <- Inf
-    }
-  } else {
-    D <- pairdist(X)
-    diag(D) <- Inf
-    DIJ <- D[I, J]
+  ## compute pairwise distances
+  DIJ <- crossdist(X[I], X[J], check=FALSE)
+  if(has.clash) {
+    ## exclude pairs of identical points from consideration
+    Iclash <- which(clash[I])
+    Jclash <- which(clash[J])
+    DIJ[cbind(Iclash,Jclash)] <- Inf
   }
   #---  compile into pair correlation function ---
   if(correction == "none" && is.null(reweight)) {
@@ -254,27 +246,15 @@ linearPCFmultiEngine <- function(X, I, J, ..., r=NULL, reweight=NULL, denom=1,
     attr(g, "correction") <- correction
     return(g)
   }
-  if(correction == "none")
+  if(correction == "none") {
      edgewt <- 1
-  else {
-     # inverse m weights (Ang's correction)
-     # compute m[i,j]
-     m <- matrix(1, nI, nJ)
-     XPI <- XP[I]
-     if(!has.clash) {
-       for(k in seq_len(nJ)) {
-         j <- whichJ[k]
-         m[,k] <- countends(L, XPI, DIJ[, k])
-       }
-     } else {
-       # don't count identical pairs
-       for(k in seq_len(nJ)) {
-         j <- whichJ[k]
-         inotj <- (whichI != j)
-         m[inotj, k] <- countends(L, XPI[inotj], DIJ[inotj, k])
-       }
-     }
-     edgewt <- 1/m
+  } else {
+    ## inverse m weights (Ang's correction)
+    ## determine tolerance
+    toler <- default.linnet.tolerance(L)
+    ## compute m[i,j]
+    m <- DoCountCrossEnds(X, I, J, DIJ, toler)
+    edgewt <- 1/m
   }
   # compute pcf
   wt <- if(!is.null(reweight)) edgewt * reweight else edgewt

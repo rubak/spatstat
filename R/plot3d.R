@@ -1,6 +1,6 @@
 #'  perspective plot of 3D 
 #'
-#'  $Revision: 1.3 $ $Date: 2015/01/28 05:12:58 $
+#'  $Revision: 1.7 $ $Date: 2019/10/22 07:53:14 $
 #'
 
 
@@ -47,15 +47,15 @@ project3Dhom <- local({
     ## horizontal axis in screen
     vhoriz <- crossprod(vin, vup)
     ##
-    dbg <- FALSE
-    if(dbg) {
-      cat("vin=")
-      print(vin)
-      cat("vup=")
-      print(vup)
-      cat("vhoriz=")
-      print(vhoriz)
-    }
+#    dbg <- FALSE
+#    if(dbg) {
+#      cat("vin=")
+#      print(vin)
+#      cat("vup=")
+#      print(vup)
+#      cat("vhoriz=")
+#      print(vhoriz)
+#    }
     ## homogeneous coordinates
     hom <- t(t(xyz) - eye) %*% cbind(vhoriz, vup, vin)
     colnames(hom) <- c("x", "y", "d")
@@ -78,6 +78,14 @@ plot3Dpoints <- local({
                            ) {
     if(missing(main)) main <- short.deparse(substitute(xyz))
     type <- match.arg(type)
+    #'
+    if(is.null(box.back) || (is.logical(box.back) && box.back))
+      box.back <- list(col="pink")
+    if(is.null(box.front) || (is.logical(box.front) && box.front))
+      box.front <- list(col="blue", lwd=2)
+    stopifnot(is.list(box.back) || is.logical(box.back))
+    stopifnot(is.list(box.front) || is.logical(box.front))
+    #'
     stopifnot(is.matrix(xyz) && ncol(xyz) == 3)
     if(nrow(xyz) > 0) {
       if(missing(xlim)) xlim <- range(pretty(xyz[,1]))
@@ -86,44 +94,66 @@ plot3Dpoints <- local({
       if(missing(org)) org <- c(mean(xlim), mean(ylim), mean(zlim))
     }
     if(!add) {
+      #' initialise plot
       bb <- plot3Dbox(xlim, ylim, zlim, eye=eye, org=org, do.plot=FALSE)
       plot(bb$xlim, bb$ylim, axes=FALSE, asp=1, type="n",
            xlab="", ylab="", main=main)
     }
-    do.call(plot3DboxPart,
-            resolve.defaults(list(xlim=xlim,
-                                  ylim=ylim,
-                                  zlim=zlim,
-                                  eye=eye, org=org,
-                                  part="back"),
-                             box.back,
-                             list(...)))
+    if(is.list(box.back)) {
+      #' plot rear of box
+      do.call(plot3DboxPart,
+              resolve.defaults(list(xlim=xlim,
+                                    ylim=ylim,
+                                    zlim=zlim,
+                                    eye=eye, org=org,
+                                    part="back"),
+                               box.back,
+                               list(...)))
+    }
     if(type != "n") {
+      #' plot points
       uv <- project3Dhom(xyz, eye=eye, org=org)
       uv <- as.data.frame(uv)
       dord <- order(uv$d, decreasing=TRUE)
       uv <- uv[dord, , drop=FALSE]
+      #' capture graphics arguments which might be vectors
+      grarg <- list(..., cex=cex)
+      grarg <- grarg[names(grarg) %in% parsAll]
+      if(any(lengths(grarg) > 1L)) {
+        grarg <- as.data.frame(grarg, stringsAsFactors=FALSE)
+        grarg <- grarg[dord, , drop=FALSE]
+        grarg <- as.list(grarg)
+      }
+      #' draw segments
       if(type == "h") {
         xy0 <- cbind(xyz[,1:2,drop=FALSE], zlim[1])
         uv0 <- as.data.frame(project3Dhom(xy0, eye=eye, org=org))
         uv0 <- uv0[dord, , drop=FALSE]
-        do.call.matched(segments,
-                        list(x0=with(uv0, x/d),
-                             y0=with(uv0, y/d),
-                             x1=with(uv,  x/d),
-                             y1=with(uv,  y/d),
-                             ...))
+        segargs <- grarg[names(grarg) %in% parsSegments]
+        do.call(segments,
+                append(list(x0=with(uv0, x/d),
+                            y0=with(uv0, y/d),
+                            x1=with(uv,  x/d),
+                            y1=with(uv,  y/d)),
+                       segargs))
       }
-      with(uv, points(x/d, y/d, cex=cex * min(d)/d, ...))
+      #' draw points
+      ptargs <- grarg[names(grarg) %in% parsPoints]
+      ptargs$cex <- ptargs$cex * with(uv, min(d)/d)
+      do.call(points,
+              c(list(x=with(uv, x/d),
+                     y=with(uv, y/d)),
+                ptargs))
     }
-    do.call(plot3DboxPart,
-            resolve.defaults(list(xlim=xlim,
-                                  ylim=ylim,
-                                  zlim=zlim,
-                                  eye=eye, org=org,
-                                  part="front"),
-                             box.front,
-                             list(...)))
+    if(is.list(box.front)) 
+      do.call(plot3DboxPart,
+              resolve.defaults(list(xlim=xlim,
+                                    ylim=ylim,
+                                    zlim=zlim,
+                                    eye=eye, org=org,
+                                    part="front"),
+                               box.front,
+                               list(...)))
     return(invisible(NULL))
   }
 
@@ -137,6 +167,10 @@ plot3Dpoints <- local({
   vertexfrom <- vertexind[edgepairs$from,]
   vertexto   <- vertexind[edgepairs$to,]
 
+  parsPoints <- c("cex", "col", "fg", "bg", "pch", "lwd") 
+  parsSegments <- c("col", "lwd", "lty")
+  parsAll <- union(parsPoints, parsSegments)
+  
   hamming <- function(a, b) sum(abs(a-b))
 
   ## determine projected positions of box vertices
@@ -171,11 +205,12 @@ plot3Dpoints <- local({
     ind <- if(part == "back") nearback else !nearback
     ## draw lines
     with(edgepairs[ind,],
-         segments(xyvert[from, 1],
-                  xyvert[from, 2],
-                  xyvert[to,   1],
-                  xyvert[to,   2],
-                  ...))
+         do.call.matched(segments,
+                         list(x0=xyvert[from, 1],
+                              y0=xyvert[from, 2],
+                              x1=xyvert[to,   1],
+                              y1=xyvert[to,   2],
+                              ...)))
   }
 
   plot3Dpoints

@@ -1,7 +1,7 @@
 #
 # pppmatch.R
 #
-# $Revision: 1.22 $  $Date: 2014/11/11 01:06:44 $
+# $Revision: 1.25 $  $Date: 2018/10/26 08:06:28 $
 #
 # Code by Dominic Schuhmacher
 #
@@ -42,32 +42,35 @@ pppmatching <- function(X, Y, am, type = NULL, cutoff = NULL,
       stop("Adjacency matrix does not have the right dimensions")
    am <- matrix(as.numeric(am), n1, n2)
    #am <- apply(am, c(1,2), as.numeric)
-   res <- list("pp1" = X, "pp2" = Y, "matrix" = am, "type" = type, "cutoff" = cutoff, 
-      "q" = q, "distance" = mdist)
+   res <- list("pp1" = X, "pp2" = Y, "matrix" = am,
+               "type" = type, "cutoff" = cutoff, 
+               "q" = q, "distance" = mdist)
    class(res) <- "pppmatching"
    res
 }
 
-# currently, for fractional matchings all the flows are plotted the same way
-# irrespective of their weights
-plot.pppmatching <- function(x, addmatch = NULL, main = NULL, ...) {
+plot.pppmatching <- function(x, addmatch = NULL, main = NULL, ..., adjust=1) {
    if (is.null(main))
-      main <- short.deparse(substitute(x))
+     main <- short.deparse(substitute(x))
    pp1 <- x$pp1
    pp2 <- x$pp2
-   plot.owin(pp1$window, main = main, ...)
+   do.call.matched(plot.owin,
+                   list(x=pp1$window, main = main, ...),
+                   extrargs=graphicsPars("owin"))
    here <- which((x$matrix > 0), arr.ind = TRUE)
    if (!is.null(addmatch)) {
-      addhere <- which((addmatch > 0), arr.ind = TRUE)
-      seg <- as.psp(from=pp1[addhere[,1]], to=pp2[addhere[,2]])
-      plot(seg, add=TRUE, lty = 2, col="gray70")
+     stopifnot(is.matrix(addmatch))
+     addhere <- which((addmatch > 0), arr.ind = TRUE)
+     seg <- as.psp(from=pp1[addhere[,1]], to=pp2[addhere[,2]])
+     plot(seg, add=TRUE, lty = 2, col="gray70")
    }
    if (length(here) > 0) {
      seg <- as.psp(from=pp1[here[,1]], to=pp2[here[,2]])
-     plot(seg, add=TRUE, ...)
+     marks(seg) <- x$matrix[here]
+     plot(seg, add=TRUE, ..., style="width", adjust=adjust)
    }
-   points(x$pp1, pch=20, col=2, ...)
-   points(x$pp2, pch=20, col=4, ...)
+   plot(x$pp1, add=TRUE, pch=20, col=2, ...)
+   plot(x$pp2, add=TRUE, pch=20, col=4, ...)
    return(invisible(NULL))
 }
 
@@ -75,24 +78,25 @@ print.pppmatching <- function(x, ...) {
    n1 <- x$pp1$n
    n2 <- x$pp2$n
    if (is.null(x$type) || is.null(x$q) || is.null(x$cutoff))
-     cat("Generic matching of two planar point patterns \n")
+     splat("Generic matching of two planar point patterns")
    else
-     cat(x$type, "-", x$q, " matching of two planar point patterns (cutoff = ",
-       x$cutoff, ") \n", sep = "")
-   cat("pp1:", n1, ngettext(n1, "point", "points"), "\n")
-   cat("pp2:", n2, ngettext(n2, "point", "points"), "\n")
-   print.owin(x$pp1$window)
+     splat(x$type, "-",
+           x$q, " matching of two planar point patterns (cutoff = ",
+           x$cutoff, ")", sep = "")
+   splat("pp1:", n1, ngettext(n1, "point", "points"))
+   splat("pp2:", n2, ngettext(n2, "point", "points"))
+   print(Window(x$pp1))
    npair <- sum(x$matrix > 0)
    if (npair == 0)
-     cat("matching is empty \n") 
+     splat("matching is empty")
    else {
      if (any(x$matrix != trunc(x$matrix)))
-       cat("fractional matching,", npair, ngettext(npair, "flow", "flows"), "\n")
+       splat("fractional matching,", npair, ngettext(npair, "flow", "flows"))
      else
-       cat("point matching,", npair, ngettext(npair, "line", "lines"), "\n")
+       splat("point matching,", npair, ngettext(npair, "line", "lines"))
    }
    if (!is.null(x$distance))
-     cat("distance:", x$distance, "\n") 
+     splat("distance:", x$distance)
    return(invisible(NULL))
 }
 
@@ -102,22 +106,23 @@ summary.pppmatching <- function(object, ...) {
    n1 <- X$n
    n2 <- Y$n
    if (is.null(object$type) || is.null(object$q) || is.null(object$cutoff))
-     cat("Generic matching of two planar point patterns \n")
+     splat("Generic matching of two planar point patterns")
    else
-     cat(object$type, "-", object$q, " matching of two planar point patterns (cutoff = ",
-       object$cutoff, ") \n", sep = "")
-   cat("pp1:", n1, ngettext(n1, "point", "points"), "\n")
-   cat("pp2:", n2, ngettext(n2, "point", "points"), "\n")
-   print.owin(X$window)
+     splat(object$type, "-", object$q,
+           " matching of two planar point patterns (cutoff = ",
+           object$cutoff, ")", sep = "")
+   splat("pp1:", n1, ngettext(n1, "point", "points"))
+   splat("pp2:", n2, ngettext(n2, "point", "points"))
+   print(Window(X))
    npair <- sum(object$matrix > 0)
    if (npair == 0)
-     cat("matching is empty \n") 
+     splat("matching is empty") 
    else {
      if (any(object$matrix != trunc(object$matrix))) {
-       cat("fractional matching,", npair, ngettext(npair, "flow", "flows"), "\n")
+       splat("fractional matching,", npair, ngettext(npair, "flow", "flows"))
      }
      else {
-       cat("point matching,", npair, ngettext(npair, "line", "lines"), "\n")
+       splat("point matching,", npair, ngettext(npair, "line", "lines"))
        rowsum <- rowSums(object$matrix)
        colsum <- colSums(object$matrix)
        lt <- ifelse(min(rowsum) >= 1, TRUE, FALSE)
@@ -125,19 +130,19 @@ summary.pppmatching <- function(object, ...) {
        rt <- ifelse(min(colsum) >= 1, TRUE, FALSE)
        lu <- ifelse(max(colsum) <= 1, TRUE, FALSE)
        if (lt && ru && rt && lu)
-         cat("matching is 1-1 \n")
+         splat("matching is 1-1")
        else if (any(lt, ru, rt, lu)) {
-         cat("matching is",
+         splat("matching is",
                    ifelse(lt, " left-total", ""),
                    ifelse(lu, " left-unique", ""),
                    ifelse(rt, " right-total", ""),
                    ifelse(ru, " right-unique", ""),
-                   "\n", sep="")
+                   sep="")
          }
      }
    }
    if (!is.null(object$distance))
-     cat("distance:", object$distance, "\n") 
+     splat("distance:", object$distance)
    return(invisible(NULL))
 }
 
@@ -274,8 +279,8 @@ matchingdist <- function(matching, type = NULL, cutoff = NULL, q = NULL) {
 # -----------------------------------------------------------------
 
 pppdist <- function(X, Y, type = "spa", cutoff = 1, q = 1, matching = TRUE,
-  ccode = TRUE, auction = TRUE, precision = NULL, approximation = 10, show.rprimal = FALSE, timelag = 0) {
-
+                    ccode = TRUE, auction = TRUE, precision = NULL,
+                    approximation = 10, show.rprimal = FALSE, timelag = 0) {
   verifyclass(X, "ppp")
   verifyclass(Y, "ppp")
   if (!ccode && type == "mat") {
@@ -315,10 +320,12 @@ pppdist <- function(X, Y, type = "spa", cutoff = 1, q = 1, matching = TRUE,
       db <- .Machine$double.base
       minprec <- trunc(log10(.Machine$double.base^.Machine$double.digits))
       if (is.finite(q))
-        precision <- min(max(minprec,2*q),(.Machine$double.max.exp-1)*log(db)/log(10))
+        precision <- min(max(minprec,2*q),
+                         (.Machine$double.max.exp-1)*log(db)/log(10))
       else
-        precision <- min(max(minprec,2*approximation),(.Machine$double.max.exp-1)*log(db)/log(10))
-      }
+        precision <- min(max(minprec,2*approximation),
+                         (.Machine$double.max.exp-1)*log(db)/log(10))
+    }
   }
 
   if (type == "spa") {
@@ -410,19 +417,19 @@ pppdist <- function(X, Y, type = "spa", cutoff = 1, q = 1, matching = TRUE,
     f <- max(x)
     return(ifelse(f==0, 0, f * mean((x/f)^p)^(1/p)))
   }
-    
+  
   if (show.rprimal && type == "ace") {
     assig <- acedist.show(X, Y, n, d, timelag)
     am <- matrix(0, n, n)
     am[cbind(1:n, assig[1:n])] <- 1
   }
   else if (ccode) {
-  	if (auction) {
-  	  dupper <- max(d)/10	
-  	  lasteps <- 1/(n+1)
-  	  epsfac <- 10
+    if (auction) {
+      dupper <- max(d)/10	
+      lasteps <- 1/(n+1)
+      epsfac <- 10
       epsvec <- lasteps
-      # Bertsekas: from dupper/2 to 1/(n+1) divide repeatedly by a constant
+      ## Bertsekas: from dupper/2 to 1/(n+1) divide repeatedly by a constant
       while (lasteps < dupper) {
         lasteps <- lasteps*epsfac
         epsvec <- c(epsvec,lasteps)
@@ -430,27 +437,29 @@ pppdist <- function(X, Y, type = "spa", cutoff = 1, q = 1, matching = TRUE,
       epsvec <- rev(epsvec)[-1]
       neps <- length(epsvec)
       stopifnot(neps >= 1)
-  	  d <- max(d)-d
-  	  # auctionbf uses a "desire matrix"
-  	  res <- .C("auctionbf",
-                    as.integer(d),
-                    as.integer(n),
-                    pers_to_obj = as.integer(rep(-1,n)),
-                    price = as.double(rep(0,n)),
-                    profit = as.double(rep(0,n)),
-                    as.integer(neps),
-                    as.double(epsvec))
+      d <- max(d)-d
+      ## auctionbf uses a "desire matrix"
+      res <- .C("auctionbf",
+                as.integer(d),
+                as.integer(n),
+                pers_to_obj = as.integer(rep(-1,n)),
+                price       = as.double(rep(0,n)),
+                profit      = as.double(rep(0,n)),
+                as.integer(neps),
+                as.double(epsvec),
+                PACKAGE = "spatstat")
       am <- matrix(0, n, n)
       am[cbind(1:n,res$pers_to_obj+1)] <- 1
     }
     else {           
       res <- .C("dwpure",
-             as.integer(d),
-             as.integer(rep.int(1,n)),
-             as.integer(rep.int(1,n)),
-             as.integer(n),
-             as.integer(n),
-             flowmatrix = as.integer(integer(n^2)))
+                as.integer(d),
+                as.integer(rep.int(1,n)),
+                as.integer(rep.int(1,n)),
+                as.integer(n),
+                as.integer(n),
+                flowmatrix = as.integer(integer(n^2)),
+                PACKAGE = "spatstat")
       am <- matrix(res$flowmatrix, n, n)
     }
   }
@@ -569,62 +578,62 @@ maxflow <- function(costm) {
   
   m <- dim(costm)[1]   # cost matrix is square m * m
   assignment <- rep.int(-1, m)   # -1 means no pp2-point assigned to i-th pp1-point
-   # initial assignment or rowlabel <- source label (= 0) where not possible
-   for (i in 1:m) {
-      j <- match(0, costm[i,])
-      if (!(j %in% assignment))
-         assignment[i] <- j
-   }
-   newlabelfound <- TRUE
-   while (newlabelfound) {
-     rowlab <- rep.int(-1, m)   # -1 means no label given, 0 stands for source label
-     collab <- rep.int(-1, m)
-     rowlab <- ifelse(assignment == -1, 0, rowlab)
-     # column and row labeling procedure until either breakthrough occurs
-     # (which means that there is a better point assignment, i.e. one that
-     # creates more point pairs than the current one (flow can be increased))
-     # or no more labeling is possible
-     breakthrough <- -1
-     while (newlabelfound && breakthrough == -1) { 
-         newlabelfound <- FALSE
-         for (i in 1:m) {
-            if (rowlab[i] != -1) {
-               for (j in 1:m) {
-                  if (costm[i,j] == 0 && collab[j] == -1) {
-                     collab[j] <- i
-                     newlabelfound <- TRUE
-                     if (!(j %in% assignment) && breakthrough == -1)
-                        breakthrough <- j
-                  }
-               }
+  ## initial assignment or rowlabel <- source label (= 0) where not possible
+  for (i in 1:m) {
+    j <- match(0, costm[i,])
+    if (!(j %in% assignment))
+      assignment[i] <- j
+  }
+  newlabelfound <- TRUE
+  while (newlabelfound) {
+    rowlab <- rep.int(-1, m)   # -1 means no label given, 0 stands for source label
+    collab <- rep.int(-1, m)
+    rowlab <- ifelse(assignment == -1, 0, rowlab)
+    ## column and row labeling procedure until either breakthrough occurs
+    ## (which means that there is a better point assignment, i.e. one that
+    ## creates more point pairs than the current one (flow can be increased))
+    ## or no more labeling is possible
+    breakthrough <- -1
+    while (newlabelfound && breakthrough == -1) { 
+      newlabelfound <- FALSE
+      for (i in 1:m) {
+        if (rowlab[i] != -1) {
+          for (j in 1:m) {
+            if (costm[i,j] == 0 && collab[j] == -1) {
+              collab[j] <- i
+              newlabelfound <- TRUE
+              if (!(j %in% assignment) && breakthrough == -1)
+                breakthrough <- j
             }
-         }
-         for (j in 1:m) {
-            if (collab[j] != -1) {
-               for (i in 1:m) {
-                  if (assignment[i] == j && rowlab[i] == -1) {
-                     rowlab[i] <- j
-                     newlabelfound <- TRUE
-                  }
-               }
+          }
+        }
+      }
+      for (j in 1:m) {
+        if (collab[j] != -1) {
+          for (i in 1:m) {
+            if (assignment[i] == j && rowlab[i] == -1) {
+              rowlab[i] <- j
+              newlabelfound <- TRUE
             }
-         }
+          }
+        }
       }
-      # if the while-loop was left due to breakthrough,
-      # reassign points (i.e. redirect flow) and restart labeling procedure
-      if (breakthrough != -1) {
-         l <- breakthrough
-         while (l != 0) {
-            k <- collab[l]
-            assignment[k] <- l
-            l <- rowlab[k] 
-         }
+    }
+    ## if the while-loop was left due to breakthrough,
+    ## reassign points (i.e. redirect flow) and restart labeling procedure
+    if (breakthrough != -1) {
+      l <- breakthrough
+      while (l != 0) {
+        k <- collab[l]
+        assignment[k] <- l
+        l <- rowlab[k] 
       }
-   }
-   # the outermost while-loop is left, no more labels can be given; hence
-   # the maximal number of points are paired given the current restriction
-   # (flow is maximal given the current graph)
-   return(list("assignment"=assignment, "fi_rowlab"=rowlab, "fi_collab"=collab))  
+    }
+  }
+  ## the outermost while-loop is left, no more labels can be given; hence
+  ## the maximal number of points are paired given the current restriction
+  ## (flow is maximal given the current graph)
+  return(list("assignment"=assignment, "fi_rowlab"=rowlab, "fi_collab"=collab))  
 }
 
 # 
@@ -640,25 +649,28 @@ maxflow <- function(costm) {
 #
 
 pppdist.prohorov <- function(X, Y, n, dfix, type, cutoff = 1, matching = TRUE,
-  ccode = TRUE, auction = TRUE, precision = 9, approximation = 10) {
+                             ccode = TRUE, auction = TRUE,
+                             precision = 9, approximation = 10) {
   n1 <- X$n
   n2 <- Y$n
   d <- dfix/max(dfix)
   if (is.finite(approximation)) {
-      warning(paste("distance with parameter q = Inf is approximated by distance with parameter q =", approximation))
+    warning(paste("distance with parameter q = Inf is approximated by distance with parameter q =", approximation))
     d <- round((d^approximation)*(10^precision)) 
     nzeroes <- sum(d == 0 & dfix > 0)
     if (nzeroes > 0)
-      warning(paste(nzeroes, ngettext(nzeroes, "zero", "zeroes"), "introduced, while rounding distances"))
+      warning(paste(nzeroes,
+                    ngettext(nzeroes, "zero", "zeroes"),
+                    "introduced, while rounding distances"))
     if (ccode) {
       if (any(d > .Machine$integer.max))
         stop("integer overflow, while rounding the q-th powers of distances")
       if (auction) {
       	dupper <- max(d)/10
-  	    lasteps <- 1/(n+1)
-  	    epsfac <- 10
+        lasteps <- 1/(n+1)
+        epsfac <- 10
         epsvec <- lasteps
-        # Bertsekas: from dupper/2 to 1/(n+1) divide repeatedly by a constant
+        ## Bertsekas: from dupper/2 to 1/(n+1) divide repeatedly by a constant
         while (lasteps < dupper) {
           lasteps <- lasteps*epsfac
           epsvec <- c(epsvec,lasteps)
@@ -666,27 +678,29 @@ pppdist.prohorov <- function(X, Y, n, dfix, type, cutoff = 1, matching = TRUE,
         epsvec <- rev(epsvec)[-1]
         neps <- length(epsvec)
         stopifnot(neps >= 1)
-  	    d <- max(d)-d
-  	    # auctionbf uses a "desire matrix"
-  	    res <- .C("auctionbf",
-                      as.integer(d),
-                      as.integer(n),
-                      pers_to_obj = as.integer(rep(-1,n)),
-                      price = as.double(rep(0,n)),
-                      profit = as.double(rep(0,n)),
-                      as.integer(neps),
-                      as.double(epsvec))
+        d <- max(d)-d
+        ## auctionbf uses a "desire matrix"
+        res <- .C("auctionbf",
+                  as.integer(d),
+                  as.integer(n),
+                  pers_to_obj = as.integer(rep(-1,n)),
+                  price       = as.double(rep(0,n)),
+                  profit      = as.double(rep(0,n)),
+                  as.integer(neps),
+                  as.double(epsvec),
+                  PACKAGE = "spatstat")
         am <- matrix(0, n, n)
         am[cbind(1:n,res$pers_to_obj+1)] <- 1
       }
       else {           
         res <- .C("dwpure",
-                 as.integer(d),
-                 as.integer(rep.int(1,n)),
-                 as.integer(rep.int(1,n)),
-                 as.integer(n),
-                 as.integer(n),
-                 flowmatrix = as.integer(integer(n^2)))
+                  as.integer(d),
+                  as.integer(rep.int(1,n)),
+                  as.integer(rep.int(1,n)),
+                  as.integer(n),
+                  as.integer(n),
+                  flowmatrix = as.integer(integer(n^2)),
+                  PACKAGE = "spatstat")
         am <- matrix(res$flowmatrix, n, n)
       }
     }
@@ -696,7 +710,9 @@ pppdist.prohorov <- function(X, Y, n, dfix, type, cutoff = 1, matching = TRUE,
       maxd <- max(d)
       npszeroes <- sum(maxd/d[d>0] >= .Machine$double.base^.Machine$double.digits)
       if (npszeroes > 0)
-        warning(paste(npszeroes, ngettext(npszeroes, "pseudo-zero", "pseudo-zeroes"), "introduced, while taking the q-th powers of distances"))
+        warning(paste(npszeroes,
+                      ngettext(npszeroes, "pseudo-zero", "pseudo-zeroes"),
+                      "introduced, while taking the q-th powers of distances"))
       assig <- acedist.noshow(X, Y, n, d)
       am <- matrix(0, n, n)
       am[cbind(1:n, assig[1:n])] <- 1
@@ -706,13 +722,15 @@ pppdist.prohorov <- function(X, Y, n, dfix, type, cutoff = 1, matching = TRUE,
     d <- round(d*(10^precision))
     nzeroes <- sum(d == 0 & dfix > 0)
     if (nzeroes > 0)
-      warning(paste(nzeroes, ngettext(nzeroes, "zero", "zeroes"), "introduced, while rounding distances"))
+      warning(paste(nzeroes, ngettext(nzeroes, "zero", "zeroes"),
+                    "introduced, while rounding distances"))
     if (any(d > .Machine$integer.max))
       stop("integer overflow, while rounding the q-th powers of distances")
     res <- .C("dinfty_R",
-             as.integer(d),
-             as.integer(n),
-             assignment = as.integer(rep.int(-1,n)))
+              as.integer(d),
+              as.integer(n),
+              assignment = as.integer(rep.int(-1,n)),
+              PACKAGE = "spatstat")
     assig <- res$assignment
     am <- matrix(0, n, n)
     am[cbind(1:n, assig[1:n])] <- 1
@@ -725,7 +743,7 @@ pppdist.prohorov <- function(X, Y, n, dfix, type, cutoff = 1, matching = TRUE,
     return(resdist)
   else {
     amsmall <- suppressWarnings(matrix(am[1:n1,1:n2], nrow=n1, ncol=n2))
-    # previous line solves various problems associated with min(n1,n2) = 0 or = 1
+    ## previous line solves various problems associated with min(n1,n2) = 0 or = 1
     return(pppmatching(X, Y, amsmall, type, cutoff, Inf, resdist))
   }
 }   
@@ -773,7 +791,8 @@ pppdist.mat <- function(X, Y, cutoff = 1, q = 1, matching = TRUE, precision = 9,
              as.integer(rep.int(mass2,n2)),
              as.integer(n1),
              as.integer(n2),
-             flowmatrix = as.integer(integer(n1*n2)))
+             flowmatrix = as.integer(integer(n1*n2)),
+             PACKAGE = "spatstat")
     am <- matrix(res$flowmatrix/(max(n1,n2)/gcd), n1, n2)
     resdist <- max(dfix[am > 0])
   }
@@ -799,7 +818,8 @@ pppdist.mat <- function(X, Y, cutoff = 1, q = 1, matching = TRUE, precision = 9,
              as.integer(rep.int(mass2,n2)),
              as.integer(n1),
              as.integer(n2),
-             flowmatrix = as.integer(integer(n1*n2)))
+             flowmatrix = as.integer(integer(n1*n2)),
+             PACKAGE = "spatstat")
     am <- matrix(res$flowmatrix/(max(n1,n2)/gcd), n1, n2)
     # our "adjacency matrix" in this case is standardized to have
     # rowsum 1 if n1 <= n2 and colsum 1 if n1 >= n2

@@ -3,7 +3,7 @@
 ##
 ##     Texture plots and texture maps
 ##
-##  $Revision: 1.8 $ $Date: 2015/04/18 18:11:52 $
+##  $Revision: 1.15 $ $Date: 2016/02/16 01:39:12 $
 
 ### .................. basic graphics .............................
 
@@ -11,7 +11,7 @@
 add.texture <- function(W, texture=4, spacing=NULL, ...) {
   if(is.data.frame(texture)) {
     ## texture = f(x) where f is a texturemap
-    out <- do.call("add.texture",
+    out <- do.call(add.texture,
                    resolve.defaults(list(W=W, spacing=spacing),
                                     list(...),
                                     as.list(texture)))
@@ -64,18 +64,18 @@ add.texture <- function(W, texture=4, spacing=NULL, ...) {
            ## texture 8: hexagons
            H <- hextess(W, spacing, offset=runifpoint(1, W))
            H <- intersect.tess(H, W)
-           do.call.matched("plot.tess",
+           do.call.matched(plot.tess,
                            resolve.defaults(list(x=H, add=TRUE),
                                             list(...)))
          })
   if(!is.null(P))
-    do.call.matched("plot.ppp",
+    do.call.matched(plot.ppp,
                     resolve.defaults(list(x=P, add=TRUE),
                                      list(...),
                                      list(chars=3, cex=0.2)),
                     extrargs=c("lwd", "col", "cols", "pch"))
   if(!is.null(L))
-    do.call.matched("plot.psp",
+    do.call.matched(plot.psp,
                     resolve.defaults(list(x=L, add=TRUE),
                                      list(...)),
                     extrargs=c("lwd","lty","col"))
@@ -88,9 +88,12 @@ add.texture <- function(W, texture=4, spacing=NULL, ...) {
 
 texturemap <- function(inputs, textures, ...) {
   argh <- list(...)
-  isnul <- unlist(lapply(argh, is.null))
-  argh <- argh[!isnul]
-  df <- do.call("data.frame",
+  if(length(argh) > 0) {
+    isnul <- unlist(lapply(argh, is.null))
+    argh <- argh[!isnul]
+  }
+  if(missing(textures) || is.null(textures)) textures <- seq_along(inputs)
+  df <- do.call(data.frame,
                 append(list(input=inputs, texture=textures), argh))
   f <- function(x) {
     df[match(x, df$input), -1, drop=FALSE]
@@ -185,7 +188,7 @@ plot.texturemap <- local({
     
     # .......... initialise plot ...............................
     if(!add)
-      do.call.matched("plot.default",
+      do.call.matched(plot.default,
                       resolve.defaults(list(x=xlim, y=ylim,
                                             type="n", main=main,
                                             axes=FALSE, xlab="", ylab="",
@@ -214,7 +217,7 @@ plot.texturemap <- local({
         # don't draw axis lines if plotting separate blocks
         lwd0 <- if(separate) 0 else 1
         # draw axis
-        do.call.matched("axis",
+        do.call.matched(graphics::axis,
                         resolve.defaults(list(...),
                                          list(side = 1, pos = pos, at = at),
                                          list(labels=la, lwd=lwd0)),
@@ -233,7 +236,7 @@ plot.texturemap <- local({
         # draw labels horizontally if plotting separate blocks
         las0 <- if(separate) 1 else 0
         # draw axis
-        do.call.matched("axis",
+        do.call.matched(graphics::axis,
                         resolve.defaults(list(...),
                                          list(side=4, pos=pos, at=at),
                                          list(labels=la, lwd=lwd0, las=las0)),
@@ -260,7 +263,9 @@ textureplot <- local({
       main <- short.deparse(substitute(x))
     if(!(is.im(x) || is.tess(x))) {
       x <- try(as.tess(x), silent=TRUE)
-      if(inherits(x, "try-error"))
+      if(inherits(x, "try-error")) 
+        x <- try(as.im(x), silent=TRUE)
+      if(inherits(x, "try-error")) 
         stop("x must be a pixel image or a tessellation", call.=FALSE)
     }
     leg.side <- match.arg(leg.side)
@@ -342,7 +347,7 @@ textureplot <- local({
       }
       vertical <- leg.side %in% c("left", "right")
       if(legend)
-        do.call("plot.texturemap",
+        do.call(plot.texturemap,
                 resolve.defaults(list(x=tmap, add=TRUE,
                                       vertical=vertical,
                                       side=iside,

@@ -1,7 +1,7 @@
 #'
 #'       summary.kppm.R
 #'
-#'   $Revision: 1.5 $  $Date: 2015/05/08 04:25:23 $
+#'   $Revision: 1.8 $  $Date: 2020/10/31 03:34:39 $
 #' 
 
 summary.kppm <- function(object, ..., quick=FALSE) {
@@ -9,6 +9,18 @@ summary.kppm <- function(object, ..., quick=FALSE) {
   result <- unclass(object)[!(nama %in% c("X", "po", "call", "callframe"))]
   ## handle old format
   if(is.null(result$isPCP)) result$isPCP <- TRUE
+  ## extract 'optim' object
+  Fit <- object$Fit
+  opt <- switch(Fit$method,
+                mincon = Fit$mcfit$opt,
+                clik  =,
+                clik2 = Fit$clfit,
+                palm = Fit$clfit,
+                warning(paste("Unrecognised fitting method",
+                              sQuote(Fit$method)))
+                )
+  result$optim.converged <- optimConverged(opt)
+  result$optim.status    <- optimStatus(opt)
   ## summarise trend component
   result$trend <- summary(as.ppm(object), ..., quick=quick)
   if(identical(quick, FALSE)) {
@@ -36,6 +48,15 @@ summary.kppm <- function(object, ..., quick=FALSE) {
       }
     }
   }
+  #' clustering measures
+  #' sibling probability
+  result$psib <- mean(psib(object))
+  #' overdispersion index
+  win <- as.owin(object, from="points")
+  vac <- varcount(object, B=win)
+  Lam <- integral(predict(object, window=win))
+  result$odi <- vac/Lam
+  #'
   class(result) <- "summary.kppm"
   return(result)
 }
@@ -55,30 +76,35 @@ print.summary.kppm <- function(x, ...) {
   if(waxlyrical('extras', terselevel) && nchar(x$Xname) < 20)
     splat("Fitted to point pattern dataset", sQuote(x$Xname))
 
+  Fit <- x$Fit
+  
   if(waxlyrical('gory', terselevel)) {
-    switch(x$Fit$method,
+    switch(Fit$method,
            mincon = {
              splat("Fitted by minimum contrast")
-             splat("\tSummary statistic:", x$Fit$StatName)
+             splat("\tSummary statistic:", Fit$StatName)
+             print(Fit$mcfit)
            },
            clik  =,
            clik2 = {
              splat("Fitted by maximum second order composite likelihood")
-             splat("\trmax =", x$Fit$rmax)
-             if(!is.null(wtf <- x$Fit$weightfun)) {
-               cat("\tweight function: ")
-               print(wtf)
+             splat("\trmax =", Fit$rmax)
+             if(!is.null(wtf <- Fit$weightfun)) {
+               a <- attr(wtf, "selfprint") %orifnull% pasteFormula(wtf)
+               splat("\tweight function:", a)
              }
+             printStatus(x$optim.status)
            },
            palm = {
              splat("Fitted by maximum Palm likelihood")
-             splat("\trmax =", x$Fit$rmax)
-             if(!is.null(wtf <- x$Fit$weightfun)) {
-               cat("\tweight function: ")
-               print(wtf)
+             splat("\trmax =", Fit$rmax)
+             if(!is.null(wtf <- Fit$weightfun)) {
+               a <- attr(wtf, "selfprint") %orifnull% pasteFormula(wtf)
+               splat("\tweight function:", a)
              }
+             printStatus(x$optim.status)
            },
-           warning(paste("Unrecognised fitting method", sQuote(x$Fit$method)))
+           warning(paste("Unrecognised fitting method", sQuote(Fit$method)))
            )
   }
 
@@ -130,7 +156,7 @@ print.summary.kppm <- function(x, ...) {
             if(!is.im(mu)) signif(mu, digits) else "[pixel image]")
     }
   }
-  # table of coefficient estimates with SE and 95% CI
+  #' table of coefficient estimates with SE and 95% CI
   if(!is.null(cose <- x$coefs.SE.CI)) {
     parbreak()
     splat("Final standard error and CI")
@@ -139,5 +165,24 @@ print.summary.kppm <- function(x, ...) {
           "process):")
     print(cose)
   }
+
+  #' Cluster strength indices
+  psi <- x$psib
+  odi <- x$odi
+  if(!is.null(psi) || !is.null(odi)) {
+    parbreak()
+    splat("----------- cluster strength indices ---------- ")
+    if(!is.null(psi)) {
+      psi <- signif(psi, 4)
+      if(isTRUE(x$stationary)) {
+        splat("Sibling probability", psi)
+      } else splat("Mean sibling probability", psi)
+    }
+    if(!is.null(odi))
+      splat("Count overdispersion index (on original window):",
+            signif(odi, 3))
+  }
+  
+  #'
   invisible(NULL)
 }

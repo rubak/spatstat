@@ -1,7 +1,7 @@
 #
 #      distances.R
 #
-#      $Revision: 1.45 $     $Date: 2014/10/24 00:22:30 $
+#      $Revision: 1.47 $     $Date: 2018/10/07 11:07:54 $
 #
 #
 #      Interpoint distances between pairs 
@@ -31,7 +31,14 @@ pairdist.ppp <- function(X, ..., periodic=FALSE, method="C", squared=FALSE) {
 pairdist.default <-
   function(X, Y=NULL, ..., period=NULL, method="C", squared=FALSE)
 {
+  if(!is.null(dim(X)) && ncol(X) > 2)
+    stop("Data contain more than 2 coordinates")
+  
   xy <- xy.coords(X,Y)[c("x","y")]
+
+  if(identical(xy$xlab, "Index")) 
+    stop("Cannot interpret data as 2-dimensional coordinates")
+
   x <- xy$x
   y <- xy$y
 
@@ -42,16 +49,16 @@ pairdist.default <-
   # special cases
   if(n == 0)
     return(matrix(numeric(0), nrow=0, ncol=0))
-  else if(n == 1)
-    return(matrix(0,nrow=1,ncol=1))
+  else if(n == 1L)
+    return(matrix(0,nrow=1L,ncol=1L))
 
   if((periodic<- !is.null(period))) {
     stopifnot(is.numeric(period))
     stopifnot(length(period) == 2 || length(period) == 1)
     stopifnot(all(period > 0))
     if(length(period) == 1) period <- rep.int(period, 2)
-    wide <- period[1]
-    high <- period[2]
+    wide <- period[1L]
+    high <- period[2L]
   }
 
   switch(method,
@@ -80,7 +87,8 @@ pairdist.default <-
                       x= as.double(x),
                       y= as.double(y),
                       squared=as.integer(squared),
-                      d= as.double(d))
+                      d= as.double(d),
+                      PACKAGE = "spatstat")
            } else {
              z <- .C("CpairPdist",
                      n = as.integer(n),
@@ -89,7 +97,8 @@ pairdist.default <-
                      xwidth=as.double(wide),
                      yheight=as.double(high),
                      squared = as.integer(squared),
-                     d= as.double(d))
+                     d= as.double(d),
+                     PACKAGE = "spatstat")
            }
            dout <- matrix(z$d, nrow=n, ncol=n)
          },
@@ -145,9 +154,9 @@ crossdist.default <-
     stopifnot(is.numeric(period))
     stopifnot(length(period) == 2 || length(period) == 1)
     stopifnot(all(period > 0))
-    if(length(period) == 1) period <- rep.int(period, 2)
-    wide <- period[1]
-    high <- period[2]
+    if(length(period) == 1L) period <- rep.int(period, 2)
+    wide <- period[1L]
+    high <- period[2L]
   }
 
    switch(method,
@@ -177,7 +186,8 @@ crossdist.default <-
                           xto = as.double(x2),
                           yto = as.double(y2),
                           squared = as.integer(squared),
-                          d = as.double(matrix(0, nrow=n1, ncol=n2)))
+                          d = as.double(matrix(0, nrow=n1, ncol=n2)),
+                          PACKAGE = "spatstat")
                  } else {
                    z<- .C("CcrossPdist",
                           nfrom = as.integer(n1),
@@ -189,7 +199,8 @@ crossdist.default <-
                           xwidth = as.double(wide),
                           yheight = as.double(high),
                           squared = as.integer(squared),
-                          d = as.double(matrix(0, nrow=n1, ncol=n2)))
+                          d = as.double(matrix(0, nrow=n1, ncol=n2)),
+                          PACKAGE = "spatstat")
                  }
                  return(matrix(z$d, nrow=n1, ncol=n2))
                },

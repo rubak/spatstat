@@ -60,7 +60,7 @@ linearKdot(X, i, r=NULL, \dots, correction="Ang")
   Multitype point process analysis of spines on the
   dendrite network of a neuron.
   \emph{Applied Statistics} (Journal of the Royal Statistical
-   Society, Series C), In press.
+   Society, Series C), \bold{63}, 673--694.
 }
 \section{Warnings}{
   The argument \code{i} is interpreted as a
@@ -77,9 +77,9 @@ linearKdot(X, i, r=NULL, \dots, correction="Ang")
    data(chicago)
    K <- linearKdot(chicago, "assault")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+\author{\adrian
+  
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

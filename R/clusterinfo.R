@@ -12,37 +12,27 @@
          printmodelname = function(...) "Thomas process", # Used by print.kppm
          parnames = c("kappa", "sigma2"),
          clustargsnames = NULL,
-         checkpar = function(par, old = TRUE){
+         checkpar = function(par, old = TRUE, ..., strict=TRUE){
              if(is.null(par))
                  par <- c(kappa=1,scale=1)
-             if(any(par<=0))
-                 stop("par values must be positive.")
-             nam <- try(check.named.vector(par, c("kappa","sigma2")), silent = TRUE)
-             if(inherits(nam, "try-error")){
-                 check.named.vector(par, c("kappa","scale"))
-                 names(par)[2] <- "sigma2"
-                 par[2] <- par[2]^2
+             if(strict && any(par<=0))
+                 stop("par values must be positive.", call.=FALSE)
+             nam <- check.named.vector(par, c("kappa","sigma2"),
+                                       onError="null")
+             if(is.null(nam)) {
+               check.named.vector(par, c("kappa","scale"))
+               names(par)[2L] <- "sigma2"
+               par[2L] <- par[2L]^2
              }
              if(!old){
-                 names(par)[2] <- "scale"
-                 par[2] <- sqrt(par[2])
+                 names(par)[2L] <- "scale"
+                 par[2L] <- sqrt(par[2L])
              }
              return(par)
          },
-         checkclustargs = function(margs, old = TRUE) list(),
+         checkclustargs = function(margs, old = TRUE, ...) list(),
          resolvedots = function(...){
-             ## resolve dots for kppm and friends allowing for old/new par syntax
-             dots <- list(...)
-             nam <- names(dots)
-             out <- list()
-             if("ctrl" %in% nam){
-                 out$ctrl <- dots$ctrl
-             } else{
-                 out$ctrl <- dots[nam %in% c("p", "q", "rmin", "rmax")]
-             }
-             chk <- .Spatstat.ClusterModelInfoTable$Thomas$checkpar
-             if(!is.null(dots$startpar)) out$startpar <- chk(dots$startpar)
-             return(out)
+           return(list(...))
          },
          # density function for the distance to offspring
          ddist = function(r, scale, ...) {
@@ -53,9 +43,10 @@
              dots <- list(...)
              par <- dots$par
              # Choose the first of the possible supplied values for scale:
-             scale <- c(dots$scale, dots$par[["scale"]], dots$sigma, dots$par[["sigma"]])[1]
+             scale <- c(dots$scale, dots$par[["scale"]], dots$sigma, dots$par[["sigma"]])[1L]
              if(is.null(scale))
-                 stop("Argument ", sQuote("scale"), " must be given.")
+               stop(paste("Argument ", sQuote("scale"), " must be given."),
+                    call.=FALSE)
              thresh <- dots$thresh
              if(!is.null(thresh)){
                ## The squared length of isotropic Gaussian (sigma)
@@ -72,21 +63,21 @@
              return(rmax)
          },
          kernel = function(par, rvals, ...) {
-             scale <- sqrt(par[2])
+             scale <- sqrt(par[2L])
              dnorm(rvals, 0, scale)/sqrt(2*pi*scale^2)
          },
          isPCP=TRUE,
          ## K-function
-         K = function(par,rvals, ...){
-           if(any(par <= 0))
+         K = function(par,rvals, ..., strict=TRUE){
+           if(strict && any(par <= 0))
              return(rep.int(Inf, length(rvals)))
-           pi*rvals^2+(1-exp(-rvals^2/(4*par[2])))/par[1]
+           pi*rvals^2+(1-exp(-rvals^2/(4*par[2L])))/par[1L]
          },
          ## pair correlation function
-         pcf= function(par,rvals, ...){
-           if(any(par <= 0))
+         pcf= function(par,rvals, ..., strict=TRUE){
+           if(strict && any(par <= 0))
              return(rep.int(Inf, length(rvals)))
-           1 + exp(-rvals^2/(4 * par[2]))/(4 * pi * par[1] * par[2])
+           1 + exp(-rvals^2/(4 * par[2L]))/(4 * pi * par[1L] * par[2L])
          },
          ## sensible starting parameters
          selfstart = function(X) {
@@ -104,14 +95,15 @@
          },
          ## Experimental: convert to/from canonical cluster parameters
          tocanonical = function(par) {
-           kappa <- par[[1]]
-           sigma2 <- par[[2]]
-           c(strength=1/kappa, decay=1/sqrt(sigma2))
+           kappa <- par[[1L]]
+           sigma2 <- par[[2L]]
+           c(strength=1/(4 * pi * kappa * sigma2), scale=sqrt(sigma2))
          },
          tohuman = function(can) {
-           strength <- can[[1]]
-           decay <- can[[2]]
-           c(kappa=1/strength, sigma2=1/decay^2)
+           strength <- can[[1L]]
+           scale <- can[[2L]]
+           sigma2 <- scale^2
+           c(kappa=1/(4 * pi * strength * sigma2), sigma2=sigma2)
          }
          ),
        ## ...............................................
@@ -124,18 +116,18 @@
          printmodelname = function(...) "Matern cluster process", # Used by print.kppm
          parnames = c("kappa", "R"),
          clustargsnames = NULL,
-         checkpar = function(par, old = TRUE){
+         checkpar = function(par, old = TRUE, ...){
              if(is.null(par))
                  par <- c(kappa=1,scale=1)
              if(any(par<=0))
-                 stop("par values must be positive.")
-             nam <- try(check.named.vector(par, c("kappa","R")), silent = TRUE)
-             if(inherits(nam, "try-error")){
-                 check.named.vector(par, c("kappa","scale"))
-                 names(par)[2] <- "R"
+                 stop("par values must be positive.", call.=FALSE)
+             nam <- check.named.vector(par, c("kappa","R"), onError="null")
+             if(is.null(nam)) {
+               check.named.vector(par, c("kappa","scale"))
+               names(par)[2L] <- "R"
              }
              if(!old){
-                 names(par)[2] <- "scale"
+                 names(par)[2L] <- "scale"
              }
              return(par)
          },
@@ -148,38 +140,28 @@
              dots <- list(...)
              par <- dots$par
              # Choose the first of the possible supplied values for scale:
-             scale <- c(dots$scale, dots$par[["scale"]], dots$R, dots$par[["R"]])[1]
+             scale <- c(dots$scale, dots$par[["scale"]], dots$R, dots$par[["R"]])[1L]
              if(is.null(scale))
-                 stop("Argument ", sQuote("scale"), " must be given.")
+               stop(paste("Argument ", sQuote("scale"), " must be given."),
+                    call.=FALSE)
            if(!is.null(dots$thresh))
                warning("Argument ", sQuote("thresh"), " is ignored for Matern Cluster model")
              return(scale)
          },
-         checkclustargs = function(margs, old = TRUE) list(),
+         checkclustargs = function(margs, old = TRUE, ...) list(),
          resolvedots = function(...){
-             ## resolve dots for kppm and friends allowing for old/new par syntax
-             dots <- list(...)
-             nam <- names(dots)
-             out <- list()
-             if("ctrl" %in% nam){
-                 out$ctrl <- dots$ctrl
-             } else{
-                 out$ctrl <- dots[nam %in% c("p", "q", "rmin", "rmax")]
-             }
-             chk <- .Spatstat.ClusterModelInfoTable$MatClust$checkpar
-             if(!is.null(dots$startpar)) out$startpar <- chk(dots$startpar)
-             return(out)
+           return(list(...))
          },
          kernel = function(par, rvals, ...) {
-             scale <- par[2]
+             scale <- par[2L]
              ifelse(rvals>scale, 0, 1/(pi*scale^2))
          },
          isPCP=TRUE,
          K = function(par,rvals, ..., funaux){
            if(any(par <= 0))
              return(rep.int(Inf, length(rvals)))
-           kappa <- par[1]
-           R <- par[2]
+           kappa <- par[1L]
+           R <- par[2L]
            Hfun <- funaux$Hfun
            y <- pi * rvals^2 + (1/kappa) * Hfun(rvals/(2 * R))
            return(y)
@@ -187,8 +169,8 @@
          pcf= function(par,rvals, ..., funaux){
              if(any(par <= 0))
                return(rep.int(Inf, length(rvals)))
-             kappa <- par[1]
-             R <- par[2]
+             kappa <- par[1L]
+             R <- par[2L]
              g <- funaux$g
              y <- 1 + (1/(pi * kappa * R^2)) * g(rvals/(2 * R))
              return(y)
@@ -249,37 +231,26 @@
          printmodelname = function(...) "Cauchy process", # Used by print.kppm
          parnames = c("kappa", "eta2"),
          clustargsnames = NULL,
-         checkpar = function(par, old = TRUE){
+         checkpar = function(par, old = TRUE, ...){
              if(is.null(par))
                  par <- c(kappa=1,scale=1)
              if(any(par<=0))
-                 stop("par values must be positive.")
-             nam <- try(check.named.vector(par, c("kappa","eta2")), silent = TRUE)
-             if(inherits(nam, "try-error")){
+                 stop("par values must be positive.", call.=FALSE)
+             nam <- check.named.vector(par, c("kappa","eta2"), onError="null")
+             if(is.null(nam)) {
                  check.named.vector(par, c("kappa","scale"))
-                 names(par)[2] <- "eta2"
-                 par[2] <- (2*par[2])^2
+                 names(par)[2L] <- "eta2"
+                 par[2L] <- (2*par[2L])^2
              }
              if(!old){
-                 names(par)[2] <- "scale"
-                 par[2] <- sqrt(par[2])/2
+                 names(par)[2L] <- "scale"
+                 par[2L] <- sqrt(par[2L])/2
              }
              return(par)
          },
-         checkclustargs = function(margs, old = TRUE) list(),
+         checkclustargs = function(margs, old = TRUE, ...) list(),
          resolvedots = function(...){
-             ## resolve dots for kppm and friends allowing for old/new par syntax
-             dots <- list(...)
-             nam <- names(dots)
-             out <- list()
-             if("ctrl" %in% nam){
-                 out$ctrl <- dots$ctrl
-             } else{
-                 out$ctrl <- dots[nam %in% c("p", "q", "rmin", "rmax")]
-             }
-             chk <- .Spatstat.ClusterModelInfoTable$Cauchy$checkpar
-             if(!is.null(dots$startpar)) out$startpar <- chk(dots$startpar)
-             return(out)
+           return(list(...))
          },
          # density function for the distance to offspring
          ddist = function(r, scale, ...) {
@@ -289,9 +260,10 @@
          range = function(...){
              dots <- list(...)
              # Choose the first of the possible supplied values for scale:
-             scale <- c(dots$scale, dots$par[["scale"]])[1]
+             scale <- c(dots$scale, dots$par[["scale"]])[1L]
              if(is.null(scale))
-                 stop("Argument ", sQuote("scale"), " must be given.")
+               stop(paste("Argument ", sQuote("scale"), " must be given."),
+                    call.=FALSE)
              thresh <- dots$thresh %orifnull% 0.01
              ## integral of ddist(r) dr is 1 - (1+(r/scale)^2)^(-1/2)
              ## solve for integral = 1-thresh:
@@ -304,19 +276,19 @@
              return(rmax)
          },
          kernel = function(par, rvals, ...) {
-             scale <- sqrt(par[2])/2
+             scale <- sqrt(par[2L])/2
              1/(2*pi*scale^2)*((1 + (rvals/scale)^2)^(-3/2))
          },
          isPCP=TRUE,
          K = function(par,rvals, ...){
            if(any(par <= 0))
              return(rep.int(Inf, length(rvals)))
-           pi*rvals^2 + (1 - 1/sqrt(1 + rvals^2/par[2]))/par[1]
+           pi*rvals^2 + (1 - 1/sqrt(1 + rvals^2/par[2L]))/par[1L]
          },
          pcf= function(par,rvals, ...){
            if(any(par <= 0))
              return(rep.int(Inf, length(rvals)))
-           1 + ((1 + rvals^2/par[2])^(-1.5))/(2 * pi * par[2] * par[1])
+           1 + ((1 + rvals^2/par[2L])^(-1.5))/(2 * pi * par[2L] * par[1L])
          },
          selfstart = function(X) {
            kappa <- intensity(X)
@@ -345,49 +317,43 @@
          },
          parnames = c("kappa", "eta"),
          clustargsnames = "nu",
-         checkpar = function(par, old = TRUE){
+         checkpar = function(par, old = TRUE, ...){
              if(is.null(par))
                  par <- c(kappa=1,scale=1)
              if(any(par<=0))
-                 stop("par values must be positive.")
-             nam <- try(check.named.vector(par, c("kappa","eta")), silent = TRUE)
-             if(inherits(nam, "try-error")){
-                 check.named.vector(par, c("kappa","scale"))
-                 names(par)[2] <- "eta"
+                 stop("par values must be positive.", call.=FALSE)
+             nam <- check.named.vector(par, c("kappa","eta"), onError="null")
+             if(is.null(nam)) {
+               check.named.vector(par, c("kappa","scale"))
+               names(par)[2L] <- "eta"
              }
-             if(!old) names(par)[2] <- "scale"
+             if(!old) names(par)[2L] <- "scale"
              return(par)
          },
-         checkclustargs = function(margs, old = TRUE){
+         checkclustargs = function(margs, old = TRUE, ...){
              if(!old)
                  margs <- list(nu=margs$nu.ker)
              return(margs)
          },
          resolvedots = function(...){
-             ## resolve dots for kppm and friends allowing for old/new par syntax
-             dots <- list(...)
-             nam <- names(dots)
-             out <- list()
-             if("ctrl" %in% nam){
-                 out$ctrl <- dots$ctrl
-             } else{
-                 out$ctrl <- dots[nam %in% c("p", "q", "rmin", "rmax")]
-             }
-             chk <- .Spatstat.ClusterModelInfoTable$VarGamma$checkpar
-             if(!is.null(dots$startpar)) out$startpar <- chk(dots$startpar)
-             nu <- dots$nu
-             if(is.null(nu)){
-                 nu <- try(resolve.vargamma.shape(nu.ker=dots$nu.ker, nu.pcf=dots$nu.pcf)$nu.ker,
-                           silent = TRUE)
-                 if(inherits(nu, "try-error"))
-                     nu <- -1/4
-             } else{
-                 check.1.real(nu)
-                 stopifnot(nu > -1/2)
-             }
-             out$margs <- list(nu.ker=nu, nu.pcf=2*nu+1)
-             out$covmodel <- list(type="Kernel", model="VarGamma", margs=out$margs)
-             return(out)
+           ## resolve dots for kppm and friends allowing for old/new par syntax
+           dots <- list(...)
+           out <- list()
+           nu <- dots$nu
+           if(is.null(nu)){
+             nu <- try(resolve.vargamma.shape(nu.ker=dots$nu.ker,
+                                              nu.pcf=dots$nu.pcf)$nu.ker,
+                       silent = TRUE)
+             if(inherits(nu, "try-error"))
+               nu <- -1/4
+           } else {
+             check.1.real(nu)
+             stopifnot(nu > -1/2)
+           }
+           out$margs <- list(nu.ker=nu, nu.pcf=2*nu+1)
+           out$covmodel <- list(type="Kernel", model="VarGamma",
+                                margs=out$margs)
+           return(out)
          },
          # density function for the distance to offspring
          ddist = function(r, scale, nu, ...) {
@@ -400,14 +366,16 @@
          range = function(...){
              dots <- list(...)
              # Choose the first of the possible supplied values for scale:
-             scale <- c(dots$scale, dots$par[["scale"]])[1]
+             scale <- c(dots$scale, dots$par[["scale"]])[1L]
              if(is.null(scale))
-                 stop("Argument ", sQuote("scale"), " must be given.")
+               stop(paste("Argument ", sQuote("scale"), " must be given."),
+                    call.=FALSE)
              # Find value of nu:
              extra <- .Spatstat.ClusterModelInfoTable$VarGamma$resolvedots(...)
              nu <- .Spatstat.ClusterModelInfoTable$VarGamma$checkclustargs(extra$margs, old=FALSE)$nu
              if(is.null(nu))
-                 stop("Argument ", sQuote("nu"), " must be given.")
+               stop(paste("Argument ", sQuote("nu"), " must be given."),
+                    call.=FALSE)
              thresh <- dots$thresh
              if(is.null(thresh))
                  thresh <- .001
@@ -424,10 +392,11 @@
          },
          ## kernel function in polar coordinates (no angular argument).
          kernel = function(par, rvals, ..., margs) {
-             scale <- as.numeric(par[2])
+             scale <- as.numeric(par[2L])
              nu <- margs$nu
              if(is.null(nu))
-                 stop("Argument ", sQuote("nu"), " is missing.")
+               stop(paste("Argument ", sQuote("nu"), " is missing."),
+                    call.=FALSE)
              numer <- ((rvals/scale)^nu) * besselK(rvals/scale, nu)
              numer[rvals==0] <- ifelse(nu>0, 2^(nu-1)*gamma(nu), Inf)
              denom <- pi * (2^(nu+1)) * scale^2 * gamma(nu + 1)
@@ -438,8 +407,8 @@
            ## K function requires integration of pair correlation
            xgx <- function(x, par, nu.pcf) {
              ## x * pcf(x) without check on par values
-             numer <- (x/par[2])^nu.pcf * besselK(x/par[2], nu.pcf)
-             denom <- 2^(nu.pcf+1) * pi * par[2]^2 * par[1] * gamma(nu.pcf + 1)
+             numer <- (x/par[2L])^nu.pcf * besselK(x/par[2L], nu.pcf)
+             denom <- 2^(nu.pcf+1) * pi * par[2L]^2 * par[1L] * gamma(nu.pcf + 1)
              return(x * (1 + numer/denom))
            }
            vargammaK <- function(par,rvals, ..., margs){
@@ -465,14 +434,14 @@
            ##     return(rep.int(Inf, length(rvals)))
            ##   nu.pcf <- margs$nu.pcf
            ##   out <- numeric(length(rvals))
-           ##   out[1] <- if(rvals[1] == 0) 0 else 
-           ##   integrate(xgx, lower=0, upper=rvals[1],
+           ##   out[1L] <- if(rvals[1L] == 0) 0 else 
+           ##   integrate(xgx, lower=0, upper=rvals[1L],
            ##             par = par, nu.pcf=nu.pcf)$value
            ##   for (i in 2:length(rvals)) {
            ##     delta <- integrate(xgx,
-           ##                        lower=rvals[i-1], upper=rvals[i],
+           ##                        lower=rvals[i-1L], upper=rvals[i],
            ##                        par=par, nu.pcf=nu.pcf)
-           ##     out[i]=out[i-1]+delta$value
+           ##     out[i]=out[i-1L]+delta$value
            ##   }
            ##   return(out)
            ## }
@@ -483,9 +452,9 @@
            if(any(par <= 0))
              return(rep.int(Inf, length(rvals)))
            nu.pcf <- margs$nu.pcf
-           sig2 <- 1 / (4 * pi * (par[2]^2) * nu.pcf * par[1])
+           sig2 <- 1 / (4 * pi * (par[2L]^2) * nu.pcf * par[1L])
            denom <- 2^(nu.pcf - 1) * gamma(nu.pcf)
-           rr <- rvals / par[2]
+           rr <- rvals / par[2L]
            ## Matern correlation function
            fr <- ifelseXB(rr > 0,
                         (rr^nu.pcf) * besselK(rr, nu.pcf) / denom,
@@ -525,59 +494,52 @@
          modelabbrev = "log-Gaussian Cox process", # In fitted obj.
          printmodelname = function(...) "log-Gaussian Cox process", # Used by print.kppm
          parnames = c("sigma2", "alpha"),
-         checkpar = function(par, old = TRUE){
+         checkpar = function(par, old = TRUE, ...){
              if(is.null(par))
                  par <- c(var=1,scale=1)
              if(any(par<=0))
-                 stop("par values must be positive.")
-             nam <- try(check.named.vector(par, c("sigma2","alpha")), silent = TRUE)
-             if(inherits(nam, "try-error")){
+                 stop("par values must be positive.", call.=FALSE)
+             nam <- check.named.vector(par, c("sigma2","alpha"), onError="null")
+             if(is.null(nam)) {
                  check.named.vector(par, c("var","scale"))
                  names(par) <- c("sigma2", "alpha")
              }
              if(!old) names(par) <- c("var", "scale")
              return(par)
          },
-         checkclustargs = function(margs, old = TRUE) return(margs),
+         checkclustargs = function(margs, old = TRUE, ...) return(margs),
          resolvedots = function(...){
-             ## resolve dots for kppm and friends allowing for old/new par syntax
-             dots <- list(...)
-             nam <- names(dots)
-             out <- list()
-             if("ctrl" %in% nam){
-                 out$ctrl <- dots$ctrl
+           ## resolve dots for kppm and friends allowing for old/new par syntax
+           dots <- list(...)
+           nam <- names(dots)
+           out <- list()
+           cmod <- dots$covmodel
+           model <- cmod$model %orifnull% dots$model %orifnull% "exponential"
+           margs <- NULL
+           if(!identical(model, "exponential")) {
+             ## get the 'model generator' 
+             modgen <- getRandomFieldsModelGen(model)
+             attr(model, "modgen") <- modgen
+             if(is.null(cmod)){
+               margsnam <- names(formals(modgen))
+               margsnam <- margsnam[!(margsnam %in% c("var", "scale"))]
+               margs <- dots[nam %in% margsnam]
              } else{
-                 out$ctrl <- dots[nam %in% c("p", "q", "rmin", "rmax")]
+               margs <- cmod[names(cmod)!="model"]
              }
-             chk <- .Spatstat.ClusterModelInfoTable$LGCP$checkpar
-             if(!is.null(dots$startpar)) out$startpar <- chk(dots$startpar)
-             cmod <- dots$covmodel
-             model <- cmod$model %orifnull% dots$model %orifnull% "exponential"
+           }
+           if(length(margs)==0) {
              margs <- NULL
-             if(model != "exponential") {
-               kraever("RandomFields")
-               ## get the 'model generator' 
-               modgen <- try(getExportedValue("RandomFields", 
-                                              paste0("RM", model)),
-                             silent=TRUE)
-               if(inherits(modgen, "try-error") ||
-                  !inherits(modgen, "RMmodelgenerator"))
-                 stop(paste("Model", sQuote(model), "is not recognised"))
-               attr(model, "modgen") <- modgen
-               if(is.null(cmod)){
-                 margsnam <- names(formals(modgen))
-                 margsnam <- margsnam[!(margsnam %in% c("var", "scale"))]
-                 margs <- dots[nam %in% margsnam]
-               } else{
-                 margs <- cmod[names(cmod)!="model"]
-               }
-             }
-             if(length(margs)==0)
-                 margs <- NULL
-             out$margs <- margs
-             out$model <- model
-             out$covmodel <- list(type="Covariance", model=model, margs=margs)
-             return(out)
+           } else {
+             ## detect anisotropic model
+             if("Aniso" %in% names(margs))
+               stop("Anisotropic covariance models cannot be used",
+                    call.=FALSE)
+           }
+           out$margs <- margs
+           out$model <- model
+           out$covmodel <- list(type="Covariance", model=model, margs=margs)
+           return(out)
          },
          isPCP=FALSE,
          ## calls relevant covariance function from RandomFields package
@@ -586,16 +548,16 @@
              return(rep.int(Inf, length(rvals)))
            if(model == "exponential") {
              ## For efficiency and to avoid need for RandomFields package
-             integrand <- function(r,par,...) 2*pi*r*exp(par[1]*exp(-r/par[2]))
+             integrand <- function(r,par,...) 2*pi*r*exp(par[1L]*exp(-r/par[2L]))
            } else {
-             kraever("RandomFields")
+             kraeverRandomFields()
              integrand <- function(r,par,model,margs) {
                modgen <- attr(model, "modgen")
                if(length(margs) == 0) {
-                 mod <- modgen(var=par[1], scale=par[2])
+                 mod <- modgen(var=par[1L], scale=par[2L])
                } else {
                  mod <- do.call(modgen,
-                                append(list(var=par[1], scale=par[2]),
+                                append(list(var=par[1L], scale=par[2L]),
                                        margs))
                }
                2*pi *r *exp(RandomFields::RFcov(model=mod, x=r))
@@ -606,21 +568,21 @@
            if(spatstat.options("fastK.lgcp")) {
              ## integrate using Simpson's rule
              fvals <- integrand(r=rvals, par=par, model=model, margs=margs)
-             th[1] <- rvals[1] * fvals[1]/2
+             th[1L] <- rvals[1L] * fvals[1L]/2
              if(nr > 1)
                for(i in 2:nr)
-                 th[i] <- th[i-1] +
-                   (rvals[i] - rvals[i-1]) * (fvals[i] + fvals[i-1])/2
+                 th[i] <- th[i-1L] +
+                   (rvals[i] - rvals[i-1L]) * (fvals[i] + fvals[i-1L])/2
            } else {
              ## integrate using 'integrate'
-             th[1] <- if(rvals[1] == 0) 0 else 
-             integrate(integrand,lower=0,upper=rvals[1],
+             th[1L] <- if(rvals[1L] == 0) 0 else 
+             integrate(integrand,lower=0,upper=rvals[1L],
                        par=par,model=model,margs=margs)$value
              for (i in 2:length(rvals)) {
                delta <- integrate(integrand,
-                                  lower=rvals[i-1],upper=rvals[i],
+                                  lower=rvals[i-1L],upper=rvals[i],
                                   par=par,model=model,margs=margs)
-               th[i]=th[i-1]+delta$value
+               th[i]=th[i-1L]+delta$value
              }
            }
            return(th)
@@ -630,15 +592,15 @@
              return(rep.int(Inf, length(rvals)))
            if(model == "exponential") {
              ## For efficiency and to avoid need for RandomFields package
-             gtheo <- exp(par[1]*exp(-rvals/par[2]))
+             gtheo <- exp(par[1L]*exp(-rvals/par[2L]))
            } else {
-             kraever("RandomFields")
+             kraeverRandomFields()
              modgen <- attr(model, "modgen")
              if(length(margs) == 0) {
-               mod <- modgen(var=par[1], scale=par[2])
+               mod <- modgen(var=par[1L], scale=par[2L])
              } else {
                mod <- do.call(modgen,
-                              append(list(var=par[1], scale=par[2]),
+                              append(list(var=par[1L], scale=par[2L]),
                                      margs))
              }
              gtheo <- exp(RandomFields::RFcov(model=mod, x=rvals))
@@ -647,17 +609,12 @@
          },
          parhandler=function(model = "exponential", ...) {
            if(!is.character(model))
-             stop("Covariance function model should be specified by name")
+             stop("Covariance function model should be specified by name",
+                  call.=FALSE)
            margs <- c(...)
-           if(model != "exponential") {
-             kraever("RandomFields")
+           if(!identical(model, "exponential")) {
              ## get the 'model generator' 
-             modgen <- try(getExportedValue("RandomFields", 
-                                            paste0("RM", model)),
-                           silent=TRUE)
-             if(inherits(modgen, "try-error") ||
-                !inherits(modgen, "RMmodelgenerator"))
-               stop(paste("Model", sQuote(model), "is not recognised"))
+             modgen <- getRandomFieldsModelGen(model)
              attr(model, "modgen") <- modgen
            }
            return(list(type="Covariance", model=model, margs=margs))

@@ -121,8 +121,11 @@
 \seealso{
   \code{\link{perspPoints}},
   \code{\link{perspLines}}
-  for drawing additional points or lines on the surface.
+  for drawing additional points or lines \emph{on the surface}.
 
+  \code{\link[grDevices]{trans3d}} for mapping arbitrary
+  \eqn{(x,y,z)} coordinate locations to the plotting coordinates.
+  
   \code{\link{im.object}},
   \code{\link{plot.im}},
   \code{\link{contour.im}}
@@ -140,13 +143,8 @@
          zlab="Elevation", main="", ticktype="detailed",
          expand=6)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
  

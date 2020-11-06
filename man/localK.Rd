@@ -8,12 +8,15 @@
   defined by Getis and Franklin (1987).
 }
 \usage{
-  localK(X, ..., correction = "Ripley", verbose = TRUE, rvalue=NULL)
-  localL(X, ..., correction = "Ripley", verbose = TRUE, rvalue=NULL)
+  localK(X, ..., rmax = NULL, correction = "Ripley", verbose = TRUE, rvalue=NULL)
+  localL(X, ..., rmax = NULL, correction = "Ripley", verbose = TRUE, rvalue=NULL)
 }
 \arguments{
   \item{X}{A point pattern (object of class \code{"ppp"}).}
   \item{\dots}{Ignored.}
+  \item{rmax}{
+    Optional. Maximum desired value of the argument \eqn{r}.
+  }
   \item{correction}{String specifying the edge correction to be applied.
     Options are \code{"none"}, \code{"translate"}, \code{"translation"},
     \code{"Ripley"},
@@ -121,11 +124,11 @@
   contour(Z, add=TRUE)
   points(X, pch=16, cex=0.5)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

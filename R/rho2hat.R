@@ -3,7 +3,7 @@
 #
 #   Relative risk for pairs of covariate values
 #
-#   $Revision: 1.21 $   $Date: 2015/04/28 08:21:12 $
+#   $Revision: 1.25 $   $Date: 2016/07/15 10:21:12 $
 #
 
 rho2hat <- function(object, cov1, cov2, ..., method=c("ratio", "reweight")) {
@@ -12,7 +12,7 @@ rho2hat <- function(object, cov1, cov2, ..., method=c("ratio", "reweight")) {
   callstring <- short.deparse(sys.call())
   method <- match.arg(method)
   # validate model
-  if(is.ppp(object) || inherits(object, "quad")) {
+  if(is.ppp(object) || is.quad(object)) {
     model <- ppm(object, ~1, forcefit=TRUE)
     reference <- "area"
     modelcall <- NULL
@@ -69,7 +69,7 @@ rho2hat <- function(object, cov1, cov2, ..., method=c("ratio", "reweight")) {
            },
            reweight = {
              # smoothed point pattern with weights = 1/reference
-             W <- do.call.matched("as.mask",
+             W <- do.call.matched(as.mask,
                                   append(list(w=as.owin(X)), list(...)))
              if(!needflip) {
                lambda <- predict(model, locations=W)
@@ -134,7 +134,7 @@ rho2hat <- function(object, cov1, cov2, ..., method=c("ratio", "reweight")) {
              fhat <- density(Z12points, ...)
              sigma <- attr(fhat, "sigma")
              varcov <- attr(fhat, "varcov")
-             ghat <- do.call("density.ppp",
+             ghat <- do.call(density.ppp,
                              resolve.defaults(list(Z12pixels, weights=wts),
                                               list(...),
                                               list(sigma=sigma,
@@ -178,7 +178,7 @@ plot.rho2hat <- function(x, ..., do.points=FALSE) {
                               xlab=s$cov1name, ylab=s$cov2name))
   # plot image
   plotparams <- graphicsPars("plot")
-  do.call.matched("plot.im",
+  do.call.matched(plot.im,
                   resolve.defaults(list(x=x, axes=FALSE),
                                    list(...),
                                    list(main=xname, ribargs=list(axes=TRUE))),
@@ -187,7 +187,8 @@ plot.rho2hat <- function(x, ..., do.points=FALSE) {
   if(rd$axes) {
     axisparams <- graphicsPars("axis")
     Axis <- function(..., extrargs=axisparams) {
-      do.call.matched("axis", resolve.defaults(list(...)), extrargs=extrargs)
+      do.call.matched(graphics::axis,
+                      resolve.defaults(list(...)), extrargs=extrargs)
     }
     if(s$isxy) {
       # for (x,y) plots the image is at the correct physical scale
@@ -209,7 +210,7 @@ plot.rho2hat <- function(x, ..., do.points=FALSE) {
     title(ylab=rd$ylab)
   }
   if(do.points) {
-    do.call.matched("plot.ppp",
+    do.call.matched(plot.ppp,
                     resolve.defaults(list(x=s$Z12points, add=TRUE),
                                      list(...)),
                     extrargs=c("pch", "col", "cols", "bg", "cex", "lwd", "lty"))
@@ -247,9 +248,14 @@ predict.rho2hat <- function(object, ..., relative=FALSE) {
   # extract info
   s <- attr(object, "stuff")
   reference <- s$reference
-  # extract images of covariate, scaled to [0,1]
-  Z1 <- scaletointerval(s$cov1, xrange=s$r1)
-  Z2 <- scaletointerval(s$cov2, xrange=s$r2)
+  #' extract images of covariate
+  Z1 <- s$cov1
+  Z2 <- s$cov2
+  if(!is.im(Z1)) Z1 <- as.im(Z1, Window(object))
+  if(!is.im(Z2)) Z2 <- as.im(Z2, Window(object))
+  #' rescale to [0,1]
+  Z1 <- scaletointerval(Z1, xrange=s$r1)
+  Z2 <- scaletointerval(Z2, xrange=s$r2)
   # extract pairs of covariate values
   ZZ <- pairs(Z1, Z2, plot=FALSE)
   # apply rho to Z
@@ -258,7 +264,7 @@ predict.rho2hat <- function(object, ..., relative=FALSE) {
   Y <- Z1
   Y[] <- YY
   # adjust to reference baseline
-  if(reference != "Lebesgue" && !relative) {
+  if(!(relative || reference == "area")) {
     lambda <- s$lambda
     Y <- Y * lambda
   }

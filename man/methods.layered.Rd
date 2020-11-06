@@ -1,4 +1,4 @@
-\name{methods.layered} %DontDeclareMethods
+\name{methods.layered} 
 \Rdversion{1.1}
 \alias{methods.layered} %DoNotExport
 \alias{shift.layered}
@@ -75,11 +75,11 @@
 \value{
   Another object of class \code{"layered"}.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \seealso{
   \code{\link{layered}}

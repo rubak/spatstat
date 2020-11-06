@@ -16,10 +16,14 @@
 \details{
   This function takes the pixel image \code{x}
   and returns a data frame with three columns
-  containing the pixel coordinates and the pixel values. 
+  containing the pixel coordinates and the pixel values.
+
+  The data frame entries are automatically sorted in increasing order of
+  the \code{x} coordinate (and in increasing order of \code{y} within
+  \code{x}). 
 }
 \value{
-  A data frame
+  A data frame.
 }
 \examples{
    # artificial image
@@ -29,11 +33,8 @@
 
    head(Y)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{methods}

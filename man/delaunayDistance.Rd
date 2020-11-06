@@ -33,7 +33,7 @@ delaunayDistance(X)
 }
 \seealso{
   \code{\link{delaunay}},
-  \code{\link{delaunayNetwork}}
+  \code{\link{delaunayNetwork}}.
 }
 \examples{
   X <- runifpoint(20)
@@ -42,13 +42,7 @@ delaunayDistance(X)
   text(X, labels=M[1, ], cex=2)
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{manip}

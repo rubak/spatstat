@@ -9,8 +9,9 @@
   compute estimates of Foxall's  \eqn{G} and \eqn{J} functions.
 }
 \usage{
-Gfox(X, Y, r = NULL, breaks = NULL, correction = c("km", "rs", "han"), ...)
-Jfox(X, Y, r = NULL, breaks = NULL, correction = c("km", "rs", "han"), ...)
+Gfox(X, Y, r=NULL, breaks=NULL, correction=c("km", "rs", "han"), W, \dots)
+Jfox(X, Y, r=NULL, breaks=NULL, correction=c("km", "rs", "han"), W, \dots,
+     warn.trim=TRUE)
 }
 \arguments{
   \item{X}{
@@ -19,7 +20,8 @@ Jfox(X, Y, r = NULL, breaks = NULL, correction = c("km", "rs", "han"), ...)
   }
   \item{Y}{
     An object of class \code{"ppp"}, \code{"psp"} or \code{"owin"}
-    to which distances will be measured.
+    to which distances will be measured. Alternatively a pixel image
+    (class \code{"im"}) with logical values.
   }
   \item{r}{Optional. Numeric vector. The values of the argument \eqn{r}
     at which \eqn{Gfox(r)} or \eqn{Jfox(r)}
@@ -37,12 +39,25 @@ Jfox(X, Y, r = NULL, breaks = NULL, correction = c("km", "rs", "han"), ...)
     A vector of character strings selected from
     \code{"none"}, \code{"rs"}, \code{"km"}, \code{"cs"}
     and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
+  }
+  \item{W}{
+    Optional. A window (object of class \code{"owin"})
+    to be taken as the window of observation.
+    The distribution function will be estimated from data inside \code{W}.
+    The default is \code{W=Frame(Y)} when \code{Y} is a window,
+    and \code{W=Window(Y)} otherwise.
   }
   \item{\dots}{
     Extra arguments affecting the discretisation of distances.
     These arguments are ignored by \code{Gfox}, but
     \code{Jfox} passes them to \code{\link{Hest}} to determine
     the discretisation of the spatial domain.
+  }
+  \item{warn.trim}{
+    Logical value indicating whether a warning should be issued
+    by \code{Jfox} when the window of \code{X} had to be trimmed
+    in order to be a subset of the frame of \code{Y}.
   }
 }
 \details{
@@ -109,9 +124,9 @@ Jfox(X, Y, r = NULL, breaks = NULL, correction = c("km", "rs", "han"), ...)
   }
 }
 \author{Rob Foxall and
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
+  
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

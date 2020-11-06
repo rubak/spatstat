@@ -8,7 +8,7 @@
   Convert various kinds of data to a point pattern on a linear network.
 }
 \usage{
-  as.lpp(x, y=NULL, seg=NULL, tp=NULL, \dots,
+  as.lpp(x=NULL, y=NULL, seg=NULL, tp=NULL, \dots,
          marks=NULL, L=NULL, check=FALSE, sparse)
 }
 \arguments{
@@ -64,9 +64,23 @@
     segment (with \code{tp=0} representing one endpoint and
     \code{tp=1} the other endpoint of the segment).
     \item
+    \code{x,y} are missing and \code{seg,tp} are vectors of equal length
+    as described above.
+    \item
     \code{seg,tp} are \code{NULL}, and \code{x,y} are data in a format
     acceptable to \code{\link[grDevices]{xy.coords}} specifying the
     Cartesian coordinates.
+    \item
+    Only the arguments \code{x} and \code{L} are given,
+    and \code{x} is a data frame with one of the following types:
+    \itemize{
+      \item two columns labelled \code{seg,tp} interpreted as local
+      coordinates on the network.
+      \item two columns labelled \code{x,y} interpreted as Cartesian
+      coordinates.
+      \item four columns labelled \code{x,y,seg,tp}
+      interpreted as Cartesian coordinates and local coordinates.
+    }
   }
 }
 \value{
@@ -82,11 +96,11 @@
    is.ppp(X)
    Y <- as.lpp(X, L=simplenet)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

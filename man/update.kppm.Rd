@@ -5,7 +5,7 @@
   \code{update} method for class \code{"kppm"}.
 }
 \usage{
- \method{update}{kppm}(object, \dots)
+ \method{update}{kppm}(object, \dots, evaluate=TRUE)
 }
 \arguments{
   \item{object}{
@@ -15,6 +15,11 @@
   }
   \item{\dots}{
     Arguments passed to \code{\link{kppm}}.
+  }
+  \item{evaluate}{
+    Logical value indicating whether to return the updated fitted model
+    (\code{evaluate=TRUE}, the default) or just the updated call to \code{kppm}
+    (\code{evaluate=FALSE}).
   }
 }
 \details{
@@ -61,13 +66,13 @@
  fitCx <- update(fit, cells ~ x)
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  \adrian
+  
+  
+  \rolf
+  
+  and \ege
+  
 }
 \keyword{spatial}
 \keyword{models}

@@ -63,13 +63,7 @@ extractbranch(X, \dots)
   obtained by deleting or extracting the specified branch.
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+\spatstatAuthors
 }
 \seealso{
 \code{\link{treebranchlabels}},
@@ -77,9 +71,21 @@ and Ege Rubak
 \code{\link{linnet}}
 }
 \examples{
-  example(treebranchlabels)
+  # make a simple tree
+  m <- simplenet$m
+  m[8,10] <- m[10,8] <- FALSE
+  L <- linnet(vertices(simplenet), m)
+  plot(L, main="")
+  # compute branch labels 
+  tb <- treebranchlabels(L, 1)
+  tbc <- paste0("[", tb, "]")
+  text(vertices(L), labels=tbc, cex=2)
+
+  # delete branch B
   LminusB <- deletebranch(L, "b", tb)
   plot(LminusB, add=TRUE, col="green")
+
+  # extract branch B
   LB <- extractbranch(L, "b", tb)
   plot(LB, add=TRUE, col="red")
 }

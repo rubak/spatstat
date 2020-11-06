@@ -7,12 +7,13 @@
 }
 \usage{
   \method{envelope}{pp3}(Y, fun=K3est, nsim=99, nrank=1, \dots, 
-  simulate=NULL, verbose=TRUE, 
+  funargs=list(), funYargs=funargs, simulate=NULL, verbose=TRUE, 
   transform=NULL,global=FALSE,ginterval=NULL,use.theory=NULL,
   alternative=c("two.sided", "less", "greater"),
   scale=NULL, clamp=FALSE, 
   savefuns=FALSE, savepatterns=FALSE,
-  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL, maxnerr=nsim,
+  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL,
+  maxnerr=nsim, rejectNA=FALSE, silent=FALSE, 
   do.pwrong=FALSE, envir.simul=NULL)
 }
 \arguments{
@@ -36,12 +37,22 @@
   \item{\dots}{
     Extra arguments passed to \code{fun}.
   }
+  \item{funargs}{
+    A list, containing extra arguments to be passed to \code{fun}.
+  }
+  \item{funYargs}{
+    Optional. A list, containing extra arguments to be passed to
+    \code{fun} when applied to the original data \code{Y} only.
+  }
   \item{simulate}{
     Optional. Specifies how to generate the simulated point patterns.
     If \code{simulate} is an expression in the R language, then this
     expression will be evaluated \code{nsim} times,
     to obtain \code{nsim} point patterns which are taken as the
     simulated patterns from which the envelopes are computed.
+    If \code{simulate} is a function, then this function will be
+    repeatedly applied to the data pattern \code{Y} to obtain
+    \code{nsim} simulated patterns.
     If \code{simulate} is a list of point patterns, then the entries
     in this list will be treated as the simulated patterns from which
     the envelopes are computed.
@@ -129,11 +140,22 @@
   }
   \item{maxnerr}{
     Maximum number of rejected patterns.
-    If \code{fun} yields an error when applied to a simulated point
+    If \code{fun} yields a fatal error when applied to a simulated point
     pattern (for example, because the pattern is empty and \code{fun}
     requires at least one point), the pattern will be rejected
     and a new random point pattern will be generated. If this happens
     more than \code{maxnerr} times, the algorithm will give up.
+  }
+  \item{rejectNA}{
+    Logical value specifying whether to reject a simulated pattern
+    if the resulting values of \code{fun} are all equal to \code{NA},
+    \code{NaN} or infinite. If \code{FALSE} (the default), then
+    simulated patterns are only rejected when \code{fun} gives a
+    fatal error. 
+  }
+  \item{silent}{
+    Logical value specifying whether to print a report each time
+    a simulated pattern is rejected.
   }
   \item{do.pwrong}{
     Logical. If \code{TRUE}, the algorithm will also estimate
@@ -218,11 +240,11 @@
   plot(envelope(X, nsim=4))
  }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{htest}

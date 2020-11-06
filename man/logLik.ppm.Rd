@@ -76,8 +76,8 @@
     AIC = -2 * log(L) + k * penalty
   }
   where \eqn{L} is the maximised likelihood of the fitted model,
-  and \eqn{\mbox{edf}}{edf} is the effective degrees of freedom
-  of the model.
+  and \eqn{\mbox{penalty}}{penalty} is a penalty for model complexity,
+  usually equal to the effective degrees of freedom of the model.
   The method \code{extractAIC.ppm} returns the \emph{analogous} quantity
   \eqn{AIC*} in which \eqn{L} is replaced by \eqn{L*},
   the quadrature approximation
@@ -88,7 +88,7 @@
   The \eqn{\mbox{penalty}}{penalty} term is calculated
   as follows. If \code{takeuchi=FALSE} then \eqn{\mbox{penalty}}{penalty} is
   the number of fitted parameters. If \code{takeuchi=TRUE} then
-  \eqn{\mbox{penalty} = \mbox{trace}(J H^{-1})}{edf = trace(J H^(-1))}
+  \eqn{\mbox{penalty} = \mbox{trace}(J H^{-1})}{penalty = trace(J H^(-1))}
   where \eqn{J} and \eqn{H} are the estimated variance and hessian,
   respectively, of the composite score.
   These two choices are equivalent for a Poisson process.
@@ -97,6 +97,19 @@
   in the original data point pattern to which the model was fitted.
   
   The \R function \code{\link[stats]{step}} uses these methods.
+}
+\section{Model comparison}{
+  The values of \code{logLik} and \code{AIC} returned by these functions
+  are based on the \emph{pseudolikelihood} of the Gibbs point process
+  model. If the model is a Poisson process, then the pseudolikelihood
+  is the same as the likelihood, but for other Gibbs models,
+  the pseudolikelihood is different from the likelihood (and the
+  likelihood of a Gibbs model is hard to compute).
+
+  For model comparison and model selection,
+  it is valid to compare the \code{logLik} values,
+  or to compare the \code{AIC} values, but only when
+  all the models are of class \code{"ppm"}.
 }
 \value{
   \code{logLik} returns a numerical value, belonging to the class
@@ -118,6 +131,7 @@
 \seealso{
   \code{\link{ppm}},  
   \code{\link{as.owin}},
+  \code{\link{anova.ppm}},
   \code{\link{coef.ppm}},
   \code{\link{fitted.ppm}},
   \code{\link{formula.ppm}},
@@ -132,13 +146,8 @@
   \code{\link{update.ppm}},
   \code{\link{vcov.ppm}}.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \examples{
   data(cells)

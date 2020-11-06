@@ -2,13 +2,14 @@
 #
 #   disc.R
 #
-#   $Revision: 1.20 $ $Date: 2015/05/27 01:02:33 $
+#   $Revision: 1.33 $ $Date: 2020/03/16 10:28:51 $
 #
 #   Compute the disc of radius r in a linear network
 #
 #   
-lineardisc <- function(L, x=locator(1), r, plotit=TRUE,
-                       cols=c("blue", "red", "green")) {
+lineardisc <- function(L, x=locator(1), r, plotit=TRUE, 
+                       cols=c("blue", "red", "green"),
+                       add=TRUE) {
   # L is the linear network (object of class "linnet")
   # x is the centre point of the disc
   # r is the radius of the disc
@@ -18,23 +19,34 @@ lineardisc <- function(L, x=locator(1), r, plotit=TRUE,
   if(L$sparse) {
     message("Converting linear network to non-sparse representation..")
     L <- as.linnet(L, sparse=FALSE)
+    message("Done.")
   }
   lines <- L$lines
   vertices <- L$vertices
-  lengths <- lengths.psp(lines)
+  lengths <- lengths_psp(lines)
   win <- L$window
-  #
-  # project x to nearest segment
-  if(missing(x))
+  marx <- marks(lines)
+  ##
+  if(missing(x) || is.null(x)) 
     x <- clickppp(1, win, add=TRUE)
-  else
+  if(is.lpp(x) && identical(L, domain(x))) {
+    ## extract local coordinates
+    stopifnot(npoints(x) == 1)
+    coo <- coords(x)
+    startsegment <- coo$seg
+    startfraction <- coo$tp
+  } else {
+    ## interpret x as 2D location
     x <- as.ppp(x, win)
-  pro <- project2segment(x, lines)
-  # which segment?
-  startsegment <- pro$mapXY
-  # parametric position of x along this segment
-  startfraction <- pro$tp
-  # vertices at each end of this segment
+    stopifnot(npoints(x) == 1)
+    ## project x to nearest segment
+    pro <- project2segment(x, lines)
+    ## which segment?
+    startsegment <- pro$mapXY
+    ## parametric position of x along this segment
+    startfraction <- pro$tp
+  }
+  ## vertices at each end of this segment
   A <- L$from[startsegment]
   B <- L$to[startsegment]
   # distances from x to  A and B
@@ -91,6 +103,7 @@ lineardisc <- function(L, x=locator(1), r, plotit=TRUE,
                  (1-tp)*v0$y + tp*v1$y,
                  window=win)
     extralinesfrom <- as.psp(from=v0, to=vfrom)
+    if(!is.null(marx)) marks(extralinesfrom) <- marx %msub% okfrom
   } else vfrom <- extralinesfrom <- NULL
   #
   okto <- (resid.to > 0)
@@ -103,6 +116,7 @@ lineardisc <- function(L, x=locator(1), r, plotit=TRUE,
                (1-tp)*v0$y + tp*v1$y,
                window=win)
     extralinesto <- as.psp(from=v0, to=vto)
+    if(!is.null(marx)) marks(extralinesto) <- marx %msub% okto
   } else vto <- extralinesto <- NULL
   #
   # deal with special case where start segment is not fully covered
@@ -119,6 +133,7 @@ lineardisc <- function(L, x=locator(1), r, plotit=TRUE,
                   (1-tright) * vA$y + tright * vB$y,
                   window=win)
     startline <- as.psp(from=vleft, to=vright)
+    if(!is.null(marx)) marks(startline) <- marx %msub% startsegment
     startends <- superimpose(if(!covered[A]) vleft else NULL,
                              if(!covered[B]) vright else NULL)
   } else startline <- startends <- NULL
@@ -132,53 +147,82 @@ lineardisc <- function(L, x=locator(1), r, plotit=TRUE,
                           W=win, check=FALSE)
   #
   if(plotit) {
-    if(dev.cur() == 1) {
-      # null device - initialise a plot
+    if(!add || dev.cur() == 1) 
       plot(L, main="")
-    }
-    points(x, col=cols[1], pch=16)
-    plot(disclines, add=TRUE, col=cols[2], lwd=2)
-    plot(discends, add=TRUE, col=cols[3], pch=16)
+    plot(as.ppp(x), add=TRUE, cols=cols[1L], pch=16)
+    plot(disclines, add=TRUE, col=cols[2L], lwd=2)
+    plot(discends, add=TRUE, col=cols[3L], pch=16)
   }
   return(list(lines=disclines, endpoints=discends))
 }
 
-countends <- function(L, x=locator(1), r, toler=NULL) {
+countends <- function(L, x=locator(1), r, toler=NULL, internal=list()) {
   # L is the linear network (object of class "linnet")
   # x is the centre point of the disc
   # r is the radius of the disc
   #
   stopifnot(inherits(L, "linnet"))
-  lines <- L$lines
-  vertices <- L$vertices
-  lengths <- lengths.psp(lines)
-  dpath <- L$dpath
-  win <- L$window
-  nv <- vertices$n
-  ns <- lines$n
+  sparse <- L$sparse %orifnull% is.null(L$dpath)
+  if(sparse)
+    stop(paste("countends() does not support linear networks",
+               "that are stored in sparse matrix format.",
+               "Please convert the data using as.linnet(sparse=FALSE)"),
+         call.=FALSE)
   # get x
   if(missing(x))
-    x <- clickppp(1, win, add=TRUE)
-  else
-    x <- as.ppp(x, win)
-  #
+    x <- clickppp(1, Window(L), add=TRUE)
+  if(!inherits(x, "lpp"))
+    x <- as.lpp(x, L=L)
   np <- npoints(x)
+  
   if(length(r) != np)
     stop("Length of vector r does not match number of points in x")
-  # project x to nearest segment
-  pro <- project2segment(x, lines)
-  # which segment?
-  startsegment <- pro$mapXY
+  
+  ## determine whether network is connected
+  iscon <- internal$is.connected %orifnull% is.connected(L)
+  if(!iscon) {
+    #' disconnected network - split into components
+    result <- numeric(np)
+    lab <- internal$connected.labels %orifnull% connected(L, what="labels")
+    subsets <- split(seq_len(nvertices(L)), factor(lab))
+    for(subi in subsets) {
+      xi <- thinNetwork(x, retainvertices=subi)
+      witch <- which(attr(xi, "retainpoints"))
+      ok <- is.finite(r[witch])
+      witchok <- witch[ok]
+      result[witchok] <-
+        countends(domain(xi), xi[ok], r[witchok], toler=toler,
+                  internal=list(is.connected=TRUE))      
+    }
+    return(result)
+  }
+  lines <- L$lines
+  vertices <- L$vertices
+  lengths <- lengths_psp(lines)
+  dpath <- L$dpath
+  nv <- vertices$n
+  ns <- lines$n
+  #
+  if(!spatstat.options("Ccountends")) {
+    #' interpreted code
+    result <- integer(np)
+    for(i in seq_len(np)) 
+      result[i] <- npoints(lineardisc(L, x[i], r[i], plotit=FALSE)$endpoints)
+    return(result)
+  }
+  # extract coordinates
+  coo <- coords(x)
+  #' which segment
+  startsegment <- coo$seg 
   # parametric position of x along this segment
-  startfraction <- pro$tp
-
+  startfraction <- coo$tp
   # convert indices to C 
   seg0 <- startsegment - 1L
   from0 <- L$from - 1L
   to0   <- L$to - 1L
+  # determine numerical tolerance
   if(is.null(toler)) {
-    toler <- 0.001 * min(lengths[lengths > 0])
-    toler <- max(.Machine$double.xmin, toler, finite=TRUE)
+    toler <- default.linnet.tolerance(L)
   } else {
     check.1.real(toler)
     stopifnot(toler > 0)
@@ -197,6 +241,27 @@ countends <- function(L, x=locator(1), r, toler=NULL) {
            dpath = as.double(dpath),
            lengths = as.double(lengths),
            toler=as.double(toler),
-           nendpoints = as.integer(integer(np)))
+           nendpoints = as.integer(integer(np)),
+           PACKAGE = "spatstat")
   zz$nendpoints
 }
+
+default.linnet.tolerance <- function(L) {
+  # L could be a linnet or psp
+  if(!is.null(toler <- L$toler)) return(toler)
+  len2 <- lengths_psp(as.psp(L), squared=TRUE)
+  len2pos <- len2[len2 > 0]
+  toler <- if(length(len2pos) == 0) 0 else (0.001 * sqrt(min(len2pos)))
+  toler <- makeLinnetTolerance(toler)
+  return(toler)
+}
+
+makeLinnetTolerance <- function(toler) {
+  max(sqrt(.Machine$double.xmin),
+      toler[is.finite(toler)], na.rm=TRUE)
+}
+
+
+
+
+  

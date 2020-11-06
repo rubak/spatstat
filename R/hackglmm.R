@@ -1,9 +1,9 @@
 # hackglmm.R
-#  $Revision: 1.3 $ $Date: 2015/08/12 07:25:33 $
+#  $Revision: 1.8 $ $Date: 2020/11/04 00:27:07 $
 
 hackglmmPQL <- 
 function (fixed, random, family, data, correlation, weights,
-    control, niter = 10, verbose = TRUE, subset, ...)
+    control, niter = 10, verbose = TRUE, subset, ..., reltol=1e-3)
 {
     if (is.character(family))
         family <- get(family)
@@ -14,7 +14,7 @@ function (fixed, random, family, data, correlation, weights,
         stop("'family' not recognized")
     }
     m <- mcall <- Call <- match.call()
-    nm <- names(m)[-1]
+    nm <- names(m)[-1L]
     keep <- is.element(nm, c("weights", "data", "subset", "na.action"))
     for (i in nm[!keep]) m[[i]] <- NULL
     allvars <- if (is.list(random))
@@ -33,7 +33,7 @@ function (fixed, random, family, data, correlation, weights,
     m$formula <- as.formula(paste("~", paste(allvars, collapse = "+")))
     environment(m$formula) <- environment(fixed)
     m$drop.unused.levels <- TRUE
-    m[[1]] <- as.name("model.frame")
+    m[[1L]] <- as.name("model.frame")
     mf <- eval.parent(m)
     off <- model.offset(mf)
     if (is.null(off))
@@ -63,13 +63,13 @@ function (fixed, random, family, data, correlation, weights,
     zz <- eta + fit0$residuals - off
     wz <- fit0$weights
     fam <- family
-    nm <- names(mcall)[-1]
+    nm <- names(mcall)[-1L]
     keep <- is.element(nm, c("fixed", "random", "data", "subset",
         "na.action", "control"))
     for (i in nm[!keep]) mcall[[i]] <- NULL
-    fixed[[2]] <- quote(zz)
+    fixed[[2L]] <- quote(zz)
     mcall[["fixed"]] <- fixed
-    mcall[[1]] <- as.name("lme")
+    mcall[[1L]] <- as.name("lme")
     mcall$random <- random
     mcall$method <- "ML"
     if (!missing(correlation))
@@ -84,7 +84,7 @@ function (fixed, random, family, data, correlation, weights,
         fit <- eval(mcall)
         etaold <- eta
         eta <- fitted(fit) + off
-        if (sum((eta - etaold)^2) < 1e-06 * sum(eta^2))
+        if (sum((eta - etaold)^2) < (reltol^2) * sum(eta^2))
             break
         mu <- fam$linkinv(eta)
         mu.eta.val <- fam$mu.eta(eta)
@@ -93,10 +93,12 @@ function (fixed, random, family, data, correlation, weights,
         mf$invwt <- 1/wz
         mcall$data <- mf
     }
-    attributes(fit$logLik) <- NULL
     fit$call <- Call
     fit$family <- family
-    fit$logLik <- as.numeric(NA)
+#    if(!spatstat.options("developer")) {
+#      attributes(fit$logLik) <- NULL
+#      fit$logLik <- as.numeric(NA)
+#    }
     oldClass(fit) <- c("glmmPQL", oldClass(fit))
     fit
 }

@@ -1,7 +1,7 @@
 #
 #  quadratcount.R
 #
-#  $Revision: 1.50 $  $Date: 2015/05/10 02:22:36 $
+#  $Revision: 1.57 $  $Date: 2016/08/15 03:05:15 $
 #
 
 quadratcount <- function(X, ...) {
@@ -9,7 +9,7 @@ quadratcount <- function(X, ...) {
 }
 
 quadratcount.splitppp <- function(X, ...) {
-  as.solist(lapply(X, quadratcount, ...))
+  solapply(X, quadratcount, ...)
 }
 
 quadratcount.ppp <- function(X, nx=5, ny=nx, ...,
@@ -34,7 +34,8 @@ quadratcount.ppp <- function(X, nx=5, ny=nx, ...,
                        nx=nx, ny=ny, xbreaks=xbreaks, ybreaks=ybreaks,
                        keepempty=TRUE)
       # now delete the empty quadrats and the corresponding counts
-      nonempty <- !unlist(lapply(tiles(tess), is.empty))
+      nonempty <- !tiles.empty(tess)
+#     WAS: nonempty <- !unlist(lapply(tiles(tess), is.empty))
       if(!any(nonempty))
         stop("All tiles are empty")
       if(!all(nonempty)) {
@@ -61,7 +62,7 @@ quadratcount.ppp <- function(X, nx=5, ny=nx, ...,
     } else {
       # quadrats are another type of tessellation
       Y <- cut(X, tess)
-      if(any(is.na(marks(Y))))
+      if(anyNA(marks(Y)))
         warning("Tessellation does not contain all the points of X")
       Xcount <- table(tile=marks(Y))
     }
@@ -83,7 +84,7 @@ plot.quadratcount <- function(x, ...,
   # add=TRUE,  show.tiles=FALSE => plot numbers
   if(show.tiles || !add) {
     context <- if(show.tiles) tess else as.owin(tess)
-    do.call("plot",
+    do.call(plot,
             resolve.defaults(list(context, add=add),
                              list(...),
                              list(main=xname),
@@ -93,14 +94,15 @@ plot.quadratcount <- function(x, ...,
     labels <- paste(as.vector(entries))
     til <- tiles(tess)
     incircles <- lapply(til, incircle)
-    x0 <- unlist(lapply(incircles, function(z) { z$x }))
-    y0 <- unlist(lapply(incircles, function(z) { z$y }))
-    ra <- unlist(lapply(incircles, function(z) { z$r }))
-    do.call.matched("text.default",
+    x0 <- sapply(incircles, getElement, name="x")
+    y0 <- sapply(incircles, getElement, name="y")
+    ra <- sapply(incircles, getElement, name="r")
+    do.call.matched(text.default,
                     resolve.defaults(list(x=x0 + dx * ra, y = y0 + dy * ra),
                                      list(labels=labels),
                                      textargs, 
-                                     list(...)))
+                                     list(...)),
+                    funargs=graphicsPars("text"))
   }
   return(invisible(NULL))
 }
@@ -120,19 +122,24 @@ rectquadrat.breaks <- function(xr, yr, nx=5, ny=nx, xbreaks=NULL, ybreaks=NULL) 
 rectquadrat.countEngine <- function(x, y, xbreaks, ybreaks, weights) {
   if(length(x) > 0) {
     # check validity of breaks
-    if(min(x) < min(xbreaks) || max(x) > max(xbreaks))
+    if(!all(inside.range(range(x), range(xbreaks))))
       stop("xbreaks do not span the actual range of x coordinates in data")
-    if(min(y) < min(ybreaks) || max(y) > max(ybreaks))
+    if(!all(inside.range(range(y), range(ybreaks))))
       stop("ybreaks do not span the actual range of y coordinates in data")
   }
-  xg <- cut(x, breaks=xbreaks, include.lowest=TRUE)
-  yg <- cut(y, breaks=ybreaks, include.lowest=TRUE)
-  if(missing(weights)) 
+  # WAS: 
+  # xg <- cut(x, breaks=xbreaks, include.lowest=TRUE)
+  # yg <- cut(y, breaks=ybreaks, include.lowest=TRUE)
+  xg <- fastFindInterval(x, xbreaks, labels=TRUE)
+  yg <- fastFindInterval(y, ybreaks, labels=TRUE)
+  if(missing(weights)) {
     sumz <- table(list(y=yg, x=xg))
-  else {
-    sumz <- tapply(weights, list(y=yg, x=xg), sum)
-    if(any(nbg <- is.na(sumz)))
-      sumz[nbg] <- 0
+  } else {
+    # was: 
+    # sumz <- tapply(weights, list(y=yg, x=xg), sum)
+    # if(any(nbg <- is.na(sumz)))
+    #  sumz[nbg] <- 0
+    sumz <- tapplysum(weights, list(y=yg, x=xg), do.names=TRUE)
   }
   # reverse order of y 
   sumz <- sumz[rev(seq_len(nrow(sumz))), ]

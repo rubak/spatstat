@@ -1,0 +1,369 @@
+Change log from 1.56-0 to 1.56-1
+================================
+
+15 june 2018
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Initialised as version 1.56-0.001
+	Nicknamed 'This Face Intentionally Left Blank'
+
+20 june 2018
+
+   bugtable.R
+	Bug fix!!
+	(crashed if there were no bug reports!)
+	
+   DESCRIPTION
+	date-stamped
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+27 june 2018
+
+   density.lpp.Rd
+	Updated bibliography.
+
+   ppmclass.R
+	Buglet fix in PPMmodelmatrix.
+	
+   tests/project.ppm.R
+   tests/prediction.R
+	More tests.
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.002
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+01 july 2018
+
+   lpp.R
+	Bug fix and improvement in summary.lpp
+	Bug fix in cut.lpp
+	
+   tests/lppstuff.R
+	More tests
+	Bug fix in test
+	
+   tests/contrib.R [New file]
+   	Tests of user-contributed code
+
+   as.im.R
+   as.im.Rd
+	New method 'as.im.expression'
+	
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.003
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+02 july 2018
+
+   linim.R
+	Bug fix in integral.linim
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.004
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/threedee.R
+   tests/triplets.R
+	More tests.
+	
+   Tstat.R
+	Bug fix.
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.005
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   wingeom.R
+	Bug fix in intersect.owin
+
+   wingeom.R
+   intersect.owin.Rd
+	Changed default: fatal=FALSE
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.006
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 july 2018
+
+   tests/sparse3Darrays.R
+   tests/quadschemes.R
+   tests/randoms.R
+   tests/tessera.R
+	More tests
+
+   sparse3Darray.R
+	Bug fix in [<-.sparse3Darray
+
+   tess.R
+	Bug fix in plot.tess
+
+   tess.R
+   affine.tess.Rd
+	New method flipxy.tess
+	
+   quadclass.R
+   summary.quad.R
+   logistic.R
+	Tweaks to printing of quadschemes.
+	
+   DESCRIPTION
+   NEWS
+	Depends on spatstat.utils 1.9-0
+	Version 1.56-0.007
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/Kfuns.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.008
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   pcf.R
+	Bug fix in pcf.ppp
+ 
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.009
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+11 july 2018
+
+   pointsonlines.R
+   pointsOnLines.Rd
+       The result now has an attribute named "map"
+       which maps each point to its parent line segment.
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.010
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 july 2018
+
+   tests/density.R
+   tests/envelopes.R
+	More tests.
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.011
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/lppstuff.R
+   tests/quadschemes.R
+	More tests
+
+   panel.contour.Rd
+   pairs.im.Rd
+	Tweaked examples.
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.012
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 jul 2018
+
+   tests/testparres.R
+   tests/Kfuns.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.013
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 jul 2018
+
+   tests/prediction.R
+   tests/layered.R [New file]
+	More code blocks tested.
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.014
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+16 jul 2018
+
+   tests/quadschemes.R
+	More tests for logistic quadschemes.
+
+   window.R
+	Allow diff(xrange) = 0 and diff(yrange) = 0.
+	
+   yardstick.Rd
+   plot.yardstick.Rd
+   plot.onearrow.Rd
+   plot.textstring.Rd
+	More examples.
+
+   tests/tessera.R
+	More tests for quantess()
+
+18 jul 2018
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.015
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+21 jul 2018
+
+   compileK.R
+   fv.R
+   quadclass.R
+	Bug fixes
+	
+   tests/cdf.test.R
+   tests/disconnected.R
+   tests/hypotests.R [New file]
+   tests/kppm.R
+   tests/lppstuff.R
+   tests/nndist.R
+   tests/rmhExpand.R
+	More tests
+	
+   rmhmodel.default.Rd
+   rmhstart.Rd
+   spatialcdf.Rd
+	More examples
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.016
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+22 july 2018
+
+   tests/polygons.R
+   tests/segments.R
+   tests/leverinf.R
+	More tests invoking C code blocks.
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.017
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   sdr.R
+   sdr.Rd
+	sdr is now generic with a method for ppp
+	
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.018
+
+------------- passed R-3.5.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
++++++++++++++ installed R-3.5.1        +++++++++++++++
+
+24 july 2018
+
+   src/spasumsymout.h
+	Bug fix
+
+   DESCRIPTION
+   NEWS
+	Version 1.56-0.019
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+>>>>>>> passed R-3.5.1 CMD check --use-valgrind <<<<<<<
+
+25 July 2018
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname: "Apotropaic"
+	Version 1.56-0.020
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+27 July 2018
+
+   updates.Rnw
+   bugfixes.Rnw [New file]
+   	Bug reports are now in a separate vignette.
+	    
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname: "Invisible Friend"
+	Version 1.56-1
+	
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+............. passed 'make bookcheck'  ...............
+............. submitted to CRAN        ...............
+

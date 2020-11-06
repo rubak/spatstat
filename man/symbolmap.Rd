@@ -73,7 +73,8 @@ symbolmap(\dots, range = NULL, inputs = NULL)
   \describe{
     \item{shape}{
       The shape of the symbol: currently
-      either \code{"circles"} or \code{"squares"} or \code{NA}.
+      either \code{"circles"}, \code{"squares"}, \code{"arrows"}
+      or \code{NA}.
       This parameter takes precedence over \code{pch}.
     }
     \item{size}{
@@ -86,6 +87,9 @@ symbolmap(\dots, range = NULL, inputs = NULL)
     }
     \item{cex}{
       Graphics character expansion factor.
+    }
+    \item{cols}{
+      Colour of plotting characters.
     }
     \item{fg,bg}{
       Colour of foreground (or symbol border) and background
@@ -100,17 +104,28 @@ symbolmap(\dots, range = NULL, inputs = NULL)
       which improves its visibility against the background.
       Default is \code{FALSE}.
     }
+    \item{direction,headlength,headangle,arrowtype}{
+      Numeric parameters of arrow symbols, applicable when
+      \code{shape="arrows"}. Here \code{direction} is the direction
+      of the arrow in degrees anticlockwise from the \eqn{x} axis;
+      \code{headlength} is the length of the head of the arrow in
+      coordinate units; \code{headangle} is the angle subtended by the point
+      of the arrow; and \code{arrowtype} is an integer code
+      specifying which ends of the shaft have arrowheads
+      attached (0 means no arrowheads, 1 is an arrowhead at the start
+      of the shaft, 2 is an arrowhead at the end of the shaft, and
+      3 is arrowheads at both ends). 
+    }
   }
+  A vector of colour values is also acceptable for the arguments
+  \code{col,cols,fg,bg} if
+  \code{range} is specified.
 }
 \value{
   An object of class \code{"symbolmap"}.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak.
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{plot.symbolmap}} to plot the symbol map itself.
@@ -129,8 +144,9 @@ symbolmap(\dots, range = NULL, inputs = NULL)
                     size=function(x) sqrt(ifelse(x > 0, x/pi, -x)),
                     bg = function(x) ifelse(abs(x) < 1, "red", "black"))
 
-  colmap <- colourmap(terrain.colors(20), range=c(0,10))
-  g3 <- symbolmap(pch=21, fg=colmap, range=c(0,10))
+  colmap <- colourmap(topo.colors(20), range=c(0,10))
+  g3 <- symbolmap(pch=21, bg=colmap, range=c(0,10))
+  plot(g3)
 }
 \keyword{spatial}
 \keyword{hplot}

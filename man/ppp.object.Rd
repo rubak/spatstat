@@ -39,18 +39,18 @@
 
   Standard point pattern datasets provided with the package
   include
-  \code{\link{amacrine}},
-  \code{\link{betacells}},
-  \code{\link{bramblecanes}},
-  \code{\link{cells}},
-  \code{\link{demopat}},
-  \code{\link{ganglia}},
-  \code{\link{lansing}},
-  \code{\link{longleaf}},
-  \code{\link{nztrees}},
-  \code{\link{redwood}},
-  \code{\link{simdat}} and
-  \code{\link{swedishpines}}.
+  \code{\link[spatstat.data]{amacrine}},
+  \code{\link[spatstat.data]{betacells}},
+  \code{\link[spatstat.data]{bramblecanes}},
+  \code{\link[spatstat.data]{cells}},
+  \code{\link[spatstat.data]{demopat}},
+  \code{\link[spatstat.data]{ganglia}},
+  \code{\link[spatstat.data]{lansing}},
+  \code{\link[spatstat.data]{longleaf}},
+  \code{\link[spatstat.data]{nztrees}},
+  \code{\link[spatstat.data]{redwood}},
+  \code{\link[spatstat.data]{simdat}} and
+  \code{\link[spatstat.data]{swedishpines}}.
   
   Point patterns may be scanned from your own data files by
   \code{\link{scanpp}} or by using \code{\link{read.table}} and
@@ -111,6 +111,7 @@
   mmleft <- mm[ , lu]
   \dontrun{plot(mmleft)}
   \dontrun{
+  if(FALSE) {
   # input data from file
   qq <- scanpp("my.table", unit.square())
 
@@ -119,12 +120,13 @@
   X <- as.ppp(locator(10), unit.square())
   plot(X)
   }
+ }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{attribute}

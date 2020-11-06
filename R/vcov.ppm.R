@@ -3,7 +3,7 @@
 ## and Fisher information matrix
 ## for ppm objects
 ##
-##  $Revision: 1.114 $  $Date: 2015/09/30 04:36:48 $
+##  $Revision: 1.133 $  $Date: 2020/01/30 05:13:43 $
 ##
 
 vcov.ppm <- local({
@@ -13,6 +13,7 @@ vcov.ppm <- function(object, ..., what="vcov", verbose=TRUE,
                      gam.action=c("warn", "fatal", "silent"),
                      matrix.action=c("warn", "fatal", "silent"),
                      logi.action=c("warn", "fatal", "silent"),
+                     nacoef.action=c("warn", "fatal", "silent"),
                      hessian=FALSE) {
   verifyclass(object, "ppm")
   argh <- list(...)
@@ -20,6 +21,16 @@ vcov.ppm <- function(object, ..., what="vcov", verbose=TRUE,
   gam.action <- match.arg(gam.action)
   matrix.action <- match.arg(matrix.action)
   logi.action <- match.arg(logi.action)
+  nacoef.action <- match.arg(nacoef.action)
+
+  if(!all(is.finite(coef(object)))) {
+    gripe <- "Cannot compute variance; model is not valid"
+    switch(nacoef.action,
+           fatal = stop(gripe, call.=FALSE),
+           warn = warning(gripe, call.=FALSE),
+           silent = {})
+    return(NULL)
+  }
 
   if(missing(fine) && ("A1dummy" %in% names(argh))) {
     message("Argument 'A1dummy' has been replaced by 'fine'")
@@ -49,7 +60,8 @@ vcov.ppm <- function(object, ..., what="vcov", verbose=TRUE,
   }
   
   ## nonstandard calculations (hack) 
-  generic.triggers <- c("A1", "new.coef", "matwt", "saveterms")
+  generic.triggers <- c("A1", "new.coef",
+                        "modmat", "matwt", "saveterms", "sparseOK")
   nonstandard <- any(generic.triggers %in% names(argh)) || fine
 #  saveterms <- identical(resolve.1.default("saveterms", argh), TRUE)
   
@@ -84,8 +96,8 @@ vcov.ppm <- function(object, ..., what="vcov", verbose=TRUE,
              silent={})
     }
     ## ++++ perform main calculation ++++
-    if((is.poisson(object) || hessian) && object$method != "logi") {
-      ## Poisson model, or Hessian of Gibbs model
+    if((is.poisson(object) || (hessian && what!="internals")) && object$method != "logi") {
+      ## Poisson model, or Hessian of Gibbs model without internals
       results <- vcalcPois(object, ..., what=what,
                            matrix.action=matrix.action,
                            verbose=verbose, fisher=fisher)
@@ -93,7 +105,8 @@ vcov.ppm <- function(object, ..., what="vcov", verbose=TRUE,
       ## Gibbs model 
       results <- vcalcGibbs(object, ..., what=what,
                             fine=fine,
-                            matrix.action=matrix.action)
+                            matrix.action=matrix.action,
+                            hessian = hessian)
     }
     varcov <- results$varcov
     fisher <- results$fisher
@@ -128,10 +141,13 @@ vcov.ppm <- function(object, ..., what="vcov", verbose=TRUE,
 vcalcPois <- function(object, ...,
                       what = c("vcov", "corr", "fisher", "internals", "all"),
                       matrix.action=c("warn", "fatal", "silent"),
+                      nacoef.action=c("warn", "fatal", "silent"),
                       method=c("C", "interpreted"),
                       verbose=TRUE,
-                      fisher=NULL, 
-                      matwt=NULL, new.coef=NULL,
+                      fisher=NULL,
+                      modmat=model.matrix(object), 
+                      matwt=NULL, # weights on rows of model matrix
+                      new.coef=NULL, dropcoef=FALSE, 
                       saveterms=FALSE) {
   ## variance-covariance matrix of Poisson model,
   ## or Hessian of Gibbs model
@@ -142,6 +158,15 @@ vcalcPois <- function(object, ...,
     stopifnot(is.numeric(matwt) && is.vector(matwt))
   internals <- NULL
   nonstandard <- reweighting || !is.null(new.coef) || saveterms
+  ## detect invalid model
+  if(!all(is.finite(coef(object)))) {
+    gripe<-"Cannot compute variance; some coefficients are NA, NaN or infinite"
+    switch(nacoef.action,
+           fatal=stop(gripe, call.=FALSE),
+           warn=warning(gripe, call.=FALSE),
+           silent={})
+    return(NULL)
+  }
   ## compute Fisher information if not known
   if(is.null(fisher) || nonstandard) {
     gf <- getglmfit(object)
@@ -156,8 +181,9 @@ vcalcPois <- function(object, ...,
     }
     ## compute fitted intensity and sufficient statistic
     ltype <- if(is.poisson(object)) "trend" else "lambda"
-    lambda <- fitted(object, type=ltype, new.coef=new.coef, check=FALSE)
-    mom <- model.matrix(object)
+    lambda <- fitted(object, type=ltype, new.coef=new.coef,
+                     dropcoef=dropcoef, check=FALSE)
+    mom <- modmat 
     nmom <- nrow(mom)
     Q <- quad.ppm(object)
     wt <- w.quad(Q)
@@ -199,7 +225,7 @@ vcalcPois <- function(object, ...,
                for(i in 1:nrow(mom)) {
                  ro <- mom[i, ]
                  v <- outer(ro, ro, "*") * lambda[i] * wt[i]
-                 if(!any(is.na(v)))
+                 if(!anyNA(v))
                    fisher <- fisher + v
                }
                momnames <- dimnames(mom)[[2]]
@@ -212,9 +238,9 @@ vcalcPois <- function(object, ...,
                  ldu <- lambda[i] * wt[i]
                  v <- outer(ro, ro, "*") * ldu
                  v0 <- outer(ro0, ro0, "*") * matwt[i] * ldu
-                 if(!any(is.na(v)))
+                 if(!anyNA(v))
                    fisher <- fisher + v
-                 if(!any(is.na(v0)))
+                 if(!anyNA(v0))
                    gradient <- gradient + v0
                }
                momnames <- dimnames(mom)[[2]]
@@ -227,7 +253,7 @@ vcalcPois <- function(object, ...,
   if(what %in% c("all", "internals")) {
     ## Internals needed
     if(is.null(internals))
-      internals <- list(suff = model.matrix(object))
+      internals <- list(suff = modmat)
     internals$fisher <- fisher
     if(reweighting)
       internals$gradient <- gradient
@@ -281,7 +307,7 @@ vcalcGibbs <- function(fit, ...,
   
   ## decide whether to use the generic algorithm
   generic.triggers <- c("A1", "hessian",
-                        "new.coef", "matwt", "saveterms")
+                        "new.coef", "matwt", "saveterms", "sparseOK")
   
   use.generic <-
     generic || fine ||
@@ -344,16 +370,22 @@ vcalcGibbsGeneral <- function(model,
                          ...,
                          spill = FALSE,
                          spill.vc = FALSE,
+                         na.action=c("warn", "fatal", "silent"),
                          matrix.action=c("warn", "fatal", "silent"),
                          logi.action=c("warn", "fatal", "silent"),
                          algorithm=c("vectorclip", "vector", "basic"),
                          A1 = NULL,
                          fine = FALSE,
                          hessian = FALSE,
-                         matwt = NULL, new.coef = NULL,
+                         modmat = model.matrix(model), 
+                         matwt = NULL,
+                         new.coef = NULL, dropcoef=FALSE,
                          saveterms = FALSE,
-                         parallel = TRUE
+                         parallel = TRUE,
+                         sparseOK = FALSE
                          ) {
+  modmat.given <- !missing(modmat)
+  na.action <- match.arg(na.action)
   matrix.action <- match.arg(matrix.action)
   logi.action <- match.arg(logi.action)
   algorithm <- match.arg(algorithm)
@@ -365,14 +397,21 @@ vcalcGibbsGeneral <- function(model,
   asked.parallel <- !missing(parallel)
   
   old.coef <- coef(model)
-  use.coef <- if(!is.null(new.coef)) new.coef else old.coef
-  p <- length(old.coef)
+  use.coef <- adaptcoef(new.coef, old.coef, drop=dropcoef)
+  if(modmat.given) {
+    p <- ncol(modmat)
+    pnames <- colnames(modmat)
+  } else {
+    p <- length(old.coef)
+    pnames <- names(old.coef)
+  }
+  
   if(p == 0) {
     ## this probably can't happen
     if(!spill) return(matrix(, 0, 0)) else return(list())
   }
-  pnames <- names(old.coef)
   dnames <- list(pnames, pnames)
+  # (may be revised later)
   
   internals <- list()
   ##
@@ -395,17 +434,40 @@ vcalcGibbsGeneral <- function(model,
   ## sum/integral in the pseudolikelihood
   ## (e.g. some points may be excluded by the border correction)
   okall <- getglmsubset(model)
-  ## data only:
-  ok <- okall[Z]
-  nX <- npoints(X)
   ## conditional intensity lambda(X[i] | X) = lambda(X[i] | X[-i])
   ## data and dummy:
-  lamall <- fitted(model, check = FALSE, new.coef = new.coef)
+  lamall <- fitted(model, check = FALSE, new.coef = new.coef, dropcoef=dropcoef)
+  if(anyNA(lamall)) {
+    whinge <- "Some values of the fitted conditional intensity are NA"
+    switch(na.action,
+           fatal = {
+             stop(whinge, call.=FALSE)
+           },
+           warn = {
+             warning(whinge, call.=FALSE)
+             okall <- okall & !is.na(lamall)
+           },
+           silent = {
+             okall <- okall & !is.na(lamall)
+           })
+  }
   ## data only:
   lam <- lamall[Z]
+  ok <- okall[Z]
+  nX <- npoints(X)
   ## sufficient statistic h(X[i] | X) = h(X[i] | X[-i])
   ## data and dummy:
-  mall <- model.matrix(model)
+  mall <- modmat
+  if(ncol(mall) != length(pnames)) {
+    if(!dropcoef)
+      stop(paste("Internal error: dimension of sufficient statistic = ",
+                 ncol(mall), "does not match length of coefficient vector =",
+                 length(pnames)),
+           call.=FALSE)
+    p <- length(pnames)
+    pnames <- colnames(mall)
+    dnames <- list(pnames, pnames)
+  }
   ## save
   if(saveterms) 
     internals <- append(internals,
@@ -475,7 +537,9 @@ vcalcGibbsGeneral <- function(model,
     if(parallel) {
       ## compute second order difference
       ##  ddS[i,j,] = h(X[i] | X) - h(X[i] | X[-j])
-      ddS <- deltasuffstat(model, restrict=TRUE, force=FALSE)
+      ddS <- deltasuffstat(model, restrict="pairs",
+      	                   force=FALSE, sparseOK=sparseOK)
+      sparse <- inherits(ddS, "sparse3Darray")
       if(is.null(ddS)) {
         if(asked.parallel)
           warning("parallel option not available - reverting to loop")
@@ -488,33 +552,67 @@ vcalcGibbsGeneral <- function(model,
         ## outer(ddS[,i,j], ddS[,j,i])
         ddSok <- ddS[ , ok, ok, drop=FALSE]
         A3 <- sumsymouter(ddSok)
-        ## mom.array[ ,i,j] = h(X[i] | X)
-        mom.array <- array(t(m), dim=c(p, nX, nX))
-        ## momdel[ ,i,j] = h(X[i] | X[-j])
-        momdel <- mom.array - ddS
-        ## lamdel[i,j] = lambda(X[i] | X[-j])
-        lamdel <-
-          matrix(lam, nX, nX) * exp(tensor::tensor(-use.coef, ddS, 1, 1))
-        ##  pairweight[i,j] = lamdel[i,j]/lambda[i] - 1 
-        pairweight <- lamdel / lam - 1
+        ## compute pairweight and other arrays
+        if(sparse) {
+          ## Entries are only required for pairs i,j which interact.
+          ## mom.array[ ,i,j] = h(X[i] | X)
+          mom.array <- mapSparseEntries(ddS, margin=2, values=m,
+                                        conform=TRUE, across=1)
+          ## momdel[ ,i,j] = h(X[i] | X[-j])
+          momdel <- mom.array - ddS
+          ## pairweight[i,j] = lambda(X[i] | X[-j] )/lambda( X[i] | X ) - 1
+          pairweight <- expm1(tensor1x1(-use.coef, ddS))
+        } else {
+          ## mom.array[ ,i,j] = h(X[i] | X)
+          mom.array <- array(t(m), dim=c(p, nX, nX))
+          ## momdel[ ,i,j] = h(X[i] | X[-j])
+          momdel <- mom.array - ddS
+          ## lamdel[i,j] = lambda(X[i] | X[-j])
+          lamdel <-
+            matrix(lam, nX, nX) * exp(tensor::tensor(-use.coef, ddS, 1, 1))
+          ##  pairweight[i,j] = lamdel[i,j]/lambda[i] - 1 
+          pairweight <- lamdel / lam - 1
+        }
         ## now compute sum_{i,j} for i != j
         ## pairweight[i,j] * outer(momdel[,i,j], momdel[,j,i])
         ## for data points that contributed to the pseudolikelihood
         momdelok <- momdel[ , ok, ok, drop=FALSE]
-        A2 <- sumsymouter(momdelok, w=pairweight[ok, ok])
+        pwok <- pairweight[ok, ok]
+        if(anyNA(momdelok) || anyNA(pwok))
+          stop("Unable to compute variance: NA values present", call.=FALSE)
+        A2 <- sumsymouter(momdelok, w=pwok)
+        dimnames(A2) <- dimnames(A3) <- dnames
         if(logi){
-          ## lam.array[ ,i,j] = lambda(X[i] | X)
-          lam.array <- array(lam, c(nX,nX,p))
-          lam.array <- aperm(lam.array, c(3,1,2))
-          ## lamdel.array[,i,j] = lambda(X[i] | X[-j])
-          lamdel.array <- array(lamdel, c(nX,nX,p))
-          lamdel.array <- aperm(lamdel.array, c(3,1,2))
-          momdellogi <- rho/(lamdel.array+rho)*momdel
+          if(!sparse) {
+            ## lam.array[ ,i,j] = lambda(X[i] | X)
+            lam.array <- array(lam, c(nX,nX,p))
+            lam.array <- aperm(lam.array, c(3,1,2))
+            ## lamdel.array[,i,j] = lambda(X[i] | X[-j])
+            lamdel.array <- array(lamdel, c(nX,nX,p))
+            lamdel.array <- aperm(lamdel.array, c(3,1,2))
+            momdellogi <- rho/(lamdel.array+rho)*momdel
+            ddSlogi <- rho/(lam.array+rho)*mom.array - momdellogi
+          } else {
+            ## lam.array[ ,i,j] = lambda(X[i] | X)
+            lam.array <- mapSparseEntries(ddS, margin=2, lam,
+                                          conform=TRUE, across=1)
+            ## lamdel.array[,i,j] = lambda(X[i] | X[-j])
+            pairweight.array <- aperm(as.sparse3Darray(pairweight), c(3,1,2))
+            lamdel.array <- pairweight.array * lam.array + lam.array
+            lamdel.logi <- applySparseEntries(lamdel.array,
+                                              function(y,rho) { rho/(rho+y) },
+                                              rho=rho)
+            lam.logi <- applySparseEntries(lam.array,
+                                          function(y,rho) { rho/(rho+y) },
+                                          rho=rho)
+            momdellogi <- momdel * lamdel.logi
+            ddSlogi <-    mom.array * lam.logi - momdellogi
+          }
           momdellogiok <- momdellogi[ , ok, ok, drop=FALSE]
-          A2log <- sumsymouter(momdellogiok, w=pairweight[ok, ok])
-          ddSlogi <- rho/(lam.array+rho)*mom.array - momdellogi
+          A2log <- sumsymouter(momdellogiok, w=pwok)
           ddSlogiok <- ddSlogi[ , ok, ok, drop=FALSE]
           A3log <- sumsymouter(ddSlogiok)
+          dimnames(A2log) <- dimnames(A3log) <- dnames
         }
       }
     }
@@ -733,7 +831,7 @@ vcalcGibbsGeneral <- function(model,
                      nX.i <- length(J2i)
                      ## index of XJi in X.i
                      J.i <- match(Ji, J2i)
-                     if(any(is.na(J.i)))
+                     if(anyNA(J.i))
                        stop("Internal error: Ji not a subset of J2i")
                      ## equalpairs matrix
                      E.i <- cbind(J.i, seq_len(nJi))
@@ -824,6 +922,8 @@ vcalcGibbsGeneral <- function(model,
         if(logi)
            list(A1log=A1log, A2log=A2log, A3log=A3log, Slog=Slog) else NULL,
         if(reweighting) list(gradient=gradient) else NULL,
+        list(hessian = if(reweighting) gradient else if(logi) Slog else A1,
+             fisher = Sigma),
         if(saveterms) list(lamdel=lamdel, momdel=momdel) else NULL)
     ## return internal data if no further calculation needed
     if(!spill.vc && !logi)
@@ -904,7 +1004,8 @@ vcalcGibbsGeneral <- function(model,
            model2 <- do.call(ppm, args = arglist)
 
            ## New cif
-           lamall2 <- fitted(model2, check = FALSE, new.coef = new.coef)
+           lamall2 <- fitted(model2, check = FALSE,
+                             new.coef = new.coef, dropcoef=dropcoef)
            ## New model matrix
            mall2 <- model.matrix(model2)
            okall2 <- getglmsubset(model2)
@@ -940,7 +1041,8 @@ vcalcGibbsGeneral <- function(model,
            ## finally calculation of Sigma2
            wlam <- mdum * rho*lamdum/(lamdum+rho)
            wlam2 <- mdum2 * rho*lamdum2/(lamdum2+rho)
-           Sigma2log <- t(wlam-wlam2)%*%(wlam-wlam2)/(2*rho*rho)
+           ## Sigma2log <- t(wlam-wlam2)%*%(wlam-wlam2)/(2*rho*rho)
+           Sigma2log <- crossprod(wlam-wlam2)/(2*rho*rho)
          },
          stop("sorry - unrecognized dummy process in logistic fit")
          )
@@ -1315,7 +1417,8 @@ vcalcGibbsSpecial <- function(fit, ...,
            # finally calculation of Sigma2
            wlam <- mdum * rho*lamdum/(lamdum+rho)
            wlam2 <- mdum2 * rho*lamdum2/(lamdum2+rho)
-           Sigma2log <- t(wlam-wlam2)%*%(wlam-wlam2)/(2*rho*rho)
+           ## Sigma2log <- t(wlam-wlam2)%*%(wlam-wlam2)/(2*rho*rho)
+           Sigma2log <- crossprod(wlam-wlam2)/(2*rho*rho)
          },
          stop("sorry - unrecognized dummy process in logistic fit")
          )

@@ -77,16 +77,11 @@ spatialcdf(Z, weights = NULL, normalise = FALSE, ..., W = NULL, Zname = NULL)
 \value{
   A cumulative distribution function object
   belonging to the classes \code{"spatialcdf"},
-  \code{"ewcdf"}, \code{"ecdf"} and \code{"stepfun"}.
+  \code{"ewcdf"}, \code{"ecdf"} (only if \code{normalise=TRUE})
+  and \code{"stepfun"}.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{ewcdf}},
@@ -100,6 +95,7 @@ spatialcdf(Z, weights = NULL, normalise = FALSE, ..., W = NULL, Zname = NULL)
      plot(A <- spatialcdf(grad, fit))
      A(0.1)
   })
+  plot(spatialcdf("x", W=letterR))
 }
 \keyword{spatial}
 \keyword{nonparametric}

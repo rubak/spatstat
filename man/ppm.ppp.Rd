@@ -1,6 +1,9 @@
 \name{ppm.ppp}
 \alias{ppm.ppp}
 \alias{ppm.quad}
+\concept{point process model}
+\concept{Poisson point process}
+\concept{Gibbs point process}
 \title{
   Fit Point Process Model to Point Pattern Data
 }
@@ -14,6 +17,7 @@
        data=NULL,
        covfunargs = list(),
        subset,
+       clipwin,
        correction="border",
        rbord=reach(interaction),
        use.gam=FALSE,
@@ -36,6 +40,7 @@
        data=NULL,
        covfunargs = list(),
        subset,
+       clipwin,
        correction="border",
        rbord=reach(interaction),
        use.gam=FALSE,
@@ -67,7 +72,8 @@
   \item{interaction}{
     An object of class \code{"interact"}
     describing the point process interaction
-    structure, or \code{NULL} indicating that a Poisson process (stationary
+    structure, or a function that makes such an object,
+    or \code{NULL} indicating that a Poisson process (stationary
     or nonstationary) should be fitted.
   }
   \item{\dots}{Ignored.}
@@ -78,10 +84,21 @@
     functions, windows, tessellations or single numbers. See Details.
   }
   \item{subset}{
-    Optional. An expression (typically involving the Cartesian coordinates
-    \code{x} and \code{y} or the names of entries in \code{data})
+    Optional.
+    An expression (which may involve the names of the
+    Cartesian coordinates \code{x} and \code{y}
+    and the names of entries in \code{data})
     defining a subset of the spatial domain,
-    to which the model-fitting should be restricted.
+    to which the likelihood or pseudolikelihood should be restricted.
+    See Details.
+    The result of evaluating the expression should be either a logical
+    vector, or a window (object of class \code{"owin"})
+    or a logical-valued pixel image (object of class \code{"im"}).
+  }
+  \item{clipwin}{
+    Optional. A spatial window (object of class \code{"owin"})
+    to which data will be restricted, before model-fitting
+    is performed. See Details.
   }
   \item{covfunargs}{
     A named list containing the values of any additional arguments
@@ -230,27 +247,7 @@
       class \code{"interact"} which is initialised in a very similar way to the
       usage of family objects in \code{\link{glm}} and \code{gam}.
       The models currently available are:
-      \code{\link{Poisson}},
-      \code{\link{AreaInter}},
-      \code{\link{BadGey}},
-      \code{\link{Concom}},
-      \code{\link{DiggleGatesStibbard}},
-      \code{\link{DiggleGratton}},
-      \code{\link{Fiksel}},
-      \code{\link{Geyer}},
-      \code{\link{Hardcore}},
-      \code{\link{LennardJones}},
-      \code{\link{MultiStrauss}},
-      \code{\link{MultiStraussHard}},
-      \code{\link{OrdThresh}}, 
-      \code{\link{Ord}},
-      \code{\link{Pairwise}},
-      \code{\link{PairPiece}},
-      \code{\link{Saturated}},
-      \code{\link{SatPiece}},
-      \code{\link{Softcore}},
-      \code{\link{Strauss}} and 
-      \code{\link{StraussHard}}.
+      \GibbsInteractionsList.
       See the examples below.
       It is also possible to combine several interactions
       using \code{\link{Hybrid}}.
@@ -504,6 +501,24 @@
       there is also Ripley's isotropic correction,
       identified by \code{correction="isotropic"} or \code{"Ripley"}.
     }
+    \item{Subsetting}{
+      The arguments \code{subset} and \code{clipwin} specify that the
+      model should be fitted to a restricted subset of the available
+      data. These arguments are equivalent for Poisson point process models,
+      but different for Gibbs models.
+      If \code{clipwin} is specified, then all the available data will
+      be restricted to this spatial region, and data outside this region
+      will be discarded, before the model is fitted.
+      If \code{subset} is specified, then no data are deleted, but
+      the domain of integration of the likelihood or pseudolikelihood
+      is restricted to the \code{subset}.
+      For Poisson models, these two arguments have the same effect;
+      but for a Gibbs model, 
+      interactions between points inside and outside the \code{subset}
+      are taken into account, while
+      interactions between points inside and outside the \code{clipwin}
+      are ignored.
+    }
   }
 }
 \section{Interaction parameters}{
@@ -541,8 +556,20 @@
 
   To determine the irregular parameters, there are several
   practical techniques, but no general statistical theory available.
-  One useful technique is maximum profile pseudolikelihood, which
-  is implemented in the command \code{\link{profilepl}}.   
+  Useful techniques include maximum profile pseudolikelihood, which
+  is implemented in the command \code{\link{profilepl}},
+  and Newton-Raphson maximisation, implemented in the
+  experimental command \code{\link{ippm}}. 
+
+  Some irregular parameters can be estimated directly from data:
+  the hard-core radius in the model \code{\link{Hardcore}}
+  and the matrix of hard-core radii in \code{\link{MultiHard}} can be
+  estimated easily from data. In these cases, \code{ppm} allows the user
+  to specify the interaction without giving
+  the value of the irregular parameter. The user can give the
+  hard core interaction as \code{interaction=Hardcore()}
+  or even \code{interaction=Hardcore}, and 
+  the hard core radius will then be estimated from the data.
 }
 \references{
   Baddeley, A., Coeurjolly, J.-F., Rubak, E. and Waagepetersen, R. (2014)
@@ -586,7 +613,7 @@
   Rajala T. (2014)
   \emph{A note on Bayesian logistic regression for spatial exponential family
   Gibbs point processes},
-  Preprint on ArXiv.org. \url{http://arxiv.org/abs/1411.0539}
+  Preprint on ArXiv.org. \url{https://arxiv.org/abs/1411.0539}
 
 }
 
@@ -597,35 +624,68 @@
   \code{\link{ppp}} and \code{\link{quadscheme}}
   for constructing data.
   
-  Interactions: 
-      \code{\link{Poisson}},
-      \code{\link{AreaInter}},
-      \code{\link{BadGey}},
-      \code{\link{DiggleGatesStibbard}},
-      \code{\link{DiggleGratton}},
-      \code{\link{Geyer}},
-      \code{\link{Fiksel}},
-      \code{\link{Hardcore}},
-      \code{\link{Hybrid}},
-      \code{\link{LennardJones}},
-      \code{\link{MultiStrauss}},
-      \code{\link{MultiStraussHard}},
-      \code{\link{OrdThresh}}, 
-      \code{\link{Ord}},
-      \code{\link{Pairwise}},
-      \code{\link{PairPiece}},
-      \code{\link{Saturated}},
-      \code{\link{SatPiece}},
-      \code{\link{Softcore}},
-      \code{\link{Strauss}} and 
-      \code{\link{StraussHard}}.
+  Interactions:
+  \GibbsInteractionsList.
 
-      See \code{\link{profilepl}} for advice on
-      fitting nuisance parameters in the interaction,
-      and \code{\link{ippm}} for irregular parameters in the trend.
+  See \code{\link{profilepl}} for advice on
+  fitting nuisance parameters in the interaction,
+  and \code{\link{ippm}} for irregular parameters in the trend.
 
-      See \code{\link{valid.ppm}} and \code{\link{emend.ppm}} for
-      ensuring the fitted model is a valid point process.
+  See \code{\link{valid.ppm}} and \code{\link{emend.ppm}} for
+  ensuring the fitted model is a valid point process.
+}
+\section{Error and Warning Messages}{
+  Some common error messages and warning messages 
+  are listed below, with explanations.
+  \describe{
+    \item{\dQuote{System is computationally singular}}{
+      The Fisher information matrix of the fitted model has a
+      determinant close to zero, so that the matrix cannot be inverted,
+      and the software cannot calculate standard errors or confidence intervals.
+      This error is usually reported when the model is printed,
+      because the \code{print} method calculates standard errors for the
+      fitted parameters. Singularity usually occurs because the spatial
+      coordinates in the original data were very large numbers
+      (e.g. expressed in metres) so that the fitted coefficients were
+      very small numbers. The simple remedy is to
+      \bold{rescale the data}, for example, to convert from metres to
+      kilometres by \code{X <- \link{rescale}(X, 1000)}, then re-fit the
+      model. Singularity can also occur if the covariate values are
+      very large numbers, or if the covariates are approximately
+      collinear.       
+    }
+    \item{\dQuote{Covariate values were NA or undefined at X\%
+	(M out of N) of the quadrature points}}{
+      The covariate data (typically a pixel image) did not provide
+      values of the covariate at some of the spatial locations in the 
+      observation window of the point pattern. This means that the
+      spatial domain of the pixel image does not completely cover the
+      observation window of the point pattern. If the percentage
+      is small, this warning can be ignored - typically it happens
+      because of rounding effects which cause the pixel image
+      to be one-pixel-width narrower than the observation window.
+      However if more than a few percent of covariate values are
+      undefined, it would be prudent to check that the pixel images
+      are correct, and are correctly registered in their spatial relation to
+      the observation window.
+    }
+    \item{\dQuote{Model is unidentifiable}}{
+      It is not possible to estimate all the model parameters
+      from this dataset. The error message gives a further explanation,
+      such as \dQuote{data pattern is empty}.
+      Choose a simpler model, or check the data.
+    }
+    \item{\dQuote{N data points are illegal (zero conditional intensity)}}{
+      In a Gibbs model (i.e. with interaction between
+      points), the conditional intensity may be zero at some spatial
+      locations, indicating that the model forbids the presence of a 
+      point at these locations. However if the conditional intensity is
+      zero \emph{at a data point}, this means that the model is
+      inconsistent with the data. Modify the interaction parameters so
+      that the data point is not illegal (e.g. reduce the value of the
+      hard core radius) or choose a different interaction.
+    }
+  }
 }
 \section{Warnings}{
   The implementation of the Huang-Ogata method is experimental;
@@ -776,11 +836,13 @@ coef(summary(fit1))
  # using the periodic correction.
 
 
-# Compare Maximum Pseudolikelihood and Huang-Ogata fits:
+# Compare Maximum Pseudolikelihood, Huang-Ogata and VB fits:
 \dontrun{ppm(swedishpines, ~1, Strauss(9))}
 
 \dontrun{ppm(swedishpines, ~1, Strauss(9), method="ho")}
 \testonly{ppm(swedishpines, ~1, Strauss(9), method="ho", nd=16, nsim=8)}
+
+ppm(swedishpines, ~1, Strauss(9), method="VBlogi")
 
  # COVARIATES
  #
@@ -826,11 +888,8 @@ ppm(X, ~x + f, covariates=list(f=f), covfunargs=list(a=1/2))
 \testonly{b <- ppm(ama, ~ marks * polynom(x,y,2), Poisson(), nd=16)}
 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{models}

@@ -74,7 +74,7 @@ which can then be fitted to point pattern data.
 
  Strauss, D.J. (1975)
  A model for clustering.
- \emph{Biometrika} \bold{63}, 467--475.
+ \emph{Biometrika} \bold{62}, 467--475.
 }
 \examples{
    Strauss(r=0.1)
@@ -90,11 +90,11 @@ which can then be fitted to point pattern data.
    ppm(cells, ~polynom(x,y,3), Strauss(r=0.07))
    # fit a nonstationary Strauss process with log-cubic polynomial trend
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{models}

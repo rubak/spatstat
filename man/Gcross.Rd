@@ -48,6 +48,7 @@ Gcross(X, i, j, r=NULL, breaks=NULL, \dots, correction=c("rs", "km", "han"))
     Optional. Character string specifying the edge correction(s)
     to be used. Options are \code{"none"}, \code{"rs"}, \code{"km"},
     \code{"hanisch"} and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
   }
 }
 \value{
@@ -125,7 +126,7 @@ Gcross(X, i, j, r=NULL, breaks=NULL, \dots, correction=c("rs", "km", "han"))
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape.
   Biases due to edge effects are
   treated in the same manner as in \code{\link{Gest}}.
@@ -232,14 +233,14 @@ Gcross(X, i, j, r=NULL, breaks=NULL, \dots, correction=c("rs", "km", "han"))
 
     # synthetic example    
     pp <- runifpoispp(30)
-    pp <- pp \%mark\% factor(sample(0:1, pp$n, replace=TRUE))
+    pp <- pp \%mark\% factor(sample(0:1, npoints(pp), replace=TRUE))
     G <- Gcross(pp, "0", "1")   # note: "0" not 0
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

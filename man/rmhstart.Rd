@@ -100,16 +100,14 @@
 \examples{
    # 30 random points
    a <- rmhstart(n.start=30)
+   a
 
    # a particular point pattern
-   data(cells)
    b <- rmhstart(x.start=cells)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{datagen}

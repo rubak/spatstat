@@ -10,8 +10,10 @@
   or at the points of the quadrature scheme used to fit the model.
 }
 \usage{
-  \method{fitted}{ppm}(object, \dots, type="lambda", dataonly=FALSE,
-  new.coef=NULL, leaveoneout=FALSE, drop=FALSE, check=TRUE, repair=TRUE)
+  \method{fitted}{ppm}(object, \dots, type="lambda",
+                       dataonly=FALSE, new.coef=NULL, leaveoneout=FALSE,
+		       drop=FALSE, check=TRUE, repair=TRUE,
+		       ignore.hardcore=FALSE, dropcoef=FALSE)
 }
 \arguments{
   \item{object}{
@@ -22,8 +24,9 @@
   }
   \item{type}{
     String (partially matched) indicating whether the fitted value is the
-    conditional intensity (\code{"lambda"}) or the trend
-    (\code{"trend"}).
+    conditional intensity (\code{"lambda"} or \code{"cif"}) or
+    the first order trend (\code{"trend"})
+    or the logarithm of conditional intensity (\code{"link"}).
   }
   \item{dataonly}{
     Logical. If \code{TRUE}, then values will only be computed
@@ -54,10 +57,19 @@
     Logical value indicating whether to repair the internal format
     of \code{object}, if it is found to be damaged. 
   }
+  \item{ignore.hardcore}{
+    Advanced use only.
+    Logical value specifying whether to compute only the
+    finite part of the interaction potential (effectively removing
+    any hard core interaction terms).
+  }
+  \item{dropcoef}{
+    Internal use only.
+  }
 }
 \value{
-  A vector containing the values of the fitted conditional intensity
-  or (if \code{type="trend"}) the fitted spatial trend.
+  A vector containing the values of the fitted conditional intensity,
+  fitted spatial trend, or logarithm of the fitted conditional intensity.
   
   Entries in this vector correspond to the quadrature points (data or
   dummy points) used to fit the model. The quadrature points can be
@@ -88,7 +100,7 @@
   deleting this point from the data and re-fitting the model to the
   reduced pattern \code{X[-i]}, then predicting the value at
   \code{X[i]}. (Instead of literally performing this calculation,
-  we apply a Taylor approximation using the leverage
+  we apply a Taylor approximation using the influence function
   computed in \code{\link{dfbetas.ppm}}. 
   
   The argument \code{drop} is explained in \code{\link{quad.ppm}}.
@@ -98,7 +110,7 @@
   explanatory variables.
 }
 \references{
-  Baddeley, A., Turner, R., \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005).
+  Baddeley, A., Turner, R., \Moller, J. and Hazelton, M. (2005).
   Residual analysis for spatial point processes (with discussion).
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.
@@ -124,11 +136,8 @@
 
     lambdaX <- fitted(str, leaveoneout=TRUE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{methods}

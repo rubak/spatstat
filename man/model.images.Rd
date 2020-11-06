@@ -1,4 +1,4 @@
-\name{model.images}  %DontDeclareMethods
+\name{model.images}  
 \alias{model.images}
 \alias{model.images.ppm}
 \alias{model.images.dppm}
@@ -22,12 +22,15 @@
 
   \method{model.images}{lppm}(object, L = as.linnet(object), ...)
 
+
   \method{model.images}{slrm}(object, ...)
 }
 \arguments{
   \item{object}{
     The fitted point process model. An object of class \code{"ppm"}
-    or \code{"kppm"} or \code{"lppm"} or \code{"slrm"} or \code{"dppm"}.
+    or \code{"kppm"}
+    or \code{"lppm"} 
+    or \code{"slrm"} or \code{"dppm"}.
   }
   \item{W}{
     A window (object of class \code{"owin"}) in which the
@@ -41,7 +44,7 @@
   }
   \item{\dots}{
     Other arguments (such as \code{na.action}) passed to
-    \code{\link{model.matrix.lm}}.
+    \code{\link[stats:model.matrix]{model.matrix.lm}}.
   }
 }
 \details{
@@ -54,20 +57,23 @@
   function \code{\link{ppm}}) or class \code{"kppm"} (produced by the
   fitting function \code{\link{kppm}})
   or class \code{"dppm"} (produced by the
-  fitting function \code{\link{dppm}}) or class \code{"lppm"} (produced
-  by \code{\link{lppm}}) or class \code{"slrm"} (produced by
-  \code{\link{slrm}}). 
+  fitting function \code{\link{dppm}})
+  or class \code{"lppm"} (produced by \code{\link{lppm}})
+  or class \code{"slrm"} (produced by \code{\link{slrm}}). 
 
   The spatial covariates required by the model-fitting procedure
   are computed at every pixel location in the window \code{W}.
   For \code{lppm} objects, the covariates are computed at every
-  location on the network \code{L}. For \code{slrm} objects, the
+  location on the network \code{L}.
+  For \code{slrm} objects, the
   covariates are computed on the pixels that were used to fit the
   model.
 
   Note that the spatial covariates computed here
-  are not the original covariates that were supplied when fitting the
-  model. Rather, they are the covariates that actually appear in the
+  are not necessarily the original covariates
+  that were supplied when fitting the
+  model. Rather, they are the canonical covariates,
+  the covariates that appear in the
   loglinear representation of the (conditional) intensity
   and in the columns of the design matrix. For example, they might include
   dummy or indicator variables for different levels of a factor,
@@ -86,7 +92,7 @@
     the result is a named list of pixel images (objects of class
     \code{"im"}) containing the values of the spatial covariates.
     The names of the list elements are the names of the covariates
-    determined by \code{\link{model.matrix.lm}}.
+    determined by \code{\link[stats:model.matrix]{model.matrix.lm}}.
     The result is also of class \code{"solist"} so that it can
     be plotted immediately.
     \item 
@@ -96,7 +102,7 @@
     Each column is a named list of pixel images (objects of class
     \code{"im"}) containing the values of the spatial covariates.
     The row names of the hyperframe are the names of the covariates
-    determined by \code{\link{model.matrix.lm}}.
+    determined by \code{\link[stats:model.matrix]{model.matrix.lm}}.
   }
 }
 \value{
@@ -105,13 +111,8 @@
   pixel images (objects of class \code{"im"}).
   For \code{model.images.lppm}, the images are also of class \code{"linim"}.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{model.matrix.ppm}},

@@ -9,11 +9,22 @@
   and compute a pooled estimate.
 }
 \usage{
-\method{pool}{rat}(...)
+\method{pool}{rat}(..., weights=NULL, relabel=TRUE, variance=TRUE)
 }
 \arguments{
   \item{\dots}{
     Objects of class \code{"rat"}.
+  }
+  \item{weights}{
+    Numeric vector of weights.
+  }
+  \item{relabel}{
+    Logical value indicating whether the result 
+    should be relabelled to show that it was obtained by pooling.
+  }
+  \item{variance}{
+    Logical value indicating whether to compute the sample variance
+    and related terms.
   }
 }
 \details{
@@ -41,6 +52,16 @@
   as described in Baddeley \emph{et al.} (1993)
   or Cochran (1977, pp 154, 161).
 
+  If the argument \code{weights} is given, it should be a numeric vector
+  of length equal to the number of objects to be pooled. 
+  The pooled estimator is the ratio-of-sums estimator
+  \deqn{
+    R = \frac{\sum_i w_i Y_i}{\sum_i w_i X_i}
+  }{
+    R = (w[1] * Y[1]+\dots+ w[n] * Y[n])/(w[1] * X[1]+\dots+w[n] * X[n])
+  }
+  where \code{w_i}{w[i]} is the \code{i}th weight.
+
   This calculation is implemented only for certain classes of objects
   where the arithmetic can be performed.
   
@@ -53,6 +74,7 @@
   Warnings or errors will be issued if the ratio objects \code{\dots}
   appear to be incompatible. However, the code is not smart enough to
   decide whether it is sensible to pool the data.
+
 }
 \value{
   An object of the same class as the input.
@@ -79,11 +101,8 @@
   \emph{Sampling techniques}, 3rd edition.
   New York: John Wiley and Sons.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -1,7 +1,7 @@
 #
 #	fasp.R
 #
-#	$Revision: 1.32 $	$Date: 2013/07/05 06:13:00 $
+#	$Revision: 1.35 $	$Date: 2017/02/07 07:22:47 $
 #
 #
 #-----------------------------------------------------------------------------
@@ -31,7 +31,7 @@ fasp <- function(fns, which, formulae=NULL,
     # verify format and convert to character vector
     formulae <- FormatFaspFormulae(formulae, "formulae")
     # ensure length matches length of "fns"
-    if(length(formulae) == 1 && n > 1)
+    if(length(formulae) == 1L && n > 1L)
         # single formula - replicate it
         formulae <- rep.int(formulae, n)
     else 
@@ -68,8 +68,8 @@ fasp <- function(fns, which, formulae=NULL,
         included[w] <- TRUE
 
         # if only one cell selected, and drop=TRUE:
-        if((sum(included) == 1) && drop)
-          return(x$fns[included][[1]])
+        if((sum(included) == 1L) && drop)
+          return(x$fns[included][[1L]])
         
         # determine positions in shortened lists
         whichIJ <- x$which[I,J,drop=FALSE]
@@ -99,14 +99,14 @@ print.fasp <- function(x, ...) {
   verifyclass(x, "fasp")
   cat(paste("Function array (class", sQuote("fasp"), ")\n"))
   dim <- dim(x$which)
-  cat(paste("Dimensions: ", dim[1], "x", dim[2], "\n"))
+  cat(paste("Dimensions: ", dim[1L], "x", dim[2L], "\n"))
   cat(paste("Title:", if(is.null(x$title)) "(None)" else x$title, "\n"))
   invisible(NULL)
 }
 
 # other methods
 
-as.fv.fasp <- function(x) do.call("cbind.fv", x$fns)
+as.fv.fasp <- function(x) do.call(cbind.fv, x$fns)
 
 dimnames.fasp <- function(x) {
   return(dimnames(x$which))
@@ -119,69 +119,74 @@ dimnames.fasp <- function(x) {
   return(x)
 }
 
-pool.fasp <- function(...) {
-  Alist <- list(...)
-  Yname <- short.deparse(sys.call())
-  if(nchar(Yname) > 60) Yname <- paste(substr(Yname, 1, 40), "[..]")
-  nA <-  length(Alist)
-  if(nA == 0) return(NULL)
-  # validate....
-  # All arguments must be fasp objects
-  notfasp <- !unlist(lapply(Alist, inherits, what="fasp"))
-  if(any(notfasp)) {
-    n <- sum(notfasp)
-    why <- paste(ngettext(n, "Argument", "Arguments"),
-                 commasep(which(notfasp)),
-                 ngettext(n, "does not", "do not"),
-                 "belong to the class",
-                 dQuote("fasp"))
-    stop(why)
+pool.fasp <- local({
+
+  pool.fasp <- function(...) {
+    Alist <- list(...)
+    Yname <- short.deparse(sys.call())
+    if(nchar(Yname) > 60) Yname <- paste(substr(Yname, 1L, 40L), "[..]")
+    nA <-  length(Alist)
+    if(nA == 0) return(NULL)
+    ## validate....
+    ## All arguments must be fasp objects
+    notfasp <- !unlist(lapply(Alist, inherits, what="fasp"))
+    if(any(notfasp)) {
+      n <- sum(notfasp)
+      why <- paste(ngettext(n, "Argument", "Arguments"),
+                   commasep(which(notfasp)),
+                   ngettext(n, "does not", "do not"),
+                   "belong to the class",
+                   dQuote("fasp"))
+      stop(why)
+    }
+    ## All arguments must have envelopes
+    notenv <- !unlist(lapply(Alist, has.env))
+    if(any(notenv)) {
+      n <- sum(notenv)
+      why <- paste(ngettext(n, "Argument", "Arguments"),
+                   commasep(which(notenv)),
+                   ngettext(n, "does not", "do not"),
+                   "contain envelope data")
+      stop(why)
+    }
+  
+    if(nA == 1L) return(Alist[[1L]])
+  
+    ## All arguments must have the same dimensions
+    witches <- lapply(Alist, getElement, name="which")
+    witch1 <- witches[[1L]]
+    same <- unlist(lapply(witches, identical, y=witch1))
+    if(!all(same))
+      stop("Function arrays do not have the same array dimensions")
+  
+    ## OK.
+    ## Pool envelopes at each position
+    result <- Alist[[1L]]
+    fns <- result$fns
+    for(k in seq_along(fns)) {
+      funks <- lapply(Alist, extractfun, k=k)
+      fnk <- do.call(pool.envelope, funks)
+      attr(fnk, "einfo")$Yname <- Yname
+      fns[[k]] <- fnk
+    }
+    result$fns <- fns
+    return(result)
   }
-  # All arguments must have envelopes
+
   has.env <- function(z) {
     all(unlist(lapply(z$fns, inherits, what="envelope")))
   }
-  notenv <- !unlist(lapply(Alist, has.env))
-  if(any(notenv)) {
-    n <- sum(notenv)
-    why <- paste(ngettext(n, "Argument", "Arguments"),
-                 commasep(which(notenv)),
-                 ngettext(n, "does not", "do not"),
-                 "contain envelope data")
-    stop(why)
-  }
-  
-  if(nA == 1) return(Alist[[1]])
-  
-  # All arguments must have the same dimensions
-  witches <- lapply(Alist, function(z) { z$which })
-  witch1 <- witches[[1]]
-  same <- unlist(lapply(witches, identical, y=witch1))
-  if(!all(same))
-    stop("Function arrays do not have the same array dimensions")
-  
-  # OK.
-  # Pool envelopes at each position
-  result <- Alist[[1]]
-  fns <- result$fns
-  for(k in seq_along(fns)) {
-    funks <- lapply(Alist, function(z, k) { z$fns[[k]] }, k=k)
-    fnk <- do.call("pool.envelope", funks)
-    attr(fnk, "einfo")$Yname <- Yname
-    fns[[k]] <- fnk
-  }
-  result$fns <- fns
 
-  return(result)
-}
-
-# other functions
-
-FormatFaspFormulae <- function(f, argname) {
-  # f should be a single formula object, a list of formula objects,
-  # a character vector, or a list containing formulae and strings.
-  # It will be converted to a character vector.
+  extractfun <- function(z, k) { z$fns[[k]] }
   
+  pool.fasp
+  
+})
+
+## other functions
+
+FormatFaspFormulae <- local({
+
   zapit <- function(x, argname) {
     if(inherits(x, "formula")) deparse(x)
     else if(is.character(x)) x
@@ -190,16 +195,25 @@ FormatFaspFormulae <- function(f, argname) {
                     "must be formula objects or strings"))
   }
 
-  result <-
-    if(is.character(f))
-      f
-    else if(inherits(f, "formula"))
-      deparse(f)
-    else if(is.list(f))
-      unlist(lapply(f, zapit, argname=argname))
-    else stop(paste(sQuote(argname),
-                    "should be a formula, a list of formulae,",
-                    "or a character vector"))
+  FormatFaspFormulae <- function(f, argname) {
+    ## f should be a single formula object, a list of formula objects,
+    ## a character vector, or a list containing formulae and strings.
+    ## It will be converted to a character vector.
+    result <-
+      if(is.character(f))
+        f
+      else if(inherits(f, "formula"))
+        deparse(f)
+      else if(is.list(f))
+        unlist(lapply(f, zapit, argname=argname))
+      else stop(paste(sQuote(argname),
+                      "should be a formula, a list of formulae,",
+                      "or a character vector"))
 
-  return(result)
-}
+    return(result)
+  }
+
+  FormatFaspFormulae
+})
+
+

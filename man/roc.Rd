@@ -2,6 +2,9 @@
 \alias{roc}
 \alias{roc.ppp}
 \alias{roc.ppm}
+\alias{roc.kppm}
+\alias{roc.lpp}
+\alias{roc.lppm}
 \title{
   Receiver Operating Characteristic
 }
@@ -15,11 +18,18 @@
 \method{roc}{ppp}(X, covariate, \dots, high = TRUE)
 
 \method{roc}{ppm}(X, \dots)
+
+\method{roc}{kppm}(X, \dots)
+
+\method{roc}{lpp}(X, covariate, \dots, high = TRUE)
+
+\method{roc}{lppm}(X, \dots)
 }
 \arguments{
   \item{X}{
-    Point pattern (object of class \code{"ppp"})
-    or fitted point process model (object of class \code{"ppm"}).
+    Point pattern (object of class \code{"ppp"} or \code{"lpp"})
+    or fitted point process model
+    (object of class \code{"ppm"} or \code{"kppm"} or \code{"lppm"}).
   }
   \item{covariate}{
     Spatial covariate. Either a \code{function(x,y)},
@@ -78,13 +88,7 @@
   \ifelse{latex}{\out{Birkh{\"a}user}}{Birkhauser}, Basel.
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+\spatstatAuthors.
 }
 \seealso{
 \code{\link{auc}}

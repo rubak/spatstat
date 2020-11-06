@@ -1,7 +1,7 @@
 #
 # split.ppp.R
 #
-# $Revision: 1.32 $ $Date: 2015/08/05 02:50:25 $
+# $Revision: 1.36 $ $Date: 2020/05/08 01:22:18 $
 #
 # split.ppp and "split<-.ppp"
 #
@@ -126,13 +126,17 @@ split.ppp <- function(x, f = marks(x), drop=FALSE, un=NULL, reduce=FALSE, ...) {
   return(out)
 }
 
-"split<-.ppp" <- function(x, f=marks(x), drop=FALSE, un=missing(f), 
+"split<-.ppp" <- function(x, f=marks(x), drop=FALSE, un=NULL,
                           ..., value) {
   verifyclass(x, "ppp")
   W <- x$window
+  fgiven <- !missing(f)
   mf <- markformat(x)
+  
   # evaluate `un' before assigning value of 'f'
-  force(un)
+  if(is.null(un)) {
+    un <- !fgiven && (mf != "dataframe")
+  } else un <- as.logical(un)
 
   # validate assignment value
   stopifnot(is.list(value))
@@ -247,7 +251,8 @@ split.ppp <- function(x, f = marks(x), drop=FALSE, un=NULL, reduce=FALSE, ...) {
 print.splitppp <- function(x, ...) {
   f <- attr(x, "fsplit")
   what <- if(is.tess(f)) "tessellation" else
-          if(is.factor(f)) "factor" else "unknown data"
+          if(is.factor(f)) "factor" else 
+          if(is.logical(f)) "logical vector" else typeof(f)
   cat(paste("Point pattern split by", what, "\n"))
   nam <- names(x)
   for(i in seq_along(x)) {
@@ -307,9 +312,21 @@ print.summary.splitppp <- function(x, ...) {
   x
 }
   
-density.splitppp <- function(x, ..., se=FALSE) {
-  density.ppplist(x, ..., se=se)
+density.ppplist <- 
+density.splitppp <- function(x, ..., weights=NULL, se=FALSE) {
+  if(is.null(weights) || is.im(weights) || is.expression(weights))
+    weights <- rep(list(weights), length(x))
+  y <- mapply(density.ppp, x=x, weights=weights,
+              MoreArgs=list(se=se, ...),
+              SIMPLIFY=FALSE)
+  if(!se) return(as.solist(y, demote=TRUE))
+  y.est <- lapply(y, getElement, name="estimate")
+  y.se  <- lapply(y, getElement, name="SE")
+  z <- list(estimate = as.solist(y.est, demote=TRUE),
+            SE       = as.solist(y.se,  demote=TRUE))
+  return(z)
 }
+
 
 plot.splitppp <- function(x, ..., main) {
   if(missing(main)) main <- short.deparse(substitute(x))

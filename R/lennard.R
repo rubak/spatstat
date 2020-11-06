@@ -2,7 +2,7 @@
 #
 #    lennard.R
 #
-#    $Revision: 1.19 $	$Date: 2014/12/10 07:23:14 $
+#    $Revision: 1.22 $	$Date: 2018/03/15 07:37:41 $
 #
 #    Lennard-Jones potential
 #
@@ -38,6 +38,7 @@ LennardJones <- local({
          },
          par      = list(sigma0=NULL),  # filled in later
          parnames = "Initial approximation to sigma",
+         hasInf = TRUE,
          selfstart = function(X, self) {
            # self starter for Lennard Jones
            # attempt to set value of 'sigma0'
@@ -63,8 +64,8 @@ LennardJones <- local({
          update = NULL, # default OK
          print = NULL,    # default OK
          interpret =  function(coeffs, self) {
-           theta1 <- as.numeric(coeffs[1])
-           theta2 <- as.numeric(coeffs[2])
+           theta1 <- as.numeric(coeffs[1L])
+           theta2 <- as.numeric(coeffs[2L])
            sig0 <- self$par$sigma0
            if(is.na(sig0))
              sig0 <- 1
@@ -87,12 +88,12 @@ LennardJones <- local({
            if((self$valid)(coeffs, self)) return(NULL) else return(Poisson())
          },
          irange = function(self, coeffs=NA, epsilon=0, ...) {
-           if(any(is.na(coeffs)) || epsilon == 0)
+           if(anyNA(coeffs) || epsilon == 0)
              return(Inf)
            sig0 <- self$par$sigma0
            if(is.na(sig0)) sig0 <- 1
-           theta1 <- abs(coeffs[1])
-           theta2 <- abs(coeffs[2])
+           theta1 <- abs(coeffs[1L])
+           theta2 <- abs(coeffs[2L])
            return(sig0 * max((theta1/epsilon)^(1/12), (theta2/epsilon)^(1/6)))
          },
        version=NULL # filled in later

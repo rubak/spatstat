@@ -51,6 +51,9 @@ plot(X,
      main="Point pattern on linear network (lpp)",
      show.window=FALSE)
 
+V <- as.linim(function(x,y,seg,tp){x^2-y^2}, L=simplenet)
+plot(V, main="Pixel image on a linear network")
+
 fanfare("II. Graphics")
 
 plot(letterR, col="green", border="red", lwd=2, main="Polygonal window with colour fill")
@@ -111,6 +114,10 @@ plot(rgbim(D,X,L,maxColorValue=1), valuesAreColours=TRUE,
 plot(hsvim(D,L,X), valuesAreColours=TRUE,
      main="Three images: HSV display")
 
+V <- as.linim(function(x,y,seg,tp){(y/1000)^2-(x/1000)^3}, L=domain(chicago))
+plot(V, main="Pixel image on a linear network (colour plot)")
+plot(V, style="w", main="Pixel image on a linear network (width plot)")
+
 fanfare("III. Conversion between types")
 
 W <- as.owin(chorley)
@@ -168,7 +175,20 @@ X <- as.im(function(x,y){sqrt(x^2+y^2)}, W)
 Y <- dirichlet(runifpoint(12, W))
 plot(split(X,Y), main="image split by tessellation")
 
-fanfare("V. Exploratory data analysis")
+fanfare("V. Tessellations")
+
+plot(quadrats(square(1), nx=5, ny=3))
+plot(hextess(square(1), 0.07))
+plot(quantess(letterR, "x", 7))
+plot(polartess(letterR, nangular=6, radii=(0:4)/2, origin=c(2.8, 1.5)),
+     do.col=TRUE)
+plot(delaunay(cells))
+plot(cells, add=TRUE)
+plot(dirichlet(cells))
+plot(cells, add=TRUE)
+plot(rpoislinetess(2.5), do.col=TRUE)
+
+fanfare("VI. Exploratory data analysis")
 
 par(mar=c(3,3,3,2)+0.1)
 
@@ -408,12 +428,18 @@ X <- unmark(chicago)
 plot(X, col="green", cols="red", pch=16,
      main="Chicago Street Crimes", cex.main=0.75,
      show.window=FALSE)
+plot(density(X, 100, distance="e"), main="Kernel density estimate (Euclidean)")
+plot(density(X, 100, distance="p"), main="Kernel density estimate (shortest path)")
+
+plot(X, col="green", cols="red", pch=16,
+     main="Chicago Street Crimes", cex.main=0.75,
+     show.window=FALSE)
 plot(linearK(X, correction="none"), main="Network K-function", cex.main=0.75)
 plot(linearK(X, correction="Ang"), main="Corrected K-function", cex.main=0.75)
 
 par(mfrow=c(1,1))
 
-fanfare("VI. Model-fitting")
+fanfare("VII. Model-fitting")
 
 parsave <- par(mar=0.2+c(1,1,3,2))
 plot(japanesepines)
@@ -448,8 +474,11 @@ plot(listof(redwood, simT),
      main.panel=c("Redwood", "simulation from\nfitted Thomas model"),
      main="", mar.panel=0.2, equal.scales=TRUE)
 
+mop <- par(mfrow=c(1,2), pty="s", mar=rep(4.4, 4))
+plot(fitT, xname=c("Thomas model", "minimum contrast fit"), pause=FALSE)
+par(mop)
+
 oop <- par(pty="s", mar=0.2+c(4,4,4,2))
-plot(fitT, main=c("Thomas model","minimum contrast fit"))
 os <- objsurf(fitT)
 plot(os, main="Minimum contrast objective function", col=terrain.colors(128))
 contour(os, add=TRUE)
@@ -502,7 +531,16 @@ plot(dpat, cols=c("red", "blue"))
 fit <- ppm(dpat ~marks + polynom(x,y,2), Poisson())
 plot(fit, trend=TRUE, se=TRUE)
 
-fanfare("VII. Simulation")
+# Linear network data
+plot(spiders)
+fit <- lppm(spiders ~ polynom(x,y,2))
+anova(fit, test="Chi")
+(fit <- step(fit))
+lam <- predict(fit)
+plot(lam, main="Point process model on linear network", ribscale=1000)
+plot(spiders, add=TRUE, pch=16, show.network=FALSE)
+
+fanfare("VIII. Simulation")
 
 plot(letterR, main="Poisson random points")
 lambda <- 10/area.owin(letterR)
@@ -578,23 +616,23 @@ spatstat.options(npixel=100)
 plot(Halton(512, c(2,3)), main="quasirandom pattern")
 plot(Halton(16384, c(2,3)), main="quasirandom pattern", pch=".")
 
-fanfare("VIII. Geometry")
+fanfare("IX. Geometry")
 
 A <- letterR
 
 B <- shift(letterR, c(0.2,0.1))
-plot(bounding.box(A,B), main="shift", type="n")
+plot(boundingbox(A,B), main="shift", type="n")
 plot(A, add=TRUE)
 plot(B, add=TRUE, border="red")
 
 B <- rotate(letterR, 0.2)
-plot(bounding.box(A,B), main="rotate", type="n")
+plot(boundingbox(A,B), main="rotate", type="n")
 plot(A, add=TRUE)
 plot(B, add=TRUE, border="red")
 
 mat <- matrix(c(1.1, 0, 0.3, 1), 2, 2)
 B <- affine(letterR, mat=mat, vec=c(0.2,-0.1))
-plot(bounding.box(A,B), main="affine", type="n")
+plot(boundingbox(A,B), main="affine", type="n")
 plot(A, add=TRUE)
 plot(B, add=TRUE, border="red")
 
@@ -644,12 +682,12 @@ plot(WS, add=TRUE, border="green")
 nopa <- par(mfrow=c(2,2))
 Rbox <- grow.rectangle(as.rectangle(letterR), 0.3)
 
-v <- erode.owin(letterR, 0.25)
+v <- erosion.owin(letterR, 0.25)
 plot(Rbox, type="n", main="erode.owin", cex.main=0.75)
 plot(letterR, add=TRUE, col="red", cex.main=0.75)
 plot(v, add=TRUE, col="blue")
 
-v <- dilate.owin(letterR, 0.25)
+v <- dilation.owin(letterR, 0.25)
 plot(Rbox, type="n", main="dilate.owin", cex.main=0.75)
 plot(v, add=TRUE, col="blue")
 plot(letterR, add=TRUE, col="red")
@@ -665,7 +703,9 @@ plot(letterR, add=TRUE, col="red")
 plot(v, add=TRUE, col="blue")
 par(nopa)
 
-fanfare("IX. Operations on pixel images")
+laslett(heather$fine, main="Laslett's Transform")
+
+fanfare("X. Operations on pixel images")
 
 Z <- distmap(swedishpines, dimyx=512)
 plot(Z, main="An image Z")
@@ -699,8 +739,7 @@ plot(letterR, add=TRUE)
 plot(blur(Z, 0.3, bleed=FALSE))
 plot(letterR, add=TRUE)
           
-
-fanfare("X. Programming tools")
+fanfare("XI. Programming tools")
 
 showoffK <- function(Y, current, ..., fullpicture,rad) { 
 	plot(fullpicture,
@@ -712,7 +751,7 @@ showoffK <- function(Y, current, ..., fullpicture,rad) {
 	polygon(u[1]+ rad * cos(theta),u[2]+rad*sin(theta))
 	text(u[1]+rad/3,u[2]+rad/2,Y$n,cex=3)
         if(runif(1) < 0.2) Sys.sleep(runif(1, max=0.4))
-	return(Y$n)
+	return(npoints(Y))
 }
 par(ask=FALSE)
 applynbd(redwood, R=0.2, showoffK, fullpicture=redwood, rad=0.2, exclude=TRUE)

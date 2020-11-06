@@ -51,16 +51,14 @@
   \code{vertices(L)}.
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+\spatstatAuthors
 }
 \seealso{
-  \code{\link{linnet}}
+  \code{\link{deletebranch}}, \code{\link{extractbranch}},
+  \code{\link{treeprune}} for manipulating a network using the
+  branch labels.
+  
+  \code{\link{linnet}} for creating a network.
 }
 \examples{
   # make a simple tree

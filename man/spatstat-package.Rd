@@ -10,20 +10,25 @@
 }
 \details{
   \pkg{spatstat} is a package for the statistical analysis
-  of spatial data. Currently, it deals mainly with the analysis of
+  of spatial data. Its main focus is the analysis of
   spatial patterns of points in two-dimensional space.
   The points may carry auxiliary data (`marks'),
   and the spatial region in which the points were recorded 
   may have arbitrary shape. 
 
-  The package supports
+  The package is designed to support a complete statistical analysis
+  of spatial data. It supports
   \itemize{
-    \item creation, manipulation and plotting of point patterns
-    \item exploratory data analysis 
-    \item simulation of point process models
-    \item parametric model-fitting
-    \item hypothesis tests and model diagnostics
+    \item creation, manipulation and plotting of point patterns;
+    \item exploratory data analysis;
+    \item spatial random sampling;
+    \item simulation of point process models;
+    \item parametric model-fitting;
+    \item non-parametric smoothing and regression;
+    \item formal inference (hypothesis tests, confidence intervals);
+    \item model diagnostics.
   }
+  
   Apart from two-dimensional point patterns and point processes,
   \pkg{spatstat} also supports point patterns in three dimensions, 
   point patterns in multidimensional space-time,
@@ -41,7 +46,10 @@
     (by Baddeley-Turner approximate maximum pseudolikelihood,
     Coeurjolly-Rubak logistic likelihood, or
     Huang-Ogata approximate maximum likelihood)
-    \item Cox/cluster process models
+    \item Cox/cluster point process models
+    (by Waagepetersen's two-step fitting procedure
+    and minimum contrast, composite likelihood, or Palm likelihood)
+    \item determinantal point process models
     (by Waagepetersen's two-step fitting procedure
     and minimum contrast, composite likelihood, or Palm likelihood)
   }
@@ -55,9 +63,9 @@
 \section{Getting Started}{
   For a quick introduction to \pkg{spatstat}, read
   the package vignette \emph{Getting started with spatstat}
-  installed with \pkg{spatstat}. To see this document, you can either
+  installed with \pkg{spatstat}. To read that document, you can either
   \itemize{
-    \item visit \url{cran.r-project.org/web/packages/spatstat}
+    \item visit \url{https://cran.r-project.org/package=spatstat}
     and click on \code{Getting Started with Spatstat}
     \item
     start \R, type \code{library(spatstat)} and \code{vignette('getstart')}
@@ -65,20 +73,34 @@
     start \R, type \code{help.start()} to open the help
     browser, and navigate to \code{Packages > spatstat > Vignettes}.
   }
-  For a complete course on using \pkg{spatstat}, see the
-  forthcoming book Baddeley, Rubak and Turner (2015).
+  Once you have installed \pkg{spatstat}, start \R and type
+  \code{library(spatstat)}. Then type \code{beginner}
+  for a beginner's introduction, or 
+  \code{demo(spatstat)} for a demonstration of the package's capabilities.
 
-  Type \code{demo(spatstat)} for a demonstration 
-  of the package's capabilities.
-  Type \code{demo(data)} to see all the datasets
+  For a complete course on \pkg{spatstat},
+  and on statistical analysis of spatial point patterns,
+  read the book by Baddeley, Rubak and Turner (2015).
+  Other recommended books on spatial point process methods
+  are Diggle (2014), Gelfand et al (2010) and Illian et al (2008).
+
+  The \pkg{spatstat} package includes over 50 datasets,
+  which can be useful when learning the package.
+  Type \code{demo(data)} to see plots of all datasets
   available in the package.
-  
-  For information about handling data in \bold{shapefiles},
-  see the Vignette \emph{Handling shapefiles in the spatstat package}
-  installed with \pkg{spatstat}.
+  Type \code{vignette('datasets')} for detailed background information
+  on these datasets, and plots of each dataset.
+      
+  For information on converting your data into \pkg{spatstat} format,
+  read Chapter 3 of Baddeley, Rubak and Turner (2015).
+  This chapter is available free online, as one of the sample chapters
+  at the book companion website, \url{http://book.spatstat.org}.
 
-  To learn about spatial point process methods, see the short book
-  by Diggle (2003) and the handbook Gelfand et al (2010).
+  For information about handling data in \bold{shapefiles},
+  see Chapter 3, or the Vignette
+  \emph{Handling shapefiles in the spatstat package},
+  installed with \pkg{spatstat}, accessible as
+  \code{vignette('shapefiles')}.
 }
 \section{Updates}{
   New versions of \pkg{spatstat} are released every 8 weeks.
@@ -90,8 +112,8 @@
 
   See the Vignette \emph{Summary of recent updates},
   installed with \pkg{spatstat}, which describes the main changes
-  to \pkg{spatstat} since the workshop notes (Baddeley, 2010)
-  were published.
+  to \pkg{spatstat} since the book (Baddeley, Rubak and Turner, 2015)
+  was published. It is accessible as \code{vignette('updates')}.
   
   Type \code{news(package="spatstat")} to read news documentation about
   all previous versions of the package.
@@ -180,25 +202,29 @@
 	\code{\link{rjitter}} \tab
 	apply random displacements to points in a pattern\cr
 	\code{\link{rMaternI}}  \tab
-	simulate the \ifelse{latex}{\out{Mat\'ern}}{Matern} Model I inhibition process\cr
+	simulate the \Matern Model I inhibition process\cr
 	\code{\link{rMaternII}} \tab
-	simulate the \ifelse{latex}{\out{Mat\'ern}}{Matern} Model II inhibition process\cr
+	simulate the \Matern Model II inhibition process\cr
 	\code{\link{rSSI}} \tab
 	simulate Simple Sequential Inhibition process\cr
 	\code{\link{rStrauss}} \tab
 	simulate Strauss process (perfect simulation)\cr
 	\code{\link{rHardcore}} \tab
 	simulate Hard Core process (perfect simulation)\cr
+	\code{\link{rStraussHard}} \tab
+	simulate Strauss-hard core process (perfect simulation)\cr
 	\code{\link{rDiggleGratton}} \tab
 	simulate Diggle-Gratton process (perfect simulation)\cr
 	\code{\link{rDGS}} \tab
 	simulate Diggle-Gates-Stibbard process (perfect simulation)\cr
+	\code{\link{rPenttinen}} \tab
+	simulate Penttinen process (perfect simulation)\cr
 	\code{\link{rNeymanScott}} \tab
 	simulate a general Neyman-Scott process\cr
 	\code{\link{rPoissonCluster}} \tab
 	simulate a general Poisson cluster process\cr
 	\code{\link{rMatClust}} \tab
-	simulate the \ifelse{latex}{\out{Mat\'ern}}{Matern} Cluster process\cr
+	simulate the \Matern Cluster process\cr
 	\code{\link{rThomas}} \tab
 	simulate the Thomas process  \cr
 	\code{\link{rGaussPoisson}}  \tab
@@ -241,57 +267,57 @@
       Type \code{demo(data)} to see a display of all the datasets
       installed with the package.
 
-      Type \code{vignette(datasets)} for a document giving an overview
+      Type \code{vignette('datasets')} for a document giving an overview
       of all datasets, including background information, and plots.
       
       \tabular{ll}{
-	\code{\link{amacrine}} \tab Austin Hughes' rabbit amacrine cells \cr
-	\code{\link{anemones}} \tab Upton-Fingleton sea anemones data\cr
-	\code{\link{ants}} \tab Harkness-Isham ant nests data\cr
-	\code{\link{bdspots}} \tab Breakdown spots in microelectrodes \cr
-	\code{\link{bei}} \tab Tropical rainforest trees \cr
-	\code{\link{betacells}} \tab Waessle et al. cat retinal ganglia data \cr
-	\code{\link{bramblecanes}} \tab Bramble Canes data \cr
-	\code{\link{bronzefilter}} \tab Bronze Filter Section data \cr
-	\code{\link{cells}} \tab Crick-Ripley biological cells data \cr
-	\code{\link{chicago}} \tab Chicago street crimes \cr
-	\code{\link{chorley}} \tab Chorley-Ribble cancer data \cr
-	\code{\link{clmfires}} \tab Castilla-La Mancha forest fires \cr
-	\code{\link{copper}} \tab Berman-Huntington copper deposits data \cr
-	\code{\link{dendrite}} \tab Dendritic spines \cr
-	\code{\link{demohyper}} \tab Synthetic point patterns\cr
-	\code{\link{demopat}} \tab Synthetic point pattern \cr
-	\code{\link{finpines}} \tab Finnish Pines data \cr
-	\code{\link{flu}} \tab Influenza virus proteins \cr
-	\code{\link{gordon}} \tab People in Gordon Square, London \cr
-	\code{\link{gorillas}} \tab Gorilla nest sites \cr
-	\code{\link{hamster}} \tab Aherne's hamster tumour data \cr
-	\code{\link{humberside}} \tab North Humberside childhood leukaemia data \cr
-	\code{\link{hyytiala}} \tab {Mixed forest in
+	\code{\link[spatstat.data]{amacrine}} \tab Austin Hughes' rabbit amacrine cells \cr
+	\code{\link[spatstat.data]{anemones}} \tab Upton-Fingleton sea anemones data\cr
+	\code{\link[spatstat.data]{ants}} \tab Harkness-Isham ant nests data\cr
+	\code{\link[spatstat.data]{bdspots}} \tab Breakdown spots in microelectrodes \cr
+	\code{\link[spatstat.data]{bei}} \tab Tropical rainforest trees \cr
+	\code{\link[spatstat.data]{betacells}} \tab Waessle et al. cat retinal ganglia data \cr
+	\code{\link[spatstat.data]{bramblecanes}} \tab Bramble Canes data \cr
+	\code{\link[spatstat.data]{bronzefilter}} \tab Bronze Filter Section data \cr
+	\code{\link[spatstat.data]{cells}} \tab Crick-Ripley biological cells data \cr
+	\code{\link[spatstat.data]{chicago}} \tab Chicago crimes \cr
+	\code{\link[spatstat.data]{chorley}} \tab Chorley-Ribble cancer data \cr
+	\code{\link[spatstat.data]{clmfires}} \tab Castilla-La Mancha forest fires \cr
+	\code{\link[spatstat.data]{copper}} \tab Berman-Huntington copper deposits data \cr
+	\code{\link[spatstat.data]{dendrite}} \tab Dendritic spines \cr
+	\code{\link[spatstat.data]{demohyper}} \tab Synthetic point patterns\cr
+	\code{\link[spatstat.data]{demopat}} \tab Synthetic point pattern \cr
+	\code{\link[spatstat.data]{finpines}} \tab Finnish Pines data \cr
+	\code{\link[spatstat.data]{flu}} \tab Influenza virus proteins \cr
+	\code{\link[spatstat.data]{gordon}} \tab People in Gordon Square, London \cr
+	\code{\link[spatstat.data]{gorillas}} \tab Gorilla nest sites \cr
+	\code{\link[spatstat.data]{hamster}} \tab Aherne's hamster tumour data \cr
+	\code{\link[spatstat.data]{humberside}} \tab North Humberside childhood leukaemia data \cr
+	\code{\link[spatstat.data]{hyytiala}} \tab {Mixed forest in
               \ifelse{latex}{\out{Hyyti{\"a}l{\"a}}}{Hyytiala}, Finland}\cr
-	\code{\link{japanesepines}} \tab Japanese Pines data \cr
-	\code{\link{lansing}} \tab Lansing Woods data \cr
-	\code{\link{longleaf}} \tab Longleaf Pines data \cr
-	\code{\link{mucosa}} \tab Cells in gastric mucosa \cr
-	\code{\link{murchison}} \tab Murchison gold deposits \cr
-	\code{\link{nbfires}} \tab New Brunswick fires data \cr
-	\code{\link{nztrees}} \tab Mark-Esler-Ripley trees data \cr
-	\code{\link{osteo}} \tab Osteocyte lacunae (3D, replicated) \cr
-	\code{\link{paracou}} \tab Kimboto trees in Paracou, French Guiana \cr
-	\code{\link{ponderosa}} \tab Getis-Franklin ponderosa pine trees data \cr
-	\code{\link{pyramidal}} \tab Pyramidal neurons from 31 brains \cr
-	\code{\link{redwood}} \tab Strauss-Ripley redwood saplings data \cr
-	\code{\link{redwoodfull}} \tab Strauss redwood saplings data (full set) \cr
-	\code{\link{residualspaper}} \tab Data from Baddeley et al (2005) \cr
-	\code{\link{shapley}} \tab Galaxies in an astronomical survey \cr
-	\code{\link{simdat}} \tab Simulated point pattern (inhomogeneous, with interaction) \cr
-	\code{\link{spiders}} \tab Spider webs on mortar lines of brick wall \cr
-	\code{\link{sporophores}} \tab Mycorrhizal fungi around a tree \cr
-	\code{\link{spruces}} \tab Spruce trees in Saxonia \cr
-	\code{\link{swedishpines}} \tab Strand-Ripley Swedish pines data \cr
-	\code{\link{urkiola}} \tab Urkiola Woods data \cr
-	\code{\link{waka}} \tab Trees in Waka national park \cr
-	\code{\link{waterstriders}} \tab Insects on water surface 
+	\code{\link[spatstat.data]{japanesepines}} \tab Japanese Pines data \cr
+	\code{\link[spatstat.data]{lansing}} \tab Lansing Woods data \cr
+	\code{\link[spatstat.data]{longleaf}} \tab Longleaf Pines data \cr
+	\code{\link[spatstat.data]{mucosa}} \tab Cells in gastric mucosa \cr
+	\code{\link[spatstat.data]{murchison}} \tab Murchison gold deposits \cr
+	\code{\link[spatstat.data]{nbfires}} \tab New Brunswick fires data \cr
+	\code{\link[spatstat.data]{nztrees}} \tab Mark-Esler-Ripley trees data \cr
+	\code{\link[spatstat.data]{osteo}} \tab Osteocyte lacunae (3D, replicated) \cr
+	\code{\link[spatstat.data]{paracou}} \tab Kimboto trees in Paracou, French Guiana \cr
+	\code{\link[spatstat.data]{ponderosa}} \tab Getis-Franklin ponderosa pine trees data \cr
+	\code{\link[spatstat.data]{pyramidal}} \tab Pyramidal neurons from 31 brains \cr
+	\code{\link[spatstat.data]{redwood}} \tab Strauss-Ripley redwood saplings data \cr
+	\code{\link[spatstat.data]{redwoodfull}} \tab Strauss redwood saplings data (full set) \cr
+	\code{\link[spatstat.data]{residualspaper}} \tab Data from Baddeley et al (2005) \cr
+	\code{\link[spatstat.data]{shapley}} \tab Galaxies in an astronomical survey \cr
+	\code{\link[spatstat.data]{simdat}} \tab Simulated point pattern (inhomogeneous, with interaction) \cr
+	\code{\link[spatstat.data]{spiders}} \tab Spider webs on mortar lines of brick wall \cr
+	\code{\link[spatstat.data]{sporophores}} \tab Mycorrhizal fungi around a tree \cr
+	\code{\link[spatstat.data]{spruces}} \tab Spruce trees in Saxonia \cr
+	\code{\link[spatstat.data]{swedishpines}} \tab Strand-Ripley Swedish pines data \cr
+	\code{\link[spatstat.data]{urkiola}} \tab Urkiola Woods data \cr
+	\code{\link[spatstat.data]{waka}} \tab Trees in Waka national park \cr
+	\code{\link[spatstat.data]{waterstriders}} \tab Insects on water surface 
       }
 
       \bold{To manipulate a point pattern:}
@@ -299,7 +325,7 @@
       \tabular{ll}{
 	\code{\link{plot.ppp}} \tab
 	plot a point pattern (e.g. \code{plot(X)}) \cr
-	\code{\link{iplot}} \tab
+	\code{spatstat.gui::iplot} \tab
 	plot a point pattern interactively \cr
 	\code{\link{edit.ppp}} \tab interactive text editor \cr
 	\code{\link{[.ppp}} \tab
@@ -351,6 +377,8 @@
 	remove duplicate points \cr
 	\code{\link{duplicated.ppp}} \tab
 	determine which points are duplicates \cr
+	\code{\link{uniquemap.ppp}} \tab
+	map duplicated points to unique points \cr
 	\code{\link{connected.ppp}} \tab find clumps of points \cr
 	\code{\link{dirichlet}} \tab
 	compute Dirichlet-Voronoi tessellation \cr
@@ -389,7 +417,7 @@
 	\code{\link{ripras}}    \tab
 	Ripley-Rasson estimator of window, given only the points \cr
 	\code{\link{convexhull}} \tab compute convex hull of something \cr 
-	\code{\link{letterR}}    \tab
+	\code{\link[spatstat.data]{letterR}}    \tab
 	polygonal window in the shape of the \R logo \cr
 	\code{\link{clickpoly}}    \tab
 	interactively draw a polygonal window  \cr
@@ -526,6 +554,7 @@
 	\code{\link{harmonise.im}} \tab make images compatible \cr
 	\code{\link{commonGrid}} \tab find a common pixel grid for images \cr
 	\code{\link{eval.im}} \tab evaluate any expression involving images\cr
+	\code{\link{im.apply}} \tab evaluate a function of several images \cr
 	\code{\link{scaletointerval}} \tab rescale pixel values \cr
 	\code{\link{zapsmall.im}} \tab set very small pixel values to zero \cr
 	\code{\link{levelset}} \tab level set of an image\cr 
@@ -552,6 +581,7 @@
       \code{\link{print.psp}} \tab print basic information \cr
       \code{\link{summary.psp}} \tab print summary information \cr
       \code{\link{[.psp}} \tab extract a subset of a line segment pattern \cr
+      \code{\link{subset.psp}} \tab extract subset of line segment pattern \cr
       \code{\link{as.data.frame.psp}} \tab
       convert line segment pattern to data frame \cr
       \code{\link{marks.psp}} \tab extract marks of line segments \cr
@@ -560,7 +590,7 @@
       \code{\link{midpoints.psp}} \tab
       compute the midpoints of line segments \cr
       \code{\link{endpoints.psp}} \tab extract the endpoints of line segments \cr
-      \code{\link{lengths.psp}} \tab compute the lengths of line segments \cr
+      \code{\link{lengths_psp}} \tab compute the lengths of line segments \cr
       \code{\link{angles.psp}} \tab compute the orientation angles of line segments \cr
       \code{\link{superimpose}} \tab combine several line segment patterns  \cr
       \code{\link{flipxy}} \tab swap \eqn{x} and \eqn{y} coordinates \cr      
@@ -582,6 +612,8 @@
       \code{\link{selfcut.psp}} \tab cut segments where they cross \cr
       \code{\link{crossing.psp}} \tab find crossing points between
       two line segment patterns \cr
+      \code{\link{extrapolate.psp}} \tab extrapolate line segments to
+      infinite lines \cr
       \code{\link{nncross}} \tab find distance to nearest line segment
       from a given point\cr
       \code{\link{nearestsegment}} \tab find line segment closest to a
@@ -604,7 +636,11 @@
       \code{\link{tess}} \tab create a tessellation \cr
       \code{\link{quadrats}} \tab create a tessellation of rectangles\cr
       \code{\link{hextess}} \tab create a tessellation of hexagons \cr
+      \code{\link{polartess}} \tab tessellation using polar coordinates \cr
       \code{\link{quantess}} \tab quantile tessellation \cr
+      \code{\link{venn.tess}} \tab Venn diagram tessellation \cr 
+      \code{\link{dirichlet}} \tab compute Dirichlet-Voronoi tessellation of points\cr
+      \code{\link{delaunay}} \tab compute Delaunay triangulation of points\cr
       \code{\link{as.tess}} \tab convert other data to a tessellation \cr
       \code{\link{plot.tess}} \tab plot a tessellation \cr
       \code{\link{tiles}} \tab extract all the tiles of a tessellation \cr
@@ -613,14 +649,18 @@
       \code{\link{intersect.tess}} \tab intersect two tessellations \cr
                               \tab or restrict a tessellation to a window \cr
       \code{\link{chop.tess}} \tab subdivide a tessellation by a line \cr
-      \code{\link{dirichlet}} \tab compute Dirichlet-Voronoi tessellation of points\cr
-      \code{\link{delaunay}} \tab compute Delaunay triangulation of points\cr
       \code{\link{rpoislinetess}} \tab generate tessellation using Poisson line
       process \cr
       \code{\link{tile.areas}}	\tab
       area of each tile in tessellation \cr
       \code{\link{bdist.tiles}}	\tab
-      boundary distance for each tile in tessellation 
+      boundary distance for each tile in tessellation \cr
+      \code{\link{connected.tess}} \tab find connected components of tiles \cr
+      \code{\link{shift.tess}} \tab shift a tessellation \cr
+      \code{\link{rotate.tess}} \tab rotate a tessellation \cr
+      \code{\link{reflect.tess}} \tab reflect about the origin \cr
+      \code{\link{flipxy.tess}} \tab reflect about the diagonal \cr
+      \code{\link{affine.tess}} \tab apply affine transformation 
     }
 
     \bold{Three-dimensional point patterns}
@@ -679,13 +719,19 @@
     \tabular{ll}{
       \code{\link{linnet}} \tab create a linear network \cr
       \code{\link{clickjoin}} \tab interactively join vertices in network \cr
-      \code{\link{iplot.linnet}} \tab interactively plot network \cr
-      \code{\link{simplenet}} \tab simple example of network \cr
+      \code{spatstat.gui::iplot.linnet} \tab interactively plot network \cr
+      \code{\link[spatstat.data]{simplenet}} \tab simple example of network \cr
       \code{\link{lineardisc}} \tab disc in a linear network \cr
       \code{\link{delaunayNetwork}} \tab network of Delaunay triangulation \cr
       \code{\link{dirichletNetwork}} \tab network of Dirichlet edges \cr
       \code{\link{methods.linnet}} \tab methods for \code{linnet} objects\cr
-      \code{\link{vertices.linnet}} \tab nodes of network \cr 
+      \code{\link{vertices.linnet}} \tab nodes of network \cr
+      \code{\link{joinVertices}} \tab join existing vertices in a network \cr
+      \code{\link{insertVertices}} \tab insert new vertices at positions
+      along a network \cr
+      \code{\link{addVertices}} \tab add new vertices, extending a network \cr
+      \code{\link{thinNetwork}} \tab remove vertices or lines from a network \cr
+      \code{\link{repairNetwork}} \tab repair internal format \cr
       \code{\link{pixellate.linnet}} \tab approximate by pixel image
     }
     
@@ -699,9 +745,9 @@
       \code{\link{subset.lpp}} \tab method for \code{subset} \cr
       \code{\link{rpoislpp}} \tab simulate Poisson points on linear network \cr
       \code{\link{runiflpp}} \tab simulate random points on a linear network \cr
-      \code{\link{chicago}} \tab Chicago street crime data \cr
-      \code{\link{dendrite}} \tab Dendritic spines data \cr
-      \code{\link{spiders}} \tab Spider webs on mortar lines of brick wall 
+      \code{\link[spatstat.data]{chicago}} \tab Chicago crime data \cr
+      \code{\link[spatstat.data]{dendrite}} \tab Dendritic spines data \cr
+      \code{\link[spatstat.data]{spiders}} \tab Spider webs on mortar lines of brick wall 
     }
     
     \bold{Hyperframes}
@@ -763,7 +809,7 @@
     print basic description of point pattern \code{X}  \cr
     \code{any(duplicated(X))} \tab
     check for duplicated points in pattern \code{X} \cr
-    \code{\link{istat}(X)} \tab Interactive exploratory analysis \cr
+    \code{spatstat.gui::istat(X)} \tab Interactive exploratory analysis \cr
     \code{\link{View}(X)} \tab spreadsheet-style viewer
   }
 
@@ -783,8 +829,11 @@
                                for \code{\link{density.ppp}}\cr
     \code{\link{bw.ppl}} \tab likelihood cross-validated bandwidth selection
                                for \code{\link{density.ppp}}\cr
+    \code{\link{bw.CvL}} \tab Cronie-Van Lieshout bandwidth selection
+                                for density estimation\cr
     \code{\link{bw.scott}} \tab Scott's rule of thumb 
                                 for density estimation\cr
+    \code{\link{bw.abram}} \tab Abramson's rule for adaptive bandwidths\cr
     \code{\link{bw.relrisk}} \tab cross-validated bandwidth selection
                                for \code{\link{relrisk}} \cr
     \code{\link{bw.smoothppp}} \tab cross-validated bandwidth selection
@@ -908,7 +957,13 @@
     \code{\link{Lcross.inhom},\link{Ldot.inhom}} \tab
     inhomogeneous counterparts of \code{Lcross}, \code{Ldot} \cr
     \code{\link{pcfcross.inhom},\link{pcfdot.inhom}} \tab
-    inhomogeneous counterparts of \code{pcfcross}, \code{pcfdot} 
+    inhomogeneous counterparts of \code{pcfcross}, \code{pcfdot} \cr
+    \code{\link{localKcross},\link{localKdot}} \tab
+    local counterparts of \code{Kcross}, \code{Kdot} \cr
+    \code{\link{localLcross},\link{localLdot}} \tab
+    local counterparts of \code{Lcross}, \code{Ldot} \cr
+    \code{\link{localKcross.inhom},\link{localLcross.inhom}} \tab
+    local counterparts of \code{Kcross.inhom}, \code{Lcross.inhom} 
   }
 
   \bold{Summary statistics for a marked point pattern:}
@@ -923,6 +978,7 @@
     \code{\link{markcorr}} \tab mark correlation function \cr
     \code{\link{markcrosscorr}} \tab mark cross-correlation function \cr
     \code{\link{markvario}} \tab mark variogram \cr
+    \code{\link{markmarkscatter}} \tab mark-mark scatterplot \cr
     \code{\link{Kmark}} \tab mark-weighted \eqn{K} function \cr
     \code{\link{Emark}} \tab mark independence diagnostic \eqn{E(r)} \cr
     \code{\link{Vmark}} \tab mark independence diagnostic \eqn{V(r)} \cr
@@ -1092,7 +1148,8 @@
   For model selection, you can also use 
   the generic functions \code{\link{step}}, \code{\link{drop1}} 
   and \code{\link{AIC}} on fitted point process models.
-
+  For variable selection, see \code{\link{sdr}}.
+  
   The theoretical models can also be simulated,
   for any choice of parameter values,
   using \code{\link{rThomas}}, \code{\link{rMatClust}},
@@ -1106,8 +1163,8 @@
     \code{\link{lgcp.estpcf}} \tab fit a log-Gaussian Cox process model\cr
     \code{\link{thomas.estK}} \tab fit the Thomas process model \cr
     \code{\link{thomas.estpcf}} \tab fit the Thomas process model \cr
-    \code{\link{matclust.estK}} \tab fit the Matern Cluster process model \cr
-    \code{\link{matclust.estpcf}} \tab fit the Matern Cluster process model \cr
+    \code{\link{matclust.estK}} \tab fit the \Matern Cluster process model \cr
+    \code{\link{matclust.estpcf}} \tab fit the \Matern Cluster process model \cr
     \code{\link{cauchy.estK}} \tab fit a Neyman-Scott Cauchy cluster process \cr
    \code{\link{cauchy.estpcf}} \tab fit a Neyman-Scott Cauchy cluster process\cr
    \code{\link{vargamma.estK}} \tab fit a Neyman-Scott Variance Gamma process\cr
@@ -1193,6 +1250,7 @@
   For model selection, you can also use 
   the generic functions \code{\link{step}}, \code{\link{drop1}} 
   and \code{\link{AIC}} on fitted point process models.
+  For variable selection, see \code{\link{sdr}}.
   
   See \code{\link{spatstat.options}} to control plotting of fitted model.
   
@@ -1387,6 +1445,7 @@
   including methods for \code{print}, \code{update}, \code{formula}
   and \code{terms}. Stepwise model selection is
   possible using \code{step} or \code{stepAIC}.
+  For variable selection, see \code{\link{sdr}}.
 }
 
 
@@ -1416,17 +1475,27 @@
     \code{\link{rsyst}} \tab
     systematic random sample (grid) of points \cr
     \code{\link{rMaternI}}  \tab
-    simulate the \ifelse{latex}{\out{Mat\'ern}}{Matern} Model I inhibition process\cr
+    simulate the \Matern Model I inhibition process\cr
     \code{\link{rMaternII}} \tab
-    simulate the \ifelse{latex}{\out{Mat\'ern}}{Matern} Model II inhibition process\cr
+    simulate the \Matern Model II inhibition process\cr
     \code{\link{rSSI}} \tab
     simulate Simple Sequential Inhibition process\cr
+    \code{\link{rHardcore}} \tab
+    simulate hard core process (perfect simulation)\cr
     \code{\link{rStrauss}} \tab
     simulate Strauss process (perfect simulation)\cr
+    \code{\link{rStraussHard}} \tab
+    simulate Strauss-hard core process (perfect simulation)\cr
+    \code{\link{rDiggleGratton}} \tab
+    simulate Diggle-Gratton process (perfect simulation)\cr
+    \code{\link{rDGS}} \tab
+    simulate Diggle-Gates-Stibbard process (perfect simulation)\cr
+    \code{\link{rPenttinen}} \tab
+    simulate Penttinen process (perfect simulation)\cr
     \code{\link{rNeymanScott}} \tab
     simulate a general Neyman-Scott process\cr
     \code{\link{rMatClust}} \tab
-    simulate the \ifelse{latex}{\out{Mat\'ern}}{Matern} Cluster process\cr
+    simulate the \Matern Cluster process\cr
     \code{\link{rThomas}} \tab
     simulate the Thomas process  \cr
     \code{\link{rLGCP}} \tab
@@ -1498,6 +1567,8 @@
    \tabular{ll}{
     \code{\link{envelope}} \tab critical envelope for Monte Carlo
     test of goodness-of-fit \cr
+    \code{\link{bits.envelope}} \tab critical envelope for balanced
+    two-stage Monte Carlo test \cr
     \code{\link{qqplot.ppm}} \tab diagnostic plot for interpoint
     interaction \cr
     \code{\link{scan.test}} \tab spatial scan statistic/test \cr
@@ -1509,8 +1580,8 @@
 
 \section{VIII. TESTS AND DIAGNOSTICS}{
 
-  \bold{Classical hypothesis tests:}
-  
+  \bold{Hypothesis tests:}
+
   \tabular{ll}{
     \code{\link{quadrat.test}} \tab \eqn{\chi^2}{chi^2} goodness-of-fit
     test on quadrat counts \cr
@@ -1522,13 +1593,20 @@
     \code{\link{scan.test}} \tab spatial scan statistic/test \cr
     \code{\link{dclf.test}} \tab Diggle-Cressie-Loosmore-Ford test \cr
     \code{\link{mad.test}} \tab Mean Absolute Deviation test \cr
-    \code{\link{dclf.progress}} \tab Progress plot for DCLF test \cr
-    \code{\link{mad.progress}} \tab Progress plot for MAD test \cr
     \code{\link{anova.ppm}} \tab Analysis of Deviance for
     point process models 
   }
 
-  \bold{Sensitivity diagnostics:}
+  More recently-developed tests:
+  
+  \tabular{ll}{
+    \code{\link{dg.test}} \tab Dao-Genton test \cr
+    \code{\link{bits.test}} \tab Balanced independent two-stage test \cr
+    \code{\link{dclf.progress}} \tab Progress plot for DCLF test \cr
+    \code{\link{mad.progress}} \tab Progress plot for MAD test \cr
+  }
+
+\bold{Sensitivity diagnostics:}
 
   Classical measures of model sensitivity such as leverage and influence
   have been adapted to point process models.
@@ -1537,6 +1615,7 @@
       \code{\link{leverage.ppm}} \tab Leverage for point process model\cr
       \code{\link{influence.ppm}} \tab Influence for point process model\cr
       \code{\link{dfbetas.ppm}} \tab Parameter influence\cr
+      \code{\link{dffit.ppm}} \tab Effect change diagnostic
     }
   
   \bold{Diagnostics for covariate effect:}
@@ -1556,7 +1635,7 @@
   
   Residuals for a fitted point process model, and diagnostic plots
   based on the residuals, were introduced in Baddeley et al (2005) and
-  Baddeley, Rubak and \ifelse{latex}{\out{M\o ller}}{Moller} (2011).
+  Baddeley, Rubak and \Moller (2011).
   
   Type \code{demo(diagnose)}
   for a demonstration of the diagnostics features.
@@ -1564,7 +1643,7 @@
   \tabular{ll}{
     \code{\link{diagnose.ppm}} \tab diagnostic plots for spatial trend\cr
     \code{\link{qqplot.ppm}} \tab diagnostic Q-Q plot for interpoint interaction\cr
-    \code{\link{residualspaper}} \tab examples from Baddeley et al (2005) \cr
+    \code{\link[spatstat.data]{residualspaper}} \tab examples from Baddeley et al (2005) \cr
     \code{\link{Kcom}} \tab model compensator of \eqn{K} function \cr
     \code{\link{Gcom}} \tab model compensator of \eqn{G} function \cr
     \code{\link{Kres}} \tab score residual of \eqn{K} function \cr
@@ -1596,7 +1675,7 @@
   The online manual entries are quite detailed and should be consulted
   first for information about a particular function.
   
-  The forthcoming book
+  The book
   Baddeley, Rubak and Turner (2015) is a complete course
   on analysing spatial point patterns, with full details about
   \pkg{spatstat}.
@@ -1614,8 +1693,9 @@
 \references{
   Baddeley, A. (2010)
   \emph{Analysing spatial point patterns in R}.
-  Workshop notes. Version 4.1. CSIRO online technical publication.
-  \url{https://research.csiro.au/software/r-workshop-notes/}
+  Workshop notes, Version 4.1.
+  Online technical publication, CSIRO.
+  \url{https://research.csiro.au/software/wp-content/uploads/sites/6/2015/02/Rspatialcourse_CMIS_PDF-Standard.pdf}
 
   Baddeley, A., Rubak, E. and Turner, R. (2015)
   \emph{Spatial Point Patterns: Methodology and Applications with R}.
@@ -1635,12 +1715,12 @@
   ISBN: 0-387-28311-0.
 
   Baddeley, A., Turner, R.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005)
+  \Moller, J. and Hazelton, M. (2005)
   Residual analysis for spatial point processes.
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.
 
-  Baddeley, A., Rubak, E. and \ifelse{latex}{\out{M\o ller}}{Moller}, J. (2011)
+  Baddeley, A., Rubak, E. and \Moller, J. (2011)
   Score, pseudo-score and residual
   diagnostics for spatial point process models.
   \emph{Statistical Science} \bold{26}, 613--646.
@@ -1648,11 +1728,15 @@
   Baddeley, A., Turner, R., Mateu, J. and Bevan, A. (2013)
   Hybrids of Gibbs point process models and their implementation.
   \emph{Journal of Statistical Software} \bold{55}:11, 1--43.
-  \url{http://www.jstatsoft.org/v55/i11/}
+  \url{https://www.jstatsoft.org/v55/i11/}
 
   Diggle, P.J. (2003)
   \emph{Statistical analysis of spatial point patterns},
   Second edition. Arnold.
+
+  Diggle, P.J. (2014)
+  \emph{Statistical Analysis of Spatial and Spatio-Temporal Point Patterns},
+  Third edition. {Chapman and Hall/CRC}.
 
   Gelfand, A.E., Diggle, P.J., Fuentes, M. and Guttorp, P., editors (2010)
   \emph{Handbook of Spatial Statistics}.
@@ -1664,6 +1748,10 @@
   \emph{Journal of Computational and Graphical Statistics}
   \bold{8}, 510--530.
 
+  Illian, J., Penttinen, A., Stoyan, H. and Stoyan, D. (2008)
+  \emph{Statistical Analysis and Modelling of Spatial Point Patterns.}
+  Wiley.
+  
   Waagepetersen, R.
   An estimating function approach to inference for
   inhomogeneous Neyman-Scott processes.
@@ -1674,27 +1762,36 @@
   General Public License", a copy of which is distributed with the package.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak \email{rubak@math.aau.dk}.
+  \spatstatAuthors.
 }
 \section{Acknowledgements}{
   Kasper Klitgaard Berthelsen,
+  Ottmar Cronie,
+  Tilman Davies,
+  Yongtao Guan,
   Ute Hahn,
   Abdollah Jalilian,
   Marie-Colette van Lieshout,
+  Greg McSwiggan,
   Tuomas Rajala,
-  Dominic Schuhmacher and
+  Suman Rakshit,
+  Dominic Schuhmacher,
   Rasmus Waagepetersen
+  and
+  Hangsheng Wang
   made substantial contributions of code.
 
-  Additional contributions by
+  Additional contributions and suggestions from
+  Monsuru Adepeju,
+  Corey Anderson,
   Ang Qi Wei,
+  Ryan Arellano,
+  Jens \ifelse{latex}{\out{{\AA}str{\" o}m}}{Astrom},
+  Robert Aue,
+  Marcel Austenfeld,
   Sandro Azaele,
   Malissa Baddeley,
+  Guy Bayegnak,
   Colin Beale,
   Melanie Bell,
   Thomas Bendtsen,
@@ -1707,6 +1804,8 @@
   Roger Bivand,
   Jose M. Blanco Moreno,
   Florent Bonneu,
+  Jordan Brown,
+  Ian Buller,
   Julian Burgos,
   Simon Byers,
   Ya-Mei Chang,
@@ -1714,10 +1813,17 @@
   Igor Chernayavsky,
   Y.C. Chin,
   Bjarke Christensen,
+  \ifelse{latex}{\out{Luc\'{\i{}}a}}{Lucia} Cobo Sanchez,
   Jean-Francois Coeurjolly,
+  Kim Colyvas,
+  Hadrien Commenges,
+  Rochelle Constantine,
   Robin Corria Ainslie,
+  Richard Cotton,
+  Andy Craig,
   Marcelino de la Cruz,
   Peter Dalgaard,
+  Mario D'Antuono,
   Sourav Das,
   Peter Diggle,
   Patrick Donnelly,
@@ -1725,6 +1831,7 @@
   Stephen Eglen,
   Ahmed El-Gabbas,
   Belarmain Fandohan,
+  Pavel Fibich,
   Olivier Flores,
   David Ford,
   Peter Forbes,
@@ -1733,6 +1840,7 @@
   Funwi-Gabga Neba,
   Oscar Garcia,
   Agnes Gault,
+  Jonas Geldmann,
   Marc Genton,
   Shaaban Ghalandarayeshi,
   Julian Gilbey,
@@ -1741,31 +1849,40 @@
   C. Graf,
   Ute Hahn,
   Andrew Hardegen,
-  Martin \ifelse{latex}{\out{B\o gsted}}{Bogsted} Hansen,
+  Martin \Bogsted Hansen,
   Martin Hazelton,
   Juha Heikkinen,
   Mandy Hering,
   Markus Herrmann,
+  Maximilian Hesselbarth,
+  Paul Hewson,
+  Hamidreza Heydarian,
+  Kassel Hingee,
   Kurt Hornik,
   Philipp Hunziker,
   Jack Hywood,
   Ross Ihaka,
+  \ifelse{latex}{\out{\u{C}enk I\c{c}\"{o}s}}{Cenk Icos},
   Aruna Jammalamadaka,
   Robert John-Chandran,
   Devin Johnson,
   Mahdieh Khanmohammadi,
   Bob Klaver,
+  Lily Kozmian-Ledward,
   Peter Kovesi,
   Mike Kuhn,
   Jeff Laake,
-  Frederic Lavancier,
-  Tom Lawrence,
   Robert Lamb,
+  \ifelse{latex}{\out{Fr\'{e}d\'{e}ric}}{Frederic} Lavancier,
+  Tom Lawrence,
+  Tomas Lazauskas,
   Jonathan Lee,
   George Leser,
+  Angela Li,
   Li Haitao,
   George Limitsios,
   Andrew Lister,
+  Nestor Luambua,
   Ben Madin,
   Martin Maechler,
   Kiran Marchikanti,
@@ -1775,24 +1892,31 @@
   Monia Mahling,
   Jorge Mateu Mahiques,
   Ulf Mehlig,
+  Frederico Mestre,
   Sebastian Wastl Meyer,
   Mi Xiangcheng,
   Lore De Middeleer,
   Robin Milne,
   Enrique Miranda,
-  Jesper \ifelse{latex}{\out{M\o ller}}{Moller},
+  Jesper \Moller,
+  Annie \ifelse{latex}{\out{Molli{\'e}}}{Mollie},
+  Ines Moncada,
+  Mehdi Moradi,
+  Virginia Morera Pujol,
   Erika Mudrak,
   Gopalan Nair,
+  Nader Najari,
   Nicoletta Nava,
   Linda Stougaard Nielsen,
   Felipe Nunes,
   Jens Randel Nyengaard,
-  Jens \ifelse{latex}{\out{Oehlschl\"{a}gel}}{Oehlschlaegel},
+  Jens \Oehlschlaegel,
   Thierry Onkelinx,
   Sean O'Riordan,
   Evgeni Parilov,
   Jeff Picka,
   Nicolas Picard,
+  Tim Pollington,
   Mike Porter,
   Sergiy Protsiv,
   Adrian Raftery,
@@ -1800,17 +1924,20 @@
   Ben Ramage,
   Pablo Ramon,
   Xavier Raynaud,
+  Nicholas Read,
   Matt Reiter,
   Ian Renner,
   Tom Richardson,
   Brian Ripley,
+  Yonatan Rosen,
   Ted Rosenbaum,
   Barry Rowlingson,
   Jason Rudokas,
+  Tyler Rudolph,
   John Rudge,
   Christopher Ryan,
   Farzaneh Safavimanesh,
-  Aila \ifelse{latex}{\out{S\"{a}rkk\"{a}}}{Sarkka},
+  Aila \Sarkka,
   Cody Schank,
   Katja Schladitz,
   Sebastian Schutte,
@@ -1819,16 +1946,20 @@
   \ifelse{latex}{\out{Fran\c{c}ois S\'{e}m\'{e}curbe}}{Francois Semecurbe},
   Vadim Shcherbakov,
   Shen Guochun,
+  Shi Peijian,
   Harold-Jeffrey Ship,
+  Tammy L Silva,
   Ida-Maria Sintorn,
   Yong Song, 
   Malte Spiess,
   Mark Stevenson,
   Kaspar Stucki,
+  Jan Sulavik,
   Michael Sumner,
   P. Surovy,
   Ben Taylor,
   Thordis Linda Thorarinsdottir,
+  Leigh Torres,
   Berwin Turlach,
   Torben Tvedebrink,
   Kevin Ummer,
@@ -1838,13 +1969,16 @@
   Mikko Vihtakari,
   Alexendre Villers,
   Fabrice Vinatier,
+  Maximilian Vogtland,
   Sasha Voss,
+  Sven Wagner,
   Hao Wang,
   H. Wendrock,
   Jan Wild,
   Carl G. Witthoft,
   Selene Wong,
   Maxime Woringer,
+  Luke Yates,
   Mike Zamboni
   and
   Achim Zeileis.

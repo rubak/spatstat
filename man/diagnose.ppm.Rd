@@ -54,6 +54,7 @@
     The diagnostic calculations
     will be confined to those points of the data pattern which are
     at least \code{rbord} units away from the edge of the window.
+    (An infinite value of \code{rbord} will be ignored.)
   }
   \item{cumulative}{
     Logical flag indicating whether the lurking variable plots
@@ -317,7 +318,8 @@
   of Baddeley et al (2005), if \code{oldstyle=TRUE},
   the two-standard-deviation limits are calculated
   using the innovation variance, an over-estimate of the true
-  variance of the residuals.
+  variance of the residuals. (However, see the section about
+  Replicated Data).
 
   The argument \code{rv} would normally be used only by experts.
   It enables the user to substitute arbitrary values for the
@@ -352,13 +354,22 @@
   Q-Q plot of the residuals, and \code{\link{lurking}}, which produces
   lurking variable plots for any spatial covariate.
 }
+\section{Replicated Data}{
+  Note that if \code{object} is a model that was obtained by
+  first fitting a model to replicated point pattern data using
+  \code{\link{mppm}} and then using \code{\link{subfits}} to extract
+  a model for one of the individual point patterns, then the
+  variance calculations are only implemented for the
+  innovation variance (\code{oldstyle=TRUE}) and this is the default
+  in such cases.
+}
 \references{
-  Baddeley, A., Turner, R., \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005)
+  Baddeley, A., Turner, R., \Moller, J. and Hazelton, M. (2005)
   Residual analysis for spatial point processes.
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.
 
-  Baddeley, A., \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Pakes, A.G. (2008) 
+  Baddeley, A., \Moller, J. and Pakes, A.G. (2008) 
   Properties of residuals for spatial point processes.
   \emph{Annals of the Institute of Statistical Mathematics}
   \bold{60}, 627--649.
@@ -382,8 +393,12 @@
     \dontrun{
     diagnose.ppm(fit, type="pearson")
     }
+
     diagnose.ppm(fit, which="marks")
+
     diagnose.ppm(fit, type="raw", plot.neg="discrete")
+
+    diagnose.ppm(fit, type="pearson", which="smooth")
 
     # save the diagnostics and plot them later
     u <- diagnose.ppm(fit, rbord=0.15, plot.it=FALSE)
@@ -392,11 +407,9 @@
     plot(u, which="marks")
     }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{models}

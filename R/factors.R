@@ -3,7 +3,7 @@
 #'
 #'  Tools for manipulating factors and factor-valued things
 #'
-#'  $Revision: 1.3 $  $Date: 2015/03/28 10:22:42 $
+#'  $Revision: 1.4 $  $Date: 2016/04/25 02:34:40 $
 
 relevel.im <- function(x, ref, ...) {
   if(x$type != "factor")
@@ -33,7 +33,7 @@ mergeLevels <- function(.f, ...) {
   n <- length(map)
   if(n == 0) return(.f)
   # mapping for 'other'
-  if(any(isnul <- (sapply(map, length) == 0))) {
+  if(any(isnul <- (lengths(map) == 0))) {
     if(sum(isnul) > 1)
       stop("At most one argument should be NULL or character(0)")
     otherlevels <- setdiff(levels(.f), unlist(map))
@@ -57,5 +57,8 @@ mergeLevels <- function(.f, ...) {
   return(newf)
 }
 
-
-
+levelsAsFactor <- function(x) {
+  lev <- levels(x)
+  if(is.null(lev)) return(NULL)
+  return(factor(lev, levels=lev))
+}

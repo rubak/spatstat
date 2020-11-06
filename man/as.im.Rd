@@ -1,4 +1,4 @@
-\name{as.im}  %DontDeclareMethods
+\name{as.im}  
 \alias{as.im}
 \alias{as.im.im}
 \alias{as.im.leverage.ppm}
@@ -7,9 +7,12 @@
 \alias{as.im.tess}
 \alias{as.im.function}
 \alias{as.im.funxy}
+\alias{as.im.expression}
 \alias{as.im.distfun}
 \alias{as.im.nnfun}
+\alias{as.im.densityfun}
 \alias{as.im.Smoothfun}
+\alias{as.im.data.frame}
 \alias{as.im.default}
 \title{Convert to Pixel Image}
 \description{
@@ -34,21 +37,29 @@
 
   \method{as.im}{function}(X, W=NULL, \dots,
         eps=NULL, dimyx=NULL, xy=NULL,
-        na.replace=NULL, strict=FALSE)
+        na.replace=NULL,
+        stringsAsFactors=NULL,
+        strict=FALSE, drop=TRUE)
 
   \method{as.im}{funxy}(X, W=Window(X), \dots)
 
+  \method{as.im}{expression}(X, W=NULL, \dots)
+
   \method{as.im}{distfun}(X, W=NULL, \dots,
         eps=NULL, dimyx=NULL, xy=NULL,
-        na.replace=NULL)
+        na.replace=NULL, approx=TRUE)
 
   \method{as.im}{nnfun}(X, W=NULL, \dots,
         eps=NULL, dimyx=NULL, xy=NULL,
-        na.replace=NULL)
+        na.replace=NULL, approx=TRUE)
 
-  \method{as.im}{Smoothfun}(X, W=NULL, \dots)
+  \method{as.im}{densityfun}(X, W=Window(X), \dots, approx=TRUE)
 
-  \method{as.im}{leverage.ppm}(X, \dots)
+  \method{as.im}{Smoothfun}(X, W=Window(X), \dots, approx=TRUE)
+
+  \method{as.im}{leverage.ppm}(X, \dots, what=c("smooth", "nearest"))
+
+  \method{as.im}{data.frame}(X, \dots, step, fatal=TRUE, drop=TRUE)
 
   \method{as.im}{default}(X, W=NULL, \dots,
         eps=NULL, dimyx=NULL, xy=NULL,
@@ -81,6 +92,42 @@
     are passed, and only if they match the names of formal arguments of
     \code{X}. 
   }
+  \item{step}{
+    Optional. A single number, or numeric vector of length 2,
+    giving the grid step lengths
+    in the \eqn{x} and \eqn{y} directions.
+  }
+  \item{fatal}{
+    Logical value indicating what to do if the resulting image
+    would be too large for available memory. If \code{fatal=TRUE} (the
+    default), an error occurs. If \code{fatal=FALSE}, a warning is
+    issued and \code{NULL} is returned.
+  }
+  \item{drop}{
+    Logical value indicating what to do if the result would
+    normally be a list of pixel images but the list contains
+    only one image.
+    If \code{drop=TRUE} (the default), the pixel image is extracted
+    and the result is a pixel image.
+    If \code{drop=FALSE}, this list is returned as the result.
+  }
+  \item{stringsAsFactors}{
+    Logical value (passed to \code{\link[base]{data.frame}})
+    specifying how to handle pixel values which
+    are character strings. If \code{TRUE}, character values are
+    interpreted as factor levels. If \code{FALSE}, they remain
+    as character strings. The default depends on the version of \R.
+    See section \emph{Handling Character Strings}.
+  }
+  \item{approx}{
+   Logical value indicating whether to compute an approximate result
+   at faster speed.
+ }
+ \item{what}{
+   Character string (partially matched) specifying which image data
+   should be extracted. See \code{\link{plot.leverage.ppm}} for
+   explanation.
+ }
 }
 \details{
   This function converts the data \code{X} into a pixel image
@@ -124,13 +171,51 @@
     vector or factor of the same length as the input vectors,
     giving the pixel values.
     \item
-    an object of class \code{"funxy"} representing a \code{function(x,y,...)}
+    an object of class \code{"funxy"} representing a
+    \code{function(x,y,...)} defined in a spatial region.
+    The function will be evaluated as described above.
+    The window \code{W} defaults to the domain of definition of the
+    function.
     \item
-    an object of class \code{"distfun"} representing a distance function
-    (created by the command \code{\link{distfun}}).
+    an object of class \code{"funxy"} which also belongs to one of
+    the following special classes. If \code{approx=TRUE} (the default),
+    the function will be evaluated approximately using a very fast
+    algorithm. If \code{approx=FALSE}, the function will be evaluated
+    exactly at each grid location as described above.
+    \itemize{
+      \item
+      an object of class \code{"distfun"} representing a distance function
+      (created by the command \code{\link{distfun}}).
+      The fast approximation is 
+      the distance transform \code{\link{distmap}}.
+      \item
+      an object of class \code{"nnfun"}
+      representing a nearest neighbour function
+      (created by the command \code{\link{nnfun}}).
+      The fast approximation is \code{\link{nnmap}}.
+      \item
+      an object of class \code{"densityfun"} representing a kernel
+      estimate of intensity (created by the command \code{\link{densityfun}}).
+      The fast approximation is the Fast Fourier Transform
+      algorithm in \code{\link{density.ppp}}.
+      \item
+      an object of class \code{"Smoothfun"} 
+      representing kernel-smoothed values
+      (created by the command \code{\link{Smoothfun}}).
+      The fast approximation is the Fast Fourier Transform
+      algorithm in \code{\link{Smooth.ppp}}.
+    }
     \item
-    an object of class \code{"nnfun"} representing a nearest neighbour function
-    (created by the command \code{\link{nnfun}}).
+    An \code{expression} involving the variables \code{x} and \code{y}
+    representing the spatial coordinates, and possibly also involving other
+    variables.
+    The additional argument \code{W} must be present; it will be converted to
+    a binary image mask. The expression \code{X} will be evaluated
+    in an environment where \code{x} and \code{y} are
+    \bold{vectors} containing the spatial coordinates
+    of all the pixels in the image mask.
+    Evaluation of the expression \code{X} must yield a vector or factor,
+    of the same length as \code{x} and \code{y}, giving the pixel values.
     \item
     a list with entries \code{x, y, z} in the format expected by
     the standard \code{R} functions
@@ -142,6 +227,14 @@
     \item
     a point pattern (object of class \code{"ppp"}).
     See the separate documentation for \code{\link{as.im.ppp}}.
+    \item
+    A data frame with at least three columns.
+    Columns named \code{x}, \code{y} and \code{z}, if present,
+    will be assumed to contain the spatial coordinates and the pixel
+    values, respectively. Otherwise the \code{x} and \code{y}
+    coordinates will be taken from the first two columns of the
+    data frame, and any remaining columns will be interpreted as
+    pixel values.
   }
 
   The spatial domain (enclosing rectangle) of the pixel image
@@ -177,9 +270,49 @@
   of \pkg{spatstat}, the command \code{X <- as.im(X)} will
   repair the internal format of \code{X} so that it conforms to the
   current version of \pkg{spatstat}.
+
+  If \code{X} is a data frame with \code{m} columns,
+  then \code{m-2} columns of data are interpreted as pixel values,
+  yielding \code{m-2} pixel images. The result of
+  \code{as.im.data.frame} is a list of pixel
+  images, belonging to the class \code{"imlist"}.
+  If \code{m = 3} and \code{drop=TRUE} (the default), then the
+  result is a pixel image rather than a list containing this image.
+
+  If \code{X} is a \code{function(x,y)} which returns a matrix of
+  values, then \code{as.im(X, W)} will be a list of pixel images.
+}
+\section{Character-valued images}{
+  By default, if the pixel value data are character strings, they will be
+  treated as levels of a factor, and the resulting image will be
+  factor-valued. To prevent the conversion of character strings to
+  factors, use the argument \code{stringsAsFactors=FALSE},
+  which is recognised by most of the
+  methods for \code{as.im}, or alternatively set
+  \code{options(stringsAsFactors=FALSE)}.
+}
+\section{Handling Character Strings}{
+  The argument \code{stringsAsFactors}
+  is a logical value (passed to \code{\link[base]{data.frame}})
+  specifying how to handle pixel values which
+  are character strings. If \code{TRUE}, character values are
+  interpreted as factor levels. If \code{FALSE}, they remain
+  as character strings. The default values of \code{stringsAsFactors}
+  depends on the version of \R.
+  \itemize{
+    \item In \R versions \code{< 4.1.0}
+    the factory-fresh default is \code{stringsAsFactors=FALSE} and
+    the default can be changed by setting
+    \code{options(stringsAsFactors=FALSE)}.
+    \item in \R versions {>= 4.1.0} the default
+    is \code{stringsAsFactors=FALSE} and there is no option to
+    change the default.
+  }
 }
 \value{
-  An image object of class \code{"im"}.
+  A pixel image (object of class \code{"im"}),
+  or a list of pixel images, 
+  or \code{NULL} if the conversion failed.
 }
 \seealso{
   Separate documentation for \code{\link{as.im.ppp}}
@@ -187,39 +320,56 @@
 \examples{
   data(demopat)
   # window object
-  W <- demopat$window
+  W <- Window(demopat)
   plot(W)
   Z <- as.im(W)
   image(Z)
   # function
   Z <- as.im(function(x,y) {x^2 + y^2}, unit.square())
   image(Z)
+  # or as an expression
+  Z <- as.im(expression(x^2+y^2), square(1))
+
   # function with extra arguments
   f <- function(x, y, x0, y0) {
       sqrt((x - x0)^2 + (y-y0)^2)
   }
   Z <- as.im(f, unit.square(), x0=0.5, y0=0.5)
   image(Z)
+
   # Revisit the Sixties
-  data(letterR)
   Z <- as.im(f, letterR, x0=2.5, y0=2)
   image(Z)
-  # usual convention in S
+  # usual convention in R
   stuff <- list(x=1:10, y=1:10, z=matrix(1:100, nrow=10))
   Z <- as.im(stuff)
   # convert to finer grid
   Z <- as.im(Z, dimyx=256)
 
+  #' distance functions
+  d <- distfun(redwood)
+  Zapprox <- as.im(d)
+  Zexact <- as.im(d, approx=FALSE)
+  plot(solist(approx=Zapprox, exact=Zexact), main="")
+
   # pixellate the Dirichlet tessellation
   Di <- dirichlet(runifpoint(10))
   plot(as.im(Di))
   plot(Di, add=TRUE)
+
+  # as.im.data.frame is the reverse of as.data.frame.im
+  grad <- bei.extra$grad
+  slopedata <- as.data.frame(grad)
+  slope <- as.im(slopedata)
+  unitname(grad) <- unitname(slope) <- unitname(grad) # for compatibility
+  all.equal(slope, grad) # TRUE
+
+  ## handling of character values
+  as.im("a", W=letterR, na.replace="b")
+  as.im("a", W=letterR, na.replace="b", stringsAsFactors=FALSE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{manip}

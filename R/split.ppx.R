@@ -1,7 +1,7 @@
 #
 # split.ppx.R
 #
-# $Revision: 1.3 $ $Date: 2013/04/25 06:37:43 $
+# $Revision: 1.6 $ $Date: 2018/09/07 05:49:15 $
 #
 # split.ppx etc
 #
@@ -36,12 +36,15 @@ split.ppx <- function(x, f = marks(x), drop=FALSE, un=NULL, ...) {
     fsplit <- f
     if(is.factor(f)) {
       splittype <- "factor"
+    } else if(is.logical(f)) {
+      splittype <- "factor"
+      f <- factor(f)
     } else if(is.character(f) && length(f) == 1) {
       # f is the name of a column of marks
       marx <- marks(x)
       if((is.data.frame(marx) || is.hyperframe(marx))
          && (f %in% names(marx))) {
-        fsplit <- f <- marx[[f]]
+        fsplit <- f <- as.factor(marx[ ,f,drop=TRUE])
       } else
         stop(paste("The name", sQuote(f), "does not match any column of marks"))
       splittype <- "factor"

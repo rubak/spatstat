@@ -2,7 +2,7 @@
 #
 #    pairpiece.S
 #
-#    $Revision: 1.21 $	$Date: 2013/04/25 06:37:43 $
+#    $Revision: 1.23 $	$Date: 2018/03/15 07:37:41 $
 #
 #    A pairwise interaction process with piecewise constant potential
 #
@@ -44,6 +44,7 @@ PairPiece <- local({
                      },
          par      = list(r = NULL), # filled in later
          parnames = "interaction thresholds",
+         hasInf = FALSE,
          init     = function(self) {
                       r <- self$par$r
                       if(!is.numeric(r) || !all(r > 0))

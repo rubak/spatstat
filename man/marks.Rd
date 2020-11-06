@@ -102,17 +102,14 @@ x \%mark\% value
   \code{\link{hyperframe}}
 }
 \examples{
-   data(amacrine)
+   X <- amacrine
    # extract marks
-   m <- marks(amacrine)
+   m <- marks(X)
    # recode the mark values "off", "on" as 0, 1
-   marks(amacrine) <- as.integer(m == "on")
+   marks(X) <- as.integer(m == "on")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{manip}

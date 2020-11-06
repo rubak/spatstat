@@ -3,7 +3,7 @@
 #
 # Simple mechanism for layered plotting
 #
-#  $Revision: 1.33 $  $Date: 2015/02/17 07:17:47 $
+#  $Revision: 1.39 $  $Date: 2017/06/05 10:31:58 $
 #
 
 layered <- function(..., plotargs=NULL, LayerList=NULL) {
@@ -39,7 +39,7 @@ print.layered <- function(x, ...) {
     print(x[[i]])
   }
   pl <- layerplotargs(x)
-  hasplot <- (unlist(lapply(pl, length)) > 0)
+  hasplot <- (lengths(pl) > 0)
   if(any(hasplot)) 
     splat("Includes plot arguments for", commasep(names(pl)[hasplot]))
   invisible(NULL)
@@ -147,11 +147,14 @@ plotEachLayer <- function(x, ..., main,
                         "lpp", "linnet", 
                         "im", "msr", "layered"))) {
         ## plot method for 'xi' has argument 'do.plot'.
-        out[[i]] <- outi <- do.call("plot",
+        mplf <-
+          if(inherits(xi, c("ppp", "lpp"))) list(multiplot=FALSE) else list()
+        out[[i]] <- outi <- do.call(plot,
                                     resolve.defaults(list(x=xi,
                                                           add=add.i,
                                                           do.plot=do.plot),
                                                      list(...),
+                                                     mplf,
                                                      pla.i,
                                                      dflt))
         boxes[[i]] <- as.rectangle(as.owin(outi))
@@ -186,21 +189,31 @@ plotEachLayer <- function(x, ..., main,
 
 
 "[.layered" <- function(x, i, j, drop=FALSE, ...) {
-  if(missing(i) && missing(j))
+  i.given <- !missing(i) && !is.null(i)
+  j.given <- !missing(j) && !is.null(j)
+  if(!i.given && !j.given)
     return(x)
   p <- attr(x, "plotargs")
   x <- unclass(x)
   nx <- length(x)
-  if(!missing(i) && !is.null(i)) {
-    x <- x[i]
-    p <- p[i]
-    nx <- length(x)
+  if(i.given) {
+    if(is.owin(i)) {
+      #' spatial window subset
+      nonemp <- (lengths(x) != 0)
+      x[nonemp] <- lapply(x[nonemp], "[", i=i, ...)
+    } else {
+      #' vector subset index
+      x <- x[i]
+      p <- p[i]
+      nx <- length(x)
+    }
   }
-  isnul <- (unlist(lapply(x, length)) == 0)
-  if(!missing(j) && !is.null(j))
-    x[!isnul] <- lapply(x[!isnul], "[", i=j)
+  if(j.given) {
+    nonemp <- (lengths(x) != 0)
+    x[nonemp] <- lapply(x[nonemp], "[", i=j, ...)
+  }
   if(drop && nx == 1)
-    return(x[[1]])
+    return(x[[1L]])
   y <- layered(LayerList=x, plotargs=p)
   return(y)
 }
@@ -272,7 +285,7 @@ shift.layered <- function(X, vec=c(0,0), ...) {
     if(!missing(vec)) 
       warning("Argument vec ignored; overridden by other arguments")
     ## ensure the same shift is applied to all layers
-    s <- shift(X[[1]], ...)
+    s <- shift(X[[1L]], ...)
     vec <- getlastshift(s)
   }
   Y <- applytolayers(X, shift, vec=vec)
@@ -331,11 +344,11 @@ as.owin.layered <- local({
     Wlist <- lapply(unname(W), as.owin, ..., fatal=fatal)
     Wlist <- lapply(Wlist, rescue.rectangle)
     Wlist <- lapply(Wlist, puffbox)
-    Z <- Wlist[[1]]
+    Z <- Wlist[[1L]]
     if(length(Wlist) > 1) {
-      same <- unlist(lapply(Wlist[-1], identical, y=Z))
+      same <- unlist(lapply(Wlist[-1L], identical, y=Z))
       if(!all(same))
-        Z <- do.call("union.owin", Wlist)
+        Z <- do.call(union.owin, Wlist)
     }
     return(Z)
   }
@@ -344,8 +357,8 @@ as.owin.layered <- local({
     ## union.owin will delete boxes that have width zero or height zero
     ## so 'puff' them out slightly
     ss <- sidelengths(Frame(W))
-    if(ss[1] == 0) W$xrange <- W$xrange + 1e-6 * c(-1,1) * ss[2]
-    if(ss[2] == 0) W$yrange <- W$yrange + 1e-6 * c(-1,1) * ss[1]
+    if(ss[1L] == 0) W$xrange <- W$xrange + 1e-6 * c(-1,1) * ss[2L]
+    if(ss[2L] == 0) W$yrange <- W$yrange + 1e-6 * c(-1,1) * ss[1L]
     return(W)
   }
   
@@ -360,6 +373,7 @@ as.layered <- function(X) {
 }
 
 as.layered.default <- function(X) {
+  if(is.list(X) && all(sapply(X, is.sob))) layered(LayerList=X) else 
   layered(X)
 }
 
@@ -367,9 +381,9 @@ as.layered.ppp <- function(X) {
   if(!is.marked(X)) return(layered(X))
   if(is.multitype(X)) return(layered(LayerList=split(X)))
   mX <- marks(X)
-  if(!is.null(d <- dim(mX)) && d[2] > 1) {
+  if(!is.null(d <- dim(mX)) && d[2L] > 1) {
     mx <- as.data.frame(marks(X))
-    Y <- lapply(mx, function(z, P) setmarks(P,z), P=X)
+    Y <- lapply(mx, setmarks, x=X)
     return(layered(LayerList=Y))
   }
   return(layered(X))

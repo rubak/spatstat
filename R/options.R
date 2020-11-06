@@ -3,7 +3,7 @@
 #
 #     Spatstat options and other internal states
 #
-#    $Revision: 1.67 $   $Date: 2015/09/06 03:23:27 $
+#    $Revision: 1.89 $   $Date: 2020/10/14 02:20:30 $
 #
 #
 
@@ -14,6 +14,9 @@ putSpatstatVariable <- function(name, value) {
 }
 getSpatstatVariable <- function(name) {
   get(name, envir=.spEnv)
+}
+existsSpatstatVariable <- function(name) {
+  exists(name, envir=.spEnv)
 }
 
 putSpatstatVariable("Spatstat.Options", list())
@@ -78,13 +81,12 @@ warn.once <- function(key, ...) {
 
 ".Spat.Stat.Opt.Table" <-
   list(
-       allow.logi.influence=list(
-         ## whether leverage/influence calculations are permitted
-         ## on a fitted model with method='logi'
+       areainter.polygonal = list(
+         ## use polygonal calculations in AreaInter
          default=FALSE,
-         check=function(x) { is.logical(x) && length(x) == 1 },
+         check=function(x) { is.logical(x) && length(x) == 1},
          valid="a single logical value"
-       ),
+         ),
        checkpolygons = list(
          ## superseded
          superseded=TRUE,
@@ -107,6 +109,12 @@ warn.once <- function(key, ...) {
          check=function(x) { is.logical(x) && length(x) == 1 },
          valid="a single logical value"
        ),
+       closepairs.altcode=list(
+         ## use alternative code for 'closepairs'
+         default=FALSE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
        crossing.psp.useCall=list(
          ## use new code for 'crossing.psp'
          default=TRUE,
@@ -115,6 +123,12 @@ warn.once <- function(key, ...) {
        ),
        crosspairs.newcode=list(
          ## use new code for 'crosspairs'
+         default=TRUE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       densityTransform=list(
+         ## use experimental new C routines for 'density.ppp'
          default=TRUE,
          check=function(x) { is.logical(x) && length(x) == 1 },
          valid="a single logical value"
@@ -129,7 +143,8 @@ warn.once <- function(key, ...) {
          ## maximum size of matrix in dppeigen
          default=2^24, # 16,777,216
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x > 1024
+           is.numeric(x) && length(x) == 1 &&
+             all(x == ceiling(x)) && all(x > 1024)
          },
          valid="a single integer, greater than 1024"
        ),
@@ -143,7 +158,7 @@ warn.once <- function(key, ...) {
          ## default area expansion factor
          default=2,
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && x > 1
+           is.numeric(x) && length(x) == 1 && all(x > 1)
          },
          valid="a single numeric value, greater than 1"
        ),
@@ -177,6 +192,12 @@ warn.once <- function(key, ...) {
          check=function(x) { is.logical(x) && length(x) == 1 },
          valid="a single logical value"
        ),
+       fast.trigraph=list(
+         ## whether to use C function triograph or trigraph in edges2triangles
+         default=TRUE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
        fixpolygons = list(
          ## whether to repair polygons automatically
          default=TRUE,
@@ -197,7 +218,8 @@ warn.once <- function(key, ...) {
          ## threshold to trigger a warning from rpoispp 
          default=1e6,
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x > 1024
+           is.numeric(x) && length(x) == 1 &&
+             all(x == ceiling(x)) && all(x > 1024)
          },
          valid="a single integer, greater than 1024"
        ),
@@ -227,7 +249,7 @@ warn.once <- function(key, ...) {
          ## maximum edge correction weight 
          default=100,
          check=function(x){
-           is.numeric(x) && length(x) == 1 && is.finite(x) && x >= 1
+           is.numeric(x) && length(x) == 1 && is.finite(x) && all(x >= 1)
          },
          valid="a finite numeric value, not less than 1"
        ),
@@ -235,10 +257,17 @@ warn.once <- function(key, ...) {
          ## maximum size of matrix of pairs of points in mpl.R
          default=2^24, # 16,777,216
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x > 1024
+           is.numeric(x) && length(x) == 1 &&
+             all(x == ceiling(x)) && all(x > 1024)
          },
          valid="a single integer, greater than 1024"
        ),
+       mincon.trace = list(
+         ## tracing debugger in mincontrast
+         default=FALSE,
+         check=function(x) { is.logical(x) && length(x) == 1},
+         valid="a single logical value"
+         ),
        monochrome = list(
          ## switch for monochrome colour scheme
          default=FALSE,
@@ -249,7 +278,8 @@ warn.once <- function(key, ...) {
          ## number of values of bandwidth to try in bandwidth selection
          default=32,
          check=function(x) {
-           is.numeric(x) && (length(x) == 1) && (x == ceiling(x)) && (x > 2)
+           is.numeric(x) && (length(x) == 1) &&
+             all(x == ceiling(x)) && all(x > 2)
          },
          valid="a single integer, greater than 2"
        ),
@@ -265,7 +295,7 @@ warn.once <- function(key, ...) {
          ## number of grid points used to calculate area in area-interaction
          default=128,
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x > 1
+           is.numeric(x) && length(x) == 1 && all(x == ceiling(x)) && all(x > 1)
          },
          valid="a single integer, greater than 1"
        ),
@@ -273,7 +303,7 @@ warn.once <- function(key, ...) {
          ## default pixel dimensions
          default=128,
          check=function(x){
-           is.numeric(x) && (length(x) %in% c(1,2)) && is.finite(x) &&
+           is.numeric(x) && (length(x) %in% c(1,2)) && all(is.finite(x)) &&
            all(x == ceiling(x)) && all(x > 1) 
          },
          valid="an integer, or a pair of integers, greater than 1"
@@ -282,7 +312,8 @@ warn.once <- function(key, ...) {
          ## default total number of voxels
          default=2^22,
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x > 2^12
+           is.numeric(x) && length(x) == 1 &&
+             all(x == ceiling(x)) && all(x > 2^12)
          },
          valid="a single integer, greater than 2^12"
        ),
@@ -332,13 +363,13 @@ warn.once <- function(key, ...) {
          ## under what conditions to print estimated SE in print.ppm
          default="poisson",
          check=function(x) { is.character(x) && length(x) == 1 &&
-                             x %in% c("always", "poisson", "never") },
+                             all(x %in% c("always", "poisson", "never")) },
          valid="one of the strings \'always\', \'poisson\' or \'never\'"
        ),
        progress = list(
          ## how to display progress reports
          default="tty",
-         check=function(x){ x %in% c("tty", "tk", "txtbar") },
+         check=function(x){ all(x %in% c("tty", "tk", "txtbar")) },
          valid="one of the strings 'tty', 'tk' or 'txtbar'"
          ),
        project.fast=list(
@@ -351,7 +382,8 @@ warn.once <- function(key, ...) {
          ## size of point grid for computing areas in psstA
          default=32,
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x >= 8
+           is.numeric(x) && length(x) == 1 &&
+             all(x == ceiling(x)) && all(x >= 8)
          },
          valid="a single integer, greater than or equal to 8"
        ),
@@ -359,7 +391,8 @@ warn.once <- function(key, ...) {
          ## number of 'r' values to consider in psstA
          default=30,
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x >= 4
+           is.numeric(x) && length(x) == 1 &&
+             all(x == ceiling(x)) && all(x >= 4)
          },
          valid="a single integer, greater than or equal to 4"
        ),
@@ -380,7 +413,7 @@ warn.once <- function(key, ...) {
          ## default value of parameter 'nrep' in rmh
          default=5e5, 
          check=function(x) {
-           is.numeric(x) && length(x) == 1 && (x == ceiling(x)) && x > 0
+           is.numeric(x) && length(x) == 1 && all(x == ceiling(x)) && all(x > 0)
          },
          valid="a single integer, greater than 0"
        ),
@@ -388,14 +421,14 @@ warn.once <- function(key, ...) {
          ## default value of parameter 'p' in rmh
          default=0.9,
          check=function(x) { is.numeric(x) && length(x) == 1 &&
-                             x >= 0 && x <= 1 },
+                             all(x >= 0) && all(x <= 1) },
          valid="a single numerical value, between 0 and 1"
        ),
        rmh.q=list(
          ## default value of parameter 'q' in rmh
          default=0.9,
          check=function(x) { is.numeric(x) && length(x) == 1 &&
-                             x > 0 && x < 1 },
+                             all(x > 0) && all(x < 1) },
          valid="a single numerical value, strictly between 0 and 1"
        ),
        scalable = list(
@@ -413,7 +446,7 @@ warn.once <- function(key, ...) {
        terse = list(
          ## Level of terseness in printed output (higher => more terse)
          default=0,
-         check=function(x) { length(x) == 1 && (x %in% 0:4) },
+         check=function(x) { length(x) == 1 && all(x %in% 0:4) },
          valid="an integer between 0 and 4"
        ),
        transparent=list(
@@ -426,7 +459,7 @@ warn.once <- function(key, ...) {
          default="(",
          check=function(x) {
            is.character(x) && (length(x) == 1) &&
-             (x %in% c("(", "[", "{", ""))
+             all(x %in% c("(", "[", "{", ""))
          },
          valid="one of the strings '(', '[', '{' or '' "
        ),
@@ -448,9 +481,21 @@ warn.once <- function(key, ...) {
          check=function(x) { is.logical(x) && length(x) == 1 },
          valid="a single logical value"
        ),
+       kppm.adjusted=list(
+         ## experimental
+         default=FALSE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
        kppm.canonical=list(
          ## whether to use 'canonical' parameters in kppm
          default=FALSE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       kppm.strict=list(
+         ## whether to apply domain limits for cluster parameters in kppm
+         default=TRUE,
          check=function(x) { is.logical(x) && length(x) == 1 },
          valid="a single logical value"
        ),
@@ -461,12 +506,54 @@ warn.once <- function(key, ...) {
          valid="a single logical value"
        ),
        check.RandomFields.loaded=list(
-         # this is working OK so no need to check
+         # this is working OK so no need to check unless debugging
+         default=FALSE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       check.RandomFieldsUtils.loaded=list(
+         # this is working OK so no need to check unless debugging
+         default=FALSE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       Clinequad = list(
+         # use C code for 'linequad'
+         default=TRUE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       Ccountends = list(
+         # use C code for 'countends'
+         default=TRUE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       Clinearradius = list(
+         # use C code for 'boundingradius.linnet'
+         default=TRUE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       Cnndistlpp = list(
+         # use C code for 'nndist.lpp'/'nnwhich.lpp'
+         default=TRUE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       Cnncrosslpp = list(
+         # use C code for 'nncross.lpp'
+         default=TRUE,
+         check=function(x) { is.logical(x) && length(x) == 1 },
+         valid="a single logical value"
+       ),
+       developer = list(
+         # general purpose; user is a developer; use experimental code, etc
          default=FALSE,
          check=function(x) { is.logical(x) && length(x) == 1 },
          valid="a single logical value"
        )
-       )
+    )
 # end of options list
 
 reset.spatstat.options <- function() {
@@ -477,9 +564,9 @@ reset.spatstat.options <- function() {
 
 reset.spatstat.options()
 
-"spatstat.options" <-
-function (...) 
-{
+spatstat.options <- local({
+
+  spatstat.options <- function (...) {
     Spatstat.Options <- getSpatstatVariable("Spatstat.Options")
     called <- list(...)    
 
@@ -513,23 +600,21 @@ function (...)
             return(Spatstat.Options[choices])
 	} else {
 	   wrong <- called[!ischar]
-	   offending <- unlist(lapply(wrong,
-	   		function(x) { y <- x;
-	     		short.deparse(substitute(y)) }))
+	   offending <- sapply(wrong, ShortDeparse)
 	   offending <- paste(offending, collapse=",")
            stop(paste("Unrecognised mode of argument(s) [",
 		offending,
 	   "]: should be character string or name=value pair"))
     	}
     }
-# spatstat.options(name=value, name2=value2,...)
+    ## spatstat.options(name=value, name2=value2,...)
     assignto <- names(called)
     if (is.null(assignto) || !all(nzchar(assignto)))
         stop("options must all be identified by name=value")
     recog <- assignto %in% names(.Spat.Stat.Opt.Table)
     if(!all(recog))
 	stop(paste("Unrecognised option(s):", assignto[!recog]))
-# validate new values
+    ## validate new values
     for(i in seq_along(assignto)) {
       nama <- assignto[i]
       valo <- called[[i]]
@@ -539,12 +624,21 @@ function (...)
         stop(paste("Parameter", dQuote(nama), "should be",
                    entry$valid))
     }
-# reassign
-  changed <- Spatstat.Options[assignto]
-  Spatstat.Options[assignto] <- called
-  putSpatstatVariable("Spatstat.Options", Spatstat.Options)
+    ## reassign
+    changed <- Spatstat.Options[assignto]
+    Spatstat.Options[assignto] <- called
+    putSpatstatVariable("Spatstat.Options", Spatstat.Options)
   
-# return 
+    ## return 
     invisible(changed)
-}
+  }
+
+  ShortDeparse <- function(x) {
+    y <- x
+    dont.complain.about(y)
+    short.deparse(substitute(y))
+  }
+    
+  spatstat.options
+})
 

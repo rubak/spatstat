@@ -1,7 +1,7 @@
 #
 #     dg.S
 #
-#    $Revision: 1.17 $	$Date: 2014/10/24 00:22:30 $
+#    $Revision: 1.22 $	$Date: 2018/03/15 07:37:41 $
 #
 #     Diggle-Gratton pair potential
 #
@@ -10,11 +10,11 @@ DiggleGratton <- local({
 
   # .... auxiliary functions ......
 
-  diggraterms <- function(X, Y, idX, idY, delta, rho) {
+  diggraterms <- function(X, Y, idX, idY, delta, rho, splitInf=FALSE) {
     stopifnot(is.numeric(delta))
     stopifnot(is.numeric(rho))
     stopifnot(delta < rho)
-    # sort in increasing order of x coordinate
+    ## sort in increasing order of x coordinate
     oX <- fave.order(X$x)
     oY <- fave.order(Y$x)
     Xsort <- X[oX]
@@ -23,21 +23,46 @@ DiggleGratton <- local({
     idYsort <- idY[oY]
     nX <- npoints(X)
     nY <- npoints(Y)
-    # call C routine
-    out <- .C("Ediggra",
-              nnsource = as.integer(nX),
-              xsource  = as.double(Xsort$x),
-              ysource  = as.double(Xsort$y),
-              idsource = as.integer(idXsort),
-              nntarget = as.integer(nY),
-              xtarget  = as.double(Ysort$x),
-              ytarget  = as.double(Ysort$y),
-              idtarget = as.integer(idYsort),
-              ddelta   = as.double(delta),
-              rrho     = as.double(rho),
-              values   = as.double(double(nX)))
-    answer <- integer(nX)
-    answer[oX] <- out$values
+    ## call C routine
+    if(!splitInf) {
+      ## usual case: allow cif to be zero because of hard core
+      out <- .C("Ediggra",
+                nnsource = as.integer(nX),
+                xsource  = as.double(Xsort$x),
+                ysource  = as.double(Xsort$y),
+                idsource = as.integer(idXsort),
+                nntarget = as.integer(nY),
+                xtarget  = as.double(Ysort$x),
+                ytarget  = as.double(Ysort$y),
+                idtarget = as.integer(idYsort),
+                ddelta   = as.double(delta),
+                rrho     = as.double(rho),
+                values   = as.double(double(nX)),
+                PACKAGE = "spatstat")
+      answer <- integer(nX)
+      answer[oX] <- out$values
+    } else {
+      ## split off the hard core terms and return them separately
+      out <- .C("ESdiggra",
+                nnsource = as.integer(nX),
+                xsource  = as.double(Xsort$x),
+                ysource  = as.double(Xsort$y),
+                idsource = as.integer(idXsort),
+                nntarget = as.integer(nY),
+                xtarget  = as.double(Ysort$x),
+                ytarget  = as.double(Ysort$y),
+                idtarget = as.integer(idYsort),
+                ddelta   = as.double(delta),
+                rrho     = as.double(rho),
+                positive = as.double(double(nX)),
+                hardcore = as.integer(integer(nX)),
+                PACKAGE = "spatstat")
+      answer <- integer(nX)
+      hardcore <- logical(nX)
+      answer[oX] <- out$positive
+      hardcore[oX] <- as.logical(out$hardcore)
+      attr(answer, "hardcore") <- hardcore
+    }
     return(answer)
   }
 
@@ -58,6 +83,7 @@ DiggleGratton <- local({
                     },
          par      = list(delta=NULL, rho=NULL),  # to be filled in later
          parnames = list("lower limit delta", "upper limit rho"),
+         hasInf   = TRUE, 
          selfstart = function(X, self) {
            # self starter for DiggleGratton
            nX <- npoints(X)
@@ -84,11 +110,11 @@ DiggleGratton <- local({
          init = function(self) {
            delta <- self$par$delta
            rho   <- self$par$rho
-           if(!is.numeric(rho) || length(rho) != 1)
+           if(!is.numeric(rho) || length(rho) != 1L)
              stop("upper limit rho must be a single number")
            stopifnot(is.finite(rho))
            if(!is.na(delta)) {
-             if(!is.numeric(delta) || length(delta) != 1)
+             if(!is.numeric(delta) || length(delta) != 1L)
                stop("lower limit delta must be a single number")
              stopifnot(delta >= 0)
              stopifnot(rho > delta)
@@ -97,17 +123,17 @@ DiggleGratton <- local({
          update = NULL, # default OK
          print = NULL,    # default OK
          interpret =  function(coeffs, self) {
-           kappa <- as.numeric(coeffs[1])
+           kappa <- as.numeric(coeffs[1L])
            return(list(param=list(kappa=kappa),
                        inames="exponent kappa",
                        printable=dround(kappa)))
          },
          valid = function(coeffs, self) {
-           kappa <- as.numeric(coeffs[1])
+           kappa <- as.numeric(coeffs[1L])
            return(is.finite(kappa) && (kappa >= 0))
          },
          project = function(coeffs, self) {
-           kappa <- as.numeric(coeffs[1])
+           kappa <- as.numeric(coeffs[1L])
            if(is.finite(kappa) && (kappa >= 0))
              return(NULL)
            return(Poisson())
@@ -116,7 +142,7 @@ DiggleGratton <- local({
            rho <- self$par$rho
            if(all(is.na(coeffs)))
              return(rho)
-           kappa <- coeffs[1]
+           kappa <- coeffs[1L]
            delta <- self$par$delta
            if(abs(kappa) <= epsilon)
              return(delta)
@@ -127,8 +153,9 @@ DiggleGratton <- local({
        can.do.fast=function(X,correction,par) {
          return(all(correction %in% c("border", "none")))
        },
-       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction, ...) {
-         # fast evaluator for DiggleGratton interaction
+       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction,
+                      splitInf=FALSE, ...) {
+         ## fast evaluator for DiggleGratton interaction
          if(!all(correction %in% c("border", "none")))
            return(NULL)
          if(spatstat.options("fasteval") == "test")
@@ -136,18 +163,21 @@ DiggleGratton <- local({
          delta <- potpars$delta
          rho   <- potpars$rho
          idX <- seq_len(npoints(X))
-         idU <- rep.int(-1, npoints(U))
-         idU[EqualPairs[,2]] <- EqualPairs[,1]
-         answer <- diggraterms(U, X, idU, idX, delta, rho)
-         answer <- log(pmax.int(0, answer))
-         return(matrix(answer, ncol=1))
+         idU <- rep.int(-1L, npoints(U))
+         idU[EqualPairs[,2L]] <- EqualPairs[,1L]
+         values <- diggraterms(U, X, idU, idX, delta, rho, splitInf)
+         result <- log(pmax.int(0, values))
+         result <- matrix(result, ncol=1L)
+         if(!splitInf)
+           attr(result, "-Inf") <- attr(values, "hardcore")
+         return(result)
        },
        Mayer=function(coeffs, self) {
          # second Mayer cluster integral
          rho   <- self$par$rho
          delta <- self$par$delta
          width <- rho - delta
-         kappa <- coeffs[1]
+         kappa <- coeffs[1L]
          ans <- pi * (rho^2
                       - 2 * rho* width/(kappa + 1)
                       + 2 * width^2/((kappa + 1) * (kappa + 2)))

@@ -1,13 +1,8 @@
 #
-#	wingeom.S	Various geometrical computations in windows
+#	wingeom.R	Various geometrical computations in windows
 #
+#	$Revision: 4.136 $	$Date: 2020/03/16 10:28:51 $
 #
-#	$Revision: 4.103 $	$Date: 2015/06/22 05:03:45 $
-#
-#
-#
-#
-#-------------------------------------
 
 volume.owin <- function(x) { area.owin(x) }
 
@@ -43,16 +38,21 @@ perimeter <- function(w) {
            return(2*(diff(w$xrange)+diff(w$yrange)))
          },
          polygonal={
-           return(sum(lengths.psp(edges(w))))
+           return(sum(lengths_psp(edges(w))))
          },
          mask={
            p <- as.polygonal(w)
            if(is.null(p)) return(NA)
            delta <- sqrt(w$xstep^2 + w$ystep^2)
            p <- simplify.owin(p, delta * 1.15)
-           return(sum(lengths.psp(edges(p))))
+           return(sum(lengths_psp(edges(p))))
          })
   return(NA)
+}
+
+framebottomleft <- function(w) {
+  f <- Frame(w)
+  c(f$xrange[1L], f$yrange[1L])
 }
 
 sidelengths.owin <- function(x) {
@@ -101,41 +101,108 @@ eroded.areas <- function(w, r, subset=NULL) {
 }	
 
 even.breaks.owin <- function(w) {
-	verifyclass(w, "owin")
-        Rmax <- diameter(w)
-        make.even.breaks(Rmax, Rmax/(100 * sqrt(2)))
+  verifyclass(w, "owin")
+  Rmax <- diameter(w)
+  make.even.breaks(bmax=Rmax, npos=128)
 }
 
 unit.square <- function() { owin(c(0,1),c(0,1)) }
 
 square <- function(r=1, unitname=NULL) {
   stopifnot(is.numeric(r))
-  if(any(is.na(r) | !is.finite(r)))
+  if(is.numeric(unitname) && length(unitname) == 1 && length(r) == 1) {
+    #' common error
+    warning("Interpreting square(a, b) as square(c(a,b))", call.=FALSE)
+    r <- c(r, unitname)
+    unitname <- NULL
+  }
+  if(!all(is.finite(r)))
     stop("argument r is NA or infinite")
   if(length(r) == 1) {
     stopifnot(r > 0)
     r <- c(0,r)
   } else if(length(r) == 2) {
-    stopifnot(r[1] < r[2])
+    stopifnot(r[1L] < r[2L])
   } else stop("argument r must be a single number, or a vector of length 2")
   owin(r,r, unitname=unitname)
 }
+
+# convert polygonal window to mask window 
+owinpoly2mask <- function(w, rasta, check=TRUE) {
+  if(check) {
+    verifyclass(w, "owin")
+    stopifnot(w$type == "polygonal")
+    verifyclass(rasta, "owin")
+    stopifnot(rasta$type == "mask")
+  }
+  
+  bdry <- w$bdry
+
+  x0    <- rasta$xcol[1L]
+  y0    <- rasta$yrow[1L]
+  xstep <- rasta$xstep
+  ystep <- rasta$ystep
+  dimyx <- rasta$dim
+  nx    <- dimyx[2L]
+  ny    <- dimyx[1L]
+
+  epsilon <- with(.Machine, double.base^floor(double.ulp.digits/2))
+
+  score <- numeric(nx*ny)
+  
+  for(i in seq_along(bdry)) {
+    p <- bdry[[i]]
+    xp <- p$x
+    yp <- p$y
+    np <- length(p$x)
+    # repeat last vertex
+    xp <- c(xp, xp[1L])
+    yp <- c(yp, yp[1L])
+    np <- np + 1
+    # rescale coordinates so that pixels are at integer locations
+    xp <- (xp - x0)/xstep
+    yp <- (yp - y0)/ystep
+    # avoid exact integer locations for vertices
+    whole <- (ceiling(xp) == floor(xp))
+    xp[whole] <-  xp[whole] + epsilon
+    whole <- (ceiling(yp) == floor(yp))
+    yp[whole] <-  yp[whole] + epsilon
+    # call C
+    z <- .C("poly2imI",
+            xp=as.double(xp),
+            yp=as.double(yp),
+            np=as.integer(np),
+            nx=as.integer(nx),
+            ny=as.integer(ny),
+            out=as.integer(integer(nx * ny)),
+            PACKAGE="spatstat")
+    if(i == 1)
+      score <- z$out
+    else 
+      score <- score + z$out
+  }
+  status <- (score != 0)
+  out <- owin(rasta$xrange, rasta$yrange, mask=matrix(status, ny, nx))
+  return(out)
+}
+
+
 
 overlap.owin <- function(A, B) {
   # compute the area of overlap between two windows
   
   # check units
-  if(!compatible.units(unitname(A), unitname(B)))
+  if(!compatible(unitname(A), unitname(B)))
     warning("The two windows have incompatible units of length")
   
   At <- A$type
   Bt <- B$type
   if(At=="rectangle" && Bt=="rectangle") {
-    xmin <- max(A$xrange[1],B$xrange[1])
-    xmax <- min(A$xrange[2],B$xrange[2])
+    xmin <- max(A$xrange[1L],B$xrange[1L])
+    xmax <- min(A$xrange[2L],B$xrange[2L])
     if(xmax <= xmin) return(0)
-    ymin <- max(A$yrange[1],B$yrange[1])
-    ymax <- min(A$yrange[2],B$yrange[2])
+    ymin <- max(A$yrange[1L],B$yrange[1L])
+    ymax <- min(A$yrange[2L],B$yrange[2L])
     if(ymax <= ymin) return(0)
     return((xmax-xmin) * (ymax-ymin))
   }
@@ -149,7 +216,8 @@ overlap.owin <- function(A, B) {
     for(i in seq_along(AA))
       for(j in seq_along(BB))
         area <- area + overlap.xypolygon(AA[[i]], BB[[j]])
-    return(area)
+    # small negative numbers can occur due to numerical error
+    return(max(0, area))
   }
   if(At=="mask") {
     # count pixels in A that belong to B
@@ -194,7 +262,7 @@ function(x, i, ...) {
 #
 #
 
-intersect.owin <- function(..., fatal=TRUE, p) {
+intersect.owin <- function(..., fatal=FALSE, p) {
   argh <- list(...)
   ## p is a list of arguments to polyclip::polyclip
   if(missing(p) || is.null(p)) p <- list()
@@ -211,7 +279,7 @@ intersect.owin <- function(..., fatal=TRUE, p) {
     }
   }
   ## look for window arguments
-  isowin <- sapply(argh, is.owin)
+  isowin <- as.logical(sapply(argh, is.owin))
   if(any(!isowin))
     warning("Some arguments were not windows")
   argh <- argh[isowin]
@@ -223,10 +291,19 @@ intersect.owin <- function(..., fatal=TRUE, p) {
   }
 
   ## at least one window
-  A <- argh[[1]]
+  A <- argh[[1L]]
+  if(is.empty(A)) {
+    if(fatal) stop("Intersection is empty", call.=FALSE)
+    return(A)
+  }
   if(nwin == 1) return(A)
+
   ## at least two windows
-  B <- argh[[2]]
+  B <- argh[[2L]]
+  if(is.empty(B)) {
+    if(fatal) stop("Intersection is empty", call.=FALSE)
+    return(B)
+  }
   
   if(nwin > 2) {
     ## handle union of more than two windows
@@ -234,35 +311,32 @@ intersect.owin <- function(..., fatal=TRUE, p) {
     ## determine a common set of parameters for polyclip
     p <- commonPolyclipArgs(A, B, do.call(boundingbox, windows), p=p)
     ## absorb all windows into B
-    for(i in seq_along(windows))
+    for(i in seq_along(windows)) {
       B <- do.call(intersect.owin,
-                   append(list(B, windows[[i]], p=p),
-                            rasterinfo))
+                   append(list(B, windows[[i]], p=p, fatal=fatal),
+                          rasterinfo))
+      if(is.empty(B)) return(B)
+    }
   }
 
-  ## There are now only two windows
-  if(is.empty(A)) return(A)
-  if(is.empty(B)) return(B)
-
+  ## There are now only two windows, which are not empty.
   if(identical(A, B))
     return(A)
 
   # check units
   if(!compatible(unitname(A), unitname(B)))
     warning("The two windows have incompatible units of length")
+  uname <- harmonise(unitname(A), unitname(B), single=TRUE)
 
   # determine intersection of x and y ranges
   xr <- intersect.ranges(A$xrange, B$xrange, fatal=fatal)
   yr <- intersect.ranges(A$yrange, B$yrange, fatal=fatal)
   if(!fatal && (is.null(xr) || is.null(yr)))
-    return(NULL)
-  C <- owin(xr, yr, unitname=unitname(A))
+    return(emptywindow(A))
+  #' non-empty intersection of Frames
+  C <- owin(xr, yr, unitname=uname)
 
-  if(is.empty(A) || is.empty(B))
-    return(emptywindow(C))
-           
   # Determine type of intersection
-  
   Arect <- is.rectangle(A)
   Brect <- is.rectangle(B)
 #  Apoly <- is.polygonal(A)
@@ -282,13 +356,15 @@ intersect.owin <- function(..., fatal=TRUE, p) {
                   append(list(a, b, "intersection",
                               fillA="nonzero", fillB="nonzero"),
                          p))
-    if(length(ab)==0)
+    if(length(ab)==0) {
+      if(fatal) stop("Intersection is empty", call.=FALSE)
       return(emptywindow(C))
+    }
     # ensure correct polarity
     totarea <- sum(unlist(lapply(ab, Area.xypolygon)))
     if(totarea < 0)
       ab <- lapply(ab, reverse.xypolygon)
-    AB <- owin(poly=ab, check=FALSE, unitname=unitname(A))
+    AB <- owin(poly=ab, check=FALSE, unitname=uname)
     AB <- rescue.rectangle(AB)
     return(AB)
   }
@@ -305,15 +381,29 @@ intersect.owin <- function(..., fatal=TRUE, p) {
   if(Bmask)
     B <- trim.mask(B, C)
 
+  #' trap empty windows
+  if(is.empty(A)) {
+    if(fatal) stop("Intersection is empty", call.=FALSE)
+    return(A)
+  }
+  if(is.empty(B)) {
+    if(fatal) stop("Intersection is empty", call.=FALSE)
+    return(B)
+  }
+  
   # Did the user specify the pixel raster?
   if(length(rasterinfo) > 0) {
     # convert to masks with specified parameters, and intersect
     if(Amask) {
-      A <- do.call("as.mask", append(list(A), rasterinfo))
-      return(restrict.mask(A, B))
+      A <- do.call(as.mask, append(list(A), rasterinfo))
+      AB <- restrict.mask(A, B)
+      if(fatal && is.empty(AB)) stop("Intersection is empty", call.=FALSE)
+      return(AB)
     } else {
-      B <- do.call("as.mask", append(list(B), rasterinfo))
-      return(restrict.mask(B, A))
+      B <- do.call(as.mask, append(list(B), rasterinfo))
+      BA <- restrict.mask(B,A)
+      if(fatal && is.empty(BA)) stop("Intersection is empty", call.=FALSE)
+      return(BA)
     }
   } 
   
@@ -324,29 +414,39 @@ intersect.owin <- function(..., fatal=TRUE, p) {
       return(A)
 
   # One mask and one polygon?
-  if(Amask && !Bmask) 
-    return(restrict.mask(A, B))
-  if(!Amask && Bmask)
-    return(restrict.mask(B, A))
+  if(Amask && !Bmask) {
+    AB <- restrict.mask(A, B)
+    if(fatal && is.empty(AB)) stop("Intersection is empty", call.=FALSE)
+    return(AB)
+  }
+  if(!Amask && Bmask) {
+    BA <- restrict.mask(B, A)
+    if(fatal && is.empty(BA)) stop("Intersection is empty", call.=FALSE)
+    return(BA)
+  }
 
   # Two existing masks?
   if(Amask && Bmask) {
     # choose the finer one
-    if(A$xstep <= B$xstep)
-      return(restrict.mask(A, B))
-    else
-      return(restrict.mask(B, A))
+    AB <- if(A$xstep <= B$xstep) restrict.mask(A, B) else restrict.mask(B, A)
+    if(fatal && is.empty(AB)) stop("Intersection is empty", call.=FALSE)
+    return(AB)
   }
 
-  # No existing masks. No clipping applied so far.
-  # Convert one window to a mask with default pixel raster, and intersect.
-  if(Arect) {
-    A <- as.mask(A)
-    return(restrict.mask(A, B))
-  } else {
-    B <- as.mask(B)
-    return(restrict.mask(B, A))
-  }
+  stop("Internal error: never reached")
+#  # No existing masks. No clipping applied so far.
+#  # Convert one window to a mask with default pixel raster, and intersect.
+#  if(Arect) {
+#    A <- as.mask(A)
+#    AB <- restrict.mask(A, B)
+#    if(fatal && is.empty(AB)) stop("Intersection is empty", call.=FALSE)
+#    return(AB)
+#  } else {
+#    B <- as.mask(B)
+#    BA <- restrict.mask(B, A)
+#    if(fatal && is.empty(BA)) stop("Intersection is empty", call.=FALSE)
+#    return(BA)
+#  }
 }
 
 
@@ -369,7 +469,7 @@ union.owin <- function(..., p) {
     }
   }
   ## look for window arguments
-  isowin <- sapply(argh, is.owin)
+  isowin <- as.logical(sapply(argh, is.owin))
   if(any(!isowin))
     warning("Some arguments were not windows")
   argh <- argh[isowin]
@@ -388,7 +488,7 @@ union.owin <- function(..., p) {
     return(NULL)
   }
   ## at least one window
-  A <- argh[[1]]
+  A <- argh[[1L]]
   if(nwin == 1) return(A)
 
   ## more than two windows
@@ -400,7 +500,7 @@ union.owin <- function(..., p) {
       p <- commonPolyclipArgs(do.call(boundingbox, argh), p=p)
       ## apply these parameters now to avoid numerical errors
       argh <- applyPolyclipArgs(argh, p=p)
-      A <- argh[[1]]
+      A <- argh[[1L]]
     } 
     ## absorb all windows into A without rescaling
     nullp <- list(eps=1, x0=0, y0=0)
@@ -416,13 +516,14 @@ union.owin <- function(..., p) {
   }
 
   ## Exactly two windows
-  B <- argh[[2]]
+  B <- argh[[2L]]
   if(identical(A, B))
     return(A)
 
   ## check units
   if(!compatible(unitname(A), unitname(B)))
     warning("The two windows have incompatible units of length")
+  uname <- harmonise(unitname(A), unitname(B), single=TRUE)
   
   ## Determine type of intersection
   
@@ -437,7 +538,7 @@ union.owin <- function(..., p) {
   
   C <- owin(range(A$xrange, B$xrange),
             range(A$yrange, B$yrange),
-            unitname=unitname(A))
+            unitname=uname)
 
   if(!Amask && !Bmask) {
     ####### Result is polygonal (or rectangular) ############
@@ -453,7 +554,7 @@ union.owin <- function(..., p) {
     totarea <- sum(unlist(lapply(ab, Area.xypolygon)))
     if(totarea < 0)
       ab <- lapply(ab, reverse.xypolygon)
-    AB <- owin(poly=ab, check=FALSE, unitname=unitname(A))
+    AB <- owin(poly=ab, check=FALSE, unitname=uname)
     AB <- rescue.rectangle(AB)
     return(AB)
   }
@@ -474,7 +575,7 @@ union.owin <- function(..., p) {
   }
 
   ## Convert C to mask
-  C <- do.call("as.mask", append(list(w=C), rasterinfo))
+  C <- do.call(as.mask, append(list(w=C), rasterinfo))
 
   rxy <- rasterxy.mask(C)
   x <- rxy$x
@@ -492,12 +593,13 @@ union.owin <- function(..., p) {
 }
 
 setminus.owin <- function(A, B, ..., p) {
-  if(is.null(A) || is.empty(A)) return(B)
-  if(is.null(B) || is.empty(B)) return(A)
-  verifyclass(A, "owin")
+  if(is.null(B)) return(A)
   verifyclass(B, "owin")
+  if(is.null(A)) return(emptywindow(Frame(B)))
+  verifyclass(A, "owin")
+  if(is.empty(A) || is.empty(B)) return(A)
   if(identical(A, B))
-    return(emptywindow(as.rectangle(A)))
+    return(emptywindow(Frame(A)))
 
   ## p is a list of arguments to polyclip::polyclip
   if(missing(p) || is.null(p)) p <- list()
@@ -505,6 +607,7 @@ setminus.owin <- function(A, B, ..., p) {
   ## check units
   if(!compatible(unitname(A), unitname(B)))
     warning("The two windows have incompatible units of length")
+  uname <- harmonise(unitname(A), unitname(B), single=TRUE)
   
   ## Determine type of arguments
   
@@ -517,8 +620,10 @@ setminus.owin <- function(A, B, ..., p) {
 
   ## Case where A and B are both rectangular
   if(Arect && Brect) {
+    if(is.subset.owin(A, B))
+      return(emptywindow(B))
     C <- intersect.owin(A, B, fatal=FALSE)
-    if(is.null(C)) return(A)
+    if(is.null(C) || is.empty(C)) return(A)
     return(complement.owin(C, A))
   }
     
@@ -533,12 +638,12 @@ setminus.owin <- function(A, B, ..., p) {
                               fillA="nonzero", fillB="nonzero"),
                          p))
     if(length(ab) == 0)
-      return(emptywindow(A))
+      return(emptywindow(B))
     ## ensure correct polarity
     totarea <- sum(unlist(lapply(ab, Area.xypolygon)))
     if(totarea < 0)
       ab <- lapply(ab, reverse.xypolygon)
-    AB <- owin(poly=ab, check=FALSE, unitname=unitname(A))
+    AB <- owin(poly=ab, check=FALSE, unitname=uname)
     AB <- rescue.rectangle(AB)
     return(AB)
   }
@@ -559,7 +664,7 @@ setminus.owin <- function(A, B, ..., p) {
       list()
 
   ## Convert A to mask
-  AB <- do.call("as.mask", append(list(w=A), rasterinfo))
+  AB <- do.call(as.mask, append(list(w=A), rasterinfo))
 
   rxy <- rasterxy.mask(AB)
   x <- rxy$x
@@ -619,9 +724,8 @@ trim.mask <- function(M, R, tolerant=TRUE) {
     }
 
     ## Extract subset of image grid
-    within.range <- function(u, v) { (u >= v[1]) & (u <= v[2]) }
-    yrowok <- within.range(M$yrow, R$yrange)
-    xcolok <- within.range(M$xcol, R$xrange)
+    yrowok <- inside.range(M$yrow, R$yrange)
+    xcolok <- inside.range(M$xcol, R$xrange)
     if((ny <- sum(yrowok)) == 0 || (nx <- sum(xcolok)) == 0) 
       return(emptywindow(R))
     Z <- M
@@ -689,7 +793,13 @@ trim.rectangle <- function(W, xmargin=0, ymargin=xmargin) {
        unitname=unitname(W))
 }
 
-grow.rectangle <- function(W, xmargin=0, ymargin=xmargin) {
+grow.rectangle <- function(W, xmargin=0, ymargin=xmargin, fraction=NULL) {
+  if(!is.null(fraction)) {
+    fraction <- ensure2vector(fraction)
+    if(any(fraction < 0)) stop("fraction must be non-negative")
+    if(missing(xmargin)) xmargin <- fraction[1L] * diff(W$xrange)
+    if(missing(ymargin)) ymargin <- fraction[2L] * diff(W$yrange)
+  }
   xmargin <- ensure2vector(xmargin)
   ymargin <- ensure2vector(ymargin)
   if(any(xmargin < 0) || any(ymargin < 0))
@@ -712,8 +822,8 @@ grow.mask <- function(M, xmargin=0, ymargin=xmargin) {
   nright <- attr(xcolplus, "nright")
   nbot <- attr(yrowplus, "nleft")
   ntop <- attr(yrowplus, "nright")
-  mplus[ (nleft+1):(length(yrowplus)-nright),
-         (nbot+1):(length(xcolplus)-ntop) ] <- m
+  mplus[ (nbot+1):(length(yrowplus)-ntop),
+         (nleft+1):(length(xcolplus)-nright) ] <- m
   ## pack up
   result <- owin(xrange=Rplus$xrange,
                  yrange=Rplus$yrange,
@@ -742,11 +852,33 @@ bdry.mask <- function(W) {
             nx = as.integer(nc),
             ny = as.integer(nr),
             m = as.integer(m),
-            b = as.integer(b))
+            b = as.integer(b),
+            PACKAGE = "spatstat")
     b <- matrix(as.logical(z$b), nr, nc)
   }
   W$m <- b
   return(W)
+}
+
+nvertices <- function(x, ...) {
+  UseMethod("nvertices")
+}
+
+nvertices.default <- function(x, ...) {
+  v <- vertices(x)
+  vx <- v$x
+  n <- if(is.null(vx)) NA else length(vx)
+  return(n)
+}
+
+nvertices.owin <- function(x, ...) {
+  if(is.empty(x))
+    return(0)
+  n <- switch(x$type,
+              rectangle=4,
+              polygonal=sum(lengths(lapply(x$bdry, getElement, name="x"))),
+              mask=sum(bdry.mask(x)$m))
+  return(n)
 }
 
 vertices <- function(w) {
@@ -764,7 +896,7 @@ vertices.owin <- function(w) {
            vert <- list(x=xr[c(1,2,2,1)], y=yr[c(1,1,2,2)])
          },
          polygonal={
-           vert <- do.call("concatxy",w$bdry)
+           vert <- do.call(concatxy,w$bdry)
          },
          mask={
            bm <- bdry.mask(w)$m
@@ -821,6 +953,7 @@ incircle <- function(W) {
   v <- D$v
   ok <- !is.na(v)
   Dvalues <- as.vector(v[ok])
+  if(length(Dvalues) == 0) return(NULL)
   Dmax <- max(Dvalues)
   # find location of maximum
   locn <- which.max(Dvalues)
@@ -850,6 +983,7 @@ inpoint <- function(W) {
   }
   W <- as.mask(W)
   Mm <- W$m
+  if(!any(Mm)) return(NULL)
   Mrow <- as.vector(row(Mm)[Mm])
   Mcol <- as.vector(col(Mm)[Mm])
   selectmiddle <- function(x) { x[ceiling(length(x)/2)] }
@@ -880,7 +1014,7 @@ is.convex <- function(x) {
            b <- x$bdry
            if(length(b) > 1)
              return(FALSE)
-           b <- b[[1]]
+           b <- b[[1L]]
            xx <- b$x
            yy <- b$y
            ch <- chull(xx,yy)
@@ -937,47 +1071,64 @@ emptywindow <- function(w) {
 }
 
 discs <- function(centres, radii=marks(centres)/2, ..., 
-                  separate=FALSE, mask=FALSE, trim=TRUE, delta=NULL) {
+                  separate=FALSE, mask=FALSE, trim=TRUE,
+                  delta=NULL, npoly=NULL) {
   stopifnot(is.ppp(centres))
   n <- npoints(centres)
   if(n == 0) return(emptywindow(Frame(centres)))
-  check.nvector(radii, npoints(centres))
+  check.nvector(radii, npoints(centres), oneok=TRUE)
   stopifnot(all(radii > 0))
-  if(is.null(delta)) delta <- 2 * pi * min(radii)/16
-  if(separate) {
-    D <- list()
-    W <- disc(centre=centres[1], radius=radii[1], delta=delta)
-    D[[1]] <- W
-    if(n == 1) return(D)
-    for(i in 2:n) 
-      D[[i]] <- disc(centre=centres[i], radius=radii[i], delta=delta)
-    return(D)
-  } else if(mask) {
+  
+  if(sameradius <- (length(radii) == 1)) 
+    radii <- rep(radii, npoints(centres))
+
+  if(!separate && mask) {
+    #' compute pixel approximation
     M <- as.mask(Window(centres), ...)
     z <- .C("discs2grid",
-            nx    = as.integer(M$dim[2]),
-            x0    = as.double(M$xcol[1]),
+            nx    = as.integer(M$dim[2L]),
+            x0    = as.double(M$xcol[1L]),
             xstep = as.double(M$xstep),  
-            ny    = as.integer(M$dim[1]),
-            y0    = as.double(M$yrow[1]),
+            ny    = as.integer(M$dim[1L]),
+            y0    = as.double(M$yrow[1L]),
             ystep = as.double(M$ystep), 
             nd    = as.integer(n),
             xd    = as.double(centres$x),
             yd    = as.double(centres$y),
             rd    = as.double(radii), 
-            out   = as.integer(integer(prod(M$dim))))
+            out   = as.integer(integer(prod(M$dim))),
+            PACKAGE = "spatstat")
     M$m[] <- as.logical(z$out)
     return(M)
-  } else {
-    W <- disc(centre=centres[1], radius=radii[1], delta=delta)
-    if(n == 1) return(W)
-    for(i in 2:n) {
-      Di <- disc(centre=centres[i], radius=radii[i], delta=delta)
-      W <- union.owin(W, Di)
-    }
-    if(trim) W <- intersect.owin(W, Window(centres))
-    return(W)
   }
+  #' construct a list of discs
+  D <- list()
+  if(!sameradius && length(unique(radii)) > 1) {
+    if(is.null(delta) && is.null(npoly)) {
+      ra <- range(radii)
+      rr <- ra[2L]/ra[1L]
+      mm <- ceiling(128/rr)
+      mm <- max(16, mm) ## equals 16 unless ra[2]/ra[1] < 8 
+      delta <- 2 * pi * ra[1L]/mm
+    }
+    for(i in 1:n)
+      D[[i]] <- disc(centre=centres[i], radius=radii[i],
+                     delta=delta, npoly=npoly)
+  } else {
+    #' congruent discs -- use 'shift'
+    W0 <- disc(centre=c(0,0), radius=radii[1L],
+               delta=delta, npoly=npoly)
+    for(i in 1:n) 
+      D[[i]] <- shift(W0, vec=centres[i])
+  } 
+  D <- as.solist(D)
+  #' return list of discs?
+  if(separate)
+    return(D)
+  #' return union of discs
+  W <- union.owin(D)
+  if(trim) W <- intersect.owin(W, Window(centres))
+  return(W)
 }
 
 harmonise.owin <- harmonize.owin <- function(...) {

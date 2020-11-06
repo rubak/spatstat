@@ -8,7 +8,7 @@
   for a point pattern on a linear network.
 }
 \usage{
-linearpcf(X, r=NULL, ..., correction="Ang")
+linearpcf(X, r=NULL, ..., correction="Ang", ratio=FALSE)
 }
 \arguments{
   \item{X}{
@@ -26,6 +26,12 @@ linearpcf(X, r=NULL, ..., correction="Ang")
     Geometry correction.
     Either \code{"none"} or \code{"Ang"}. See Details.
   }
+  \item{ratio}{
+    Logical. 
+    If \code{TRUE}, the numerator and denominator of
+    each estimate will also be saved,
+    for use in analysing replicated point patterns.
+  }
 }
 \details{
   This command computes the linear pair correlation function
@@ -37,7 +43,14 @@ linearpcf(X, r=NULL, ..., correction="Ang")
   \code{\link{density.default}}, 
   with a bias correction at each end of the interval of \eqn{r} values.
   To switch off the bias correction, set \code{endcorrect=FALSE}.
-  
+
+  The bandwidth for smoothing the pairwise distances
+  is determined by arguments \code{\dots}
+  passed to \code{\link{density.default}}, mainly the arguments
+  \code{bw} and \code{adjust}. The default is
+  to choose the bandwidth by Silverman's rule of thumb 
+  \code{bw="nrd0"} explained in \code{\link{density.default}}.
+
   If \code{correction="none"}, the calculations do not include
   any correction for the geometry of the linear network. The result is
   an estimate of the first derivative of the 
@@ -46,16 +59,19 @@ linearpcf(X, r=NULL, ..., correction="Ang")
   If \code{correction="Ang"}, the pair counts are weighted using
   Ang's correction (Ang, 2010). The result is an estimate of the
   pair correlation function in the linear network.
-
 }
 \value{
   Function value table (object of class \code{"fv"}).
+
+  If \code{ratio=TRUE} then the return value also has two
+  attributes called \code{"numerator"} and \code{"denominator"}
+  which are \code{"fv"} objects
+  containing the numerators and denominators of each
+  estimate of \eqn{g(r)}. 
 }
 \author{
   Ang Qi Wei \email{aqw07398@hotmail.com} and
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian.
 }
 \references{
   Ang, Q.W. (2010) Statistical methodology for spatial point patterns

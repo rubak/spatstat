@@ -1,7 +1,7 @@
 #
 #   pcfinhom.R
 #
-#   $Revision: 1.17 $   $Date: 2015/06/22 01:30:38 $
+#   $Revision: 1.23 $   $Date: 2019/05/24 10:24:48 $
 #
 #   inhomogeneous pair correlation function of point pattern 
 #
@@ -13,15 +13,19 @@ pcfinhom <- function(X, lambda=NULL, ..., r=NULL,
                      divisor=c("r","d"),
                      renormalise=TRUE,
                      normpower=1,
+                     update=TRUE, leaveoneout=TRUE,
                      reciplambda=NULL, 
-                     sigma=NULL, varcov=NULL)
+                     sigma=NULL, varcov=NULL, close=NULL)
 {
   verifyclass(X, "ppp")
 #  r.override <- !is.null(r)
-
+  miss.update <- missing(update)
+  
   win <- X$window
   areaW <- area(win)
   npts <- npoints(X)
+
+  kernel <- match.kernel(kernel)
   
   correction.given <- !missing(correction)
   correction <- pickoption("correction", correction,
@@ -30,9 +34,11 @@ pcfinhom <- function(X, lambda=NULL, ..., r=NULL,
                              trans="translate",
                              translate="translate",
                              translation="translate",
+                             good="good",
                              best="best"),
                            multi=TRUE)
-
+  if("good" %in% correction)
+    correction[correction == "good"] <- good.correction.K(X)
   correction <- implemented.for.K(correction, win$type, correction.given)
 
   divisor <- match.arg(divisor)
@@ -83,14 +89,32 @@ pcfinhom <- function(X, lambda=NULL, ..., r=NULL,
     # lambda values provided
     if(is.im(lambda)) 
       lambda <- safelookup(lambda, X)
-    else if(is.ppm(lambda))
-      lambda <- predict(lambda, locations=X, type="trend")
-    else if(is.function(lambda)) 
+    else if(is.ppm(lambda) || is.kppm(lambda) || is.dppm(lambda)) {
+      model <- lambda
+      if(!update) {
+        ## just use intensity of fitted model
+        lambda <- predict(model, locations=X, type="trend")
+      } else {
+        if(is.ppm(model)) {
+          model <- update(model, Q=X)
+          lambda <- fitted(model, dataonly=TRUE, leaveoneout=leaveoneout)
+        } else {
+          model <- update(model, X=X)
+          lambda <- fitted(model, dataonly=TRUE, leaveoneout=leaveoneout)
+        }
+        danger <- FALSE
+        if(miss.update) 
+          warn.once(key="pcfinhom.update",
+                    "The behaviour of pcfinhom when lambda is a ppm object",
+                    "has changed (in spatstat 1.45-0 and later).",
+                    "See help(pcfinhom)")
+      }
+    } else if(is.function(lambda)) 
       lambda <- lambda(X$x, X$y)
     else if(is.numeric(lambda) && is.vector(as.numeric(lambda)))
       check.nvector(lambda, npts)
     else stop(paste(sQuote("lambda"),
-                    "should be a vector, a pixel image, or a function"))
+         "should be a vector, a pixel image, a function, or a fitted model"))
     # evaluate reciprocal
     reciplambda <- 1/lambda
   }
@@ -127,7 +151,18 @@ pcfinhom <- function(X, lambda=NULL, ..., r=NULL,
   # compute pairwise distances
 
   if(npts > 1) {
-    close <- closepairs(X, rmax+hmax)
+    if(is.null(close)) {
+      #' find close pairs
+      close <- closepairs(X, rmax+hmax)
+    } else {
+      #' check 'close' has correct format
+      needed <- c("i", "j", "xi", "yi", "xj", "yj", "dx", "dy", "d")
+      if(any(is.na(match(needed, names(close)))))
+        stop(paste("Argument", sQuote("close"),
+                   "should have components named",
+                   commasep(sQuote(needed))),
+             call.=FALSE)
+    }
     dIJ <- close$d
     I <- close$i
     J <- close$j
@@ -184,14 +219,12 @@ pcfinhom <- function(X, lambda=NULL, ..., r=NULL,
   }
   
   # which corrections have been computed?
-  nama2 <- names(out)
-  corrxns <- rev(nama2[nama2 != "r"])
+  corrxns <- rev(setdiff(names(out), "r"))
 
   # default is to display them all
-  formula(out) <- deparse(as.formula(paste(
-                       "cbind(",
-                        paste(corrxns, collapse=","),
-                        ") ~ r")))
+  formula(out) <- . ~ r
+  fvnames(out, ".") <- corrxns
+
   unitname(out) <- unitname(X)
   if(danger)
     attr(out, "dangerous") <- dangerous

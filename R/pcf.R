@@ -1,7 +1,7 @@
 #
 #   pcf.R
 #
-#   $Revision: 1.54 $   $Date: 2015/06/11 08:37:46 $
+#   $Revision: 1.68 $   $Date: 2019/02/13 07:21:23 $
 #
 #
 #   calculate pair correlation function
@@ -18,7 +18,9 @@ pcf.ppp <- function(X, ..., r=NULL,
                     kernel="epanechnikov", bw=NULL, stoyan=0.15,
                     correction=c("translate", "Ripley"),
                     divisor=c("r", "d"),
-                    domain=NULL)
+                    var.approx=FALSE,
+                    domain=NULL, ratio=FALSE,
+                    close=NULL)
 {
   verifyclass(X, "ppp")
 #  r.override <- !is.null(r)
@@ -29,6 +31,10 @@ pcf.ppp <- function(X, ..., r=NULL,
   lambda <- npts/areaW
   lambda2area <- areaW * lambda^2
 
+  kernel <- match.kernel(kernel)
+
+  rmaxdefault <- rmax.rule("K", win, lambda)        
+  
   if(!is.null(domain)) {
     # estimate based on contributions from a subdomain
     domain <- as.owin(domain)
@@ -43,8 +49,21 @@ pcf.ppp <- function(X, ..., r=NULL,
                 correction=correction, kernel=kernel, bw=bw, stoyan=stoyan,
                 divisor=divisor,
                 ...)
-    # relabel and exit
-    g <- rebadge.fv(g, quote(g(r)), "g")
+    if(!ratio) {
+      ## relabel
+      g <- rebadge.fv(g, quote(g(r)), "g")
+    } else {
+      ## construct ratfv object
+      denom <- sum(indom == "TRUE") * lambda
+      g <- ratfv(as.data.frame(g), NULL, denom,
+                 "r", quote(g(r)),
+                 "theo", NULL, c(0, rmaxdefault), 
+                 attr(g, "labl"), attr(g, "desc"), fname="g",
+                 ratio=TRUE)
+    }
+    unitname(g) <- unitname(X)
+    if(var.approx)
+      warning("var.approx is not implemented when 'domain' is given")
     return(g)
   }
 
@@ -55,7 +74,9 @@ pcf.ppp <- function(X, ..., r=NULL,
                              trans="translate",
                              translate="translate",
                              translation="translate",
-                             best="best"),
+                             good="translate",
+                             best="best",
+                             none="none"),
                            multi=TRUE)
 
   correction <- implemented.for.K(correction, win$type, correction.given)
@@ -63,7 +84,7 @@ pcf.ppp <- function(X, ..., r=NULL,
   divisor <- match.arg(divisor)
   
   # bandwidth
-  if(is.null(bw) && kernel=="epanechnikov") {
+  if(is.null(bw) && (kernel == "epanechnikov")) {
     # Stoyan & Stoyan 1995, eq (15.16), page 285
     h <- stoyan /sqrt(lambda)
     hmax <- h
@@ -81,7 +102,6 @@ pcf.ppp <- function(X, ..., r=NULL,
   ########## r values ############################
   # handle arguments r and breaks 
 
-  rmaxdefault <- rmax.rule("K", win, lambda)        
   breaks <- handle.r.b.args(r, NULL, win, rmaxdefault=rmaxdefault)
   if(!(breaks$even))
     stop("r values must be evenly spaced")
@@ -94,14 +114,27 @@ pcf.ppp <- function(X, ..., r=NULL,
   # arguments for 'density'
   denargs <- resolve.defaults(list(kernel=kernel, bw=bw),
                               list(...),
-                              list(n=length(r), from=0, to=rmax))
+                              list(n=length(r), from=0, to=rmax),
+                              .StripNull = TRUE)
   
   #################################################
   
   # compute pairwise distances
   if(npts > 1) {
-    what <- if(any(correction %in% c("translate", "isotropic"))) "all" else "ijd" 
-    close <- closepairs(X, rmax + hmax, what=what)
+    needall <- any(correction %in% c("translate", "isotropic"))
+    if(is.null(close)) {
+      what <- if(needall) "all" else "ijd"
+      close <- closepairs(X, rmax + hmax, what=what)
+    } else {
+      #' check 'close' has correct format
+      needed <- if(!needall) c("i", "j", "d") else
+                 c("i", "j", "xi", "yi", "xj", "yj", "dx", "dy", "d")
+      if(any(is.na(match(needed, names(close)))))
+        stop(paste("Argument", sQuote("close"),
+                   "should have components named",
+                   commasep(sQuote(needed))),
+             call.=FALSE)
+    }
     dIJ <- close$d
   } else {
     undefined <- rep(NaN, length(r))
@@ -110,39 +143,90 @@ pcf.ppp <- function(X, ..., r=NULL,
   # initialise fv object
   
   df <- data.frame(r=r, theo=rep.int(1,length(r)))
-  out <- fv(df, "r",
-            quote(g(r)), "theo", ,
-            alim,
-            c("r","%s[Pois](r)"),
-            c("distance argument r", "theoretical Poisson %s"),
-            fname="g")
+  out <- ratfv(df,
+               NULL, lambda2area,
+               "r", quote(g(r)),
+               "theo", NULL,
+               alim,
+               c("r","%s[Pois](r)"),
+               c("distance argument r", "theoretical Poisson %s"),
+               fname="g",
+               ratio=ratio)
 
   ###### compute #######
 
+  bw.used <- NULL
+  
+  if(any(correction=="none")) {
+    #' uncorrected
+    if(npts > 1) {
+      kdenN <- sewpcf(dIJ, 1, denargs, lambda2area, divisor)
+      gN <- kdenN$g
+      bw.used <- attr(kdenN, "bw")
+    } else gN <- undefined
+    if(!ratio) {
+      out <- bind.fv(out,
+                     data.frame(un=gN),
+                     "hat(%s)[un](r)",
+                     "uncorrected estimate of %s",
+                     "un")
+    } else {
+      out <- bind.ratfv(out,
+                        data.frame(un=gN * lambda2area),
+                        lambda2area,
+                        "hat(%s)[un](r)",
+                        "uncorrected estimate of %s",
+                        "un")
+    }
+  }
+  
   if(any(correction=="translate")) {
     # translation correction
     if(npts > 1) {
       edgewt <- edge.Trans(dx=close$dx, dy=close$dy, W=win, paired=TRUE)
-      gT <- sewpcf(dIJ, edgewt, denargs, lambda2area, divisor)$g
+      kdenT <- sewpcf(dIJ, edgewt, denargs, lambda2area, divisor)
+      gT <- kdenT$g
+      bw.used <- attr(kdenT, "bw")
     } else gT <- undefined
-    out <- bind.fv(out,
-                   data.frame(trans=gT),
-                   "hat(%s)[Trans](r)",
-                   "translation-corrected estimate of %s",
-                   "trans")
+    if(!ratio) {
+      out <- bind.fv(out,
+                     data.frame(trans=gT),
+                     "hat(%s)[Trans](r)",
+                     "translation-corrected estimate of %s",
+                     "trans")
+    } else {
+      out <- bind.ratfv(out,
+                        data.frame(trans=gT * lambda2area),
+                        lambda2area,
+                        "hat(%s)[Trans](r)",
+                        "translation-corrected estimate of %s",
+                        "trans")
+    }
   }
+
   if(any(correction=="isotropic")) {
     # Ripley isotropic correction
     if(npts > 1) {
       XI <- ppp(close$xi, close$yi, window=win, check=FALSE)
       edgewt <- edge.Ripley(XI, matrix(dIJ, ncol=1))
-      gR <- sewpcf(dIJ, edgewt, denargs, lambda2area, divisor)$g
+      kdenR <- sewpcf(dIJ, edgewt, denargs, lambda2area, divisor)
+      gR <- kdenR$g
+      bw.used <- attr(kdenR, "bw")
     } else gR <- undefined
-    out <- bind.fv(out,
-                   data.frame(iso=gR),
-                   "hat(%s)[Ripley](r)",
-                   "isotropic-corrected estimate of %s",
-                   "iso")
+    if(!ratio) {
+      out <- bind.fv(out,
+                     data.frame(iso=gR),
+                     "hat(%s)[Ripley](r)",
+                     "isotropic-corrected estimate of %s",
+                     "iso")
+    } else {
+      out <- bind.ratfv(out,
+                        data.frame(iso=gR * lambda2area),
+                        lambda2area,
+                        "hat(%s)[Ripley](r)",
+                        "isotropic-corrected estimate of %s",
+                        "iso")
+    }
   }
   
   # sanity check
@@ -150,11 +234,45 @@ pcf.ppp <- function(X, ..., r=NULL,
     warning("Nothing computed - no edge corrections chosen")
     return(NULL)
   }
-  
-  # default is to display all corrections
+
+  ## variance approximation
+  ## Illian et al 2008 p 234 equation 4.3.42
+  if(var.approx) {
+    gr <- if(any(correction == "isotropic")) gR else gT
+    # integral of squared kernel
+    intk2 <- kernel.squint(kernel, bw.used)
+    # isotropised set covariance of window
+    gWbar <- as.function(rotmean(setcov(win), result="fv"))
+    vest <- gr * intk2/(pi * r * gWbar(r) * lambda^2)
+    if(!ratio) {
+      out <- bind.fv(out,
+                     data.frame(v=vest),
+                     "v(r)",
+                     "approximate variance of %s",
+                     "v")
+    } else {
+      vden <- rep((npts-1)^2, length(vest))
+      vnum <- vden * vest
+      out <- bind.ratfv(out,
+                        data.frame(v=vnum),
+                        data.frame(v=vden),
+                        "v(r)", 
+                        "approximate variance of %s",
+                        "v")
+    }
+  }
+
+  ## Finish off
+  ## default is to display all corrections
   formula(out) <- . ~ r
-  #
+  fvnames(out, ".") <- setdiff(rev(colnames(out)), c("r", "v"))
+  ##
   unitname(out) <- unitname(X)
+  ## copy to other components
+  if(ratio)
+    out <- conform.ratfv(out)
+
+  attr(out, "bw") <- bw.used
   return(out)
 }
 
@@ -166,6 +284,9 @@ pcf.ppp <- function(X, ..., r=NULL,
 
 sewpcf <- function(d, w, denargs, lambda2area, divisor=c("r","d")) {
   divisor <- match.arg(divisor)
+  nw <- length(w)
+  if(nw != length(d) && nw != 1)
+    stop("Internal error: incorrect length of weights vector in sewpcf")
   if(divisor == "d") {
     w <- w/d
     if(!all(good <- is.finite(w))) {
@@ -177,15 +298,25 @@ sewpcf <- function(d, w, denargs, lambda2area, divisor=c("r","d")) {
       w <- w[good]
     }
   }
-  wtot <- sum(w)
-  kden <- do.call.matched("density.default",
-                  append(list(x=d, weights=w/wtot), denargs))
+  if(nw == 1) {
+    #' weights are equal
+    kden <- do.call.matched(density.default,
+                            append(list(x=d), denargs))
+    wtot <- length(d)
+  } else {
+    #' weighted 
+    wtot <- sum(w)
+    kden <- do.call.matched(density.default,
+                            append(list(x=d, weights=w/wtot), denargs))
+  }
   r <- kden$x
   y <- kden$y * wtot
   if(divisor == "r")
     y <- y/r
   g <- y/(2 * pi * lambda2area)
-  return(data.frame(r=r,g=g))
+  result <- data.frame(r=r,g=g)
+  attr(result, "bw") <- kden$bw
+  return(result)
 }
 
 #
@@ -215,7 +346,7 @@ pcf.fv <- local({
   callmatched <- function(fun, argue) {
     formalnames <- names(formals(fun))
     formalnames <- formalnames[formalnames != "..."]
-    do.call("fun", argue[names(argue) %in% formalnames])
+    do.call(fun, argue[names(argue) %in% formalnames])
   }
 
   pcf.fv <- function(X, ..., method="c") {

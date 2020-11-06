@@ -1,11 +1,21 @@
 #
 #   pairs.im.R
 #
-#   $Revision: 1.7 $   $Date: 2014/08/04 05:55:43 $
+#   $Revision: 1.18 $   $Date: 2020/06/13 09:20:27 $
 #
 
-pairs.listof <- pairs.solist <- 
-  pairs.im <- function(..., plot=TRUE) {
+pairs.listof <- pairs.solist <- function(..., plot=TRUE) {
+  argh <- expandSpecialLists(list(...), special=c("solist", "listof"))
+  names(argh) <- good.names(names(argh), "V", seq_along(argh))
+  haslines <- any(sapply(argh, inherits, what="linim"))
+  if(haslines) {
+    do.call(pairs.linim, append(argh, list(plot=plot)))
+  } else {
+    do.call(pairs.im, append(argh, list(plot=plot)))
+  }
+}
+
+pairs.im <- function(..., plot=TRUE) {
   argh <- list(...)
   cl <- match.call()
   ## unpack single argument which is a list of images
@@ -19,34 +29,48 @@ pairs.listof <- pairs.solist <-
   nim <- sum(isim)
   if(nim == 0) 
     stop("No images provided")
-  if(nim == 1) {
-    ## one image: plot histogram
-    h <- hist(..., plot=plot)
-    return(invisible(h))
-  }
   ## separate image arguments from others
   imlist <- argh[isim]
   rest   <- argh[!isim]
   ## determine image names for plotting
-  imnames <- names(imlist)
-  backupnames <- paste(cl)[c(FALSE, isim, FALSE)]
-  if(length(backupnames) != nim)
-    backupnames <- paste("V", seq_len(nim), sep="")
-  if(length(imnames) != nim)
-    imnames <- backupnames
-  else if(any(needname <- !nzchar(imnames)))
-    imnames[needname] <- backupnames[needname]
-  ## extract pixel rasters and reconcile them
-  imwins <- lapply(imlist, as.owin)
-  names(imwins) <- NULL
-  rasta    <- do.call("intersect.owin", imwins)
-  ## extract image pixel values on common raster
-  pixvals <- lapply(imlist, "[.im", i=rasta, raster=rasta, drop=TRUE)
+  imnames <- argh$labels %orifnull% names(imlist)
+  if(length(imnames) != nim || !all(nzchar(imnames))) {
+    #' names not given explicitly
+    callednames <- paste(cl)[c(FALSE, isim, FALSE)]
+    backupnames <- paste0("V", seq_len(nim))
+    if(length(callednames) != nim) {
+      callednames <- backupnames
+    } else if(any(toolong <- (nchar(callednames) > 15))) {
+      callednames[toolong] <- backupnames[toolong]
+    }
+    imnames <- good.names(imnames, good.names(callednames, backupnames))
+  }
+  ## 
+  if(nim == 1) {
+    ## one image: plot histogram
+    Z <- imlist[[1L]]
+    xname <- imnames[1L]
+    do.call(hist,
+            resolve.defaults(list(x=Z, plot=plot),
+                             rest, 
+                             list(xlab=xname,
+                                  main=paste("Histogram of", xname))))
+    ## save pixel values
+    pixvals <- list(Z[])
+    names(pixvals) <- xname
+  } else {
+    ## extract pixel rasters and reconcile them
+    imwins <- lapply(imlist, as.owin)
+    names(imwins) <- NULL
+    rasta    <- do.call(intersect.owin, imwins)
+    ## extract image pixel values on common raster
+    pixvals <- lapply(imlist, "[.im", i=rasta, raster=rasta, drop=TRUE)
+  }
   ## combine into data frame
-  pixdf <- do.call("data.frame", pixvals)
-  ## plot
-  if(plot)
-    do.call("pairs", resolve.defaults(list(x=pixdf),
+  pixdf <- do.call(data.frame, pixvals)
+  ## pairs plot
+  if(plot && nim > 1)
+    do.call(pairs, resolve.defaults(list(x=pixdf),
                                       rest,
                                       list(labels=imnames, pch=".")))
   labels <- resolve.defaults(rest, list(labels=imnames))$labels
@@ -56,10 +80,19 @@ pairs.listof <- pairs.solist <-
 }
 
 plot.plotpairsim <- function(x, ...) {
-  do.call("pairs.default",
-          resolve.defaults(list(x=as.data.frame(x)),
-                           list(...),
-                           list(pch=".")))
+  xname <- short.deparse(substitute(x))
+  x <- as.data.frame(x)
+  if(ncol(x) == 1) {
+    do.call(hist.default,
+            resolve.defaults(list(x=x[,1]),
+                             list(...),
+                             list(main=xname, xlab=xname)))
+  } else {
+    do.call(pairs.default,
+            resolve.defaults(list(x=x),
+                             list(...),
+                             list(pch=".")))
+  }
   return(invisible(NULL))
 }
 
@@ -85,7 +118,7 @@ panel.contour <- function(x, y, ..., sigma=NULL) {
   yy <- scaletointerval(y)
   p <- ppp(xx, yy, window=square(1), check=FALSE)
   Z <- density(p, sigma=sigma)
-  do.call("contour",
+  do.call(contour,
           resolve.defaults(list(x=Z, add=TRUE),
                            list(...),
                            list(drawlabels=FALSE)))
@@ -97,7 +130,7 @@ panel.histogram <- function(x, ...) {
   h <- hist(x, plot = FALSE)
   breaks <- h$breaks; nB <- length(breaks)
   y <- h$counts; y <- y/max(y)
-  do.call("rect",
+  do.call(rect,
           resolve.defaults(list(xleft   = breaks[-nB],
                                 ybottom = 0,
                                 xright  = breaks[-1],

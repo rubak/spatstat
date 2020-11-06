@@ -3,7 +3,7 @@
 #
 #	The 'plot' method for observation windows (class "owin")
 #
-#	$Revision: 1.55 $	$Date: 2015/04/27 07:24:25 $
+#	$Revision: 1.60 $	$Date: 2020/02/18 03:33:02 $
 #
 #
 #
@@ -13,7 +13,7 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
                       hatch=FALSE,
                       hatchargs=list(), 
                       invert=FALSE, do.plot=TRUE,
-                      claim.title.space=FALSE) 
+                      claim.title.space=FALSE, use.polypath=TRUE) 
 {
 #
 # Function plot.owin.  A method for plot.
@@ -62,14 +62,16 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
       ylim[2] <- ylim[2] + added
     }
     ## set up plot with equal scales
-    do.call.plotfun("plot.default",
+    do.call.plotfun(plot.default,
                     resolve.defaults(list(x=numeric(0), y=numeric(0),
                                           type="n"),
                                      list(...),
                                      list(xlim=xlim, ylim=ylim,
                                           ann=FALSE, axes=FALSE,
                                           asp=1.0,
-                                          xaxs="i", yaxs="i")))
+                                          xaxs="i", yaxs="i",
+                                          xlab="", ylab=""),
+                                     .MatchNull=FALSE))
   }
   if(show.all && nlines > 0) {
     ## add title 
@@ -93,7 +95,7 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
   
 # Draw surrounding box
   if(box)
-    do.call.plotfun("segments",
+    do.call.plotfun(segments,
                     resolve.defaults(
                                      list(x0=xr[c(1,2,2,1)],
                                           y0=yr[c(1,1,2,2)],
@@ -112,12 +114,12 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
          rectangle = {
            Wpoly <- as.polygonal(W)
            po <- Wpoly$bdry[[1]]
-           do.call.plotfun("polygon",
+           do.call.plotfun(polygon,
                            resolve.defaults(list(x=po),
                                             list(...)),
                            extrargs="lwd")
            if(hatch)
-             do.call("add.texture", append(list(W=W), hatchargs))
+             do.call(add.texture, append(list(W=W), hatchargs))
          },
          polygonal = {
            p <- W$bdry
@@ -142,19 +144,18 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
              # No triangulation required;
              # simply plot the polygons
              for(i in seq_along(p))
-               do.call.plotfun("polygon",
+               do.call.plotfun(polygon,
                                resolve.defaults(
                                                 list(x=p[[i]]),
                                                 list(...)),
                                extrargs="lwd")
            } else {
               # Try using polypath():
-             lucy <- names(dev.cur())
-             if(!(lucy %in% c("xfig","pictex","X11"))) {
-               xx <- unlist(lapply(p, function(a) {c(NA, a$x)}))[-1]
-               yy <- unlist(lapply(p, function(a) {c(NA, a$y)}))[-1]
-               do.call.plotfun("polypath",
-                               resolve.defaults(list(x=xx,y=yy),
+             if(use.polypath &&
+                !(names(dev.cur()) %in% c("xfig","pictex","X11"))) {
+               ppa <- owin2polypath(W)
+               do.call.plotfun(polypath,
+                               resolve.defaults(ppa,
                                                 list(border=col.poly),
                                                 list(...)))
              } else {
@@ -166,7 +167,7 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
                  # Fill pieces with colour (and draw border in same colour)
                  pp <- broken$bdry
                  for(i in seq_len(length(pp)))
-                   do.call.plotfun("polygon",
+                   do.call.plotfun(polygon,
                                    resolve.defaults(list(x=pp[[i]],
                                                          border=col.poly),
                                                     list(...)))
@@ -174,7 +175,7 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
              }
              # Now draw polygon boundaries
              for(i in seq_along(p))
-               do.call.plotfun("polygon",
+               do.call.plotfun(polygon,
                                resolve.defaults(
                                                 list(x=p[[i]]),
                                                 list(density=0, col=NA),
@@ -182,7 +183,7 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
                                extrargs="lwd")
            }
            if(hatch)
-             do.call("add.texture", append(list(W=W), hatchargs))
+             do.call(add.texture, append(list(W=W), hatchargs))
          },
          mask = {
            # capture 'col' argument and ensure it's at least 2 values
@@ -204,7 +205,7 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
            if(spatstat.options("monochrome"))
              col <- to.grey(col)
            
-           do.call.matched("image.default",
+           do.call.matched(image.default,
                            resolve.defaults(
                            list(x=W$xcol, y=W$yrow, z=t(W$m), add=TRUE),
                            list(col=col),       
@@ -212,7 +213,7 @@ plot.owin <- function(x, main, add=FALSE, ..., box, edge=0.04,
                            spatstat.options("par.binary"),
                            list(zlim=c(FALSE, TRUE))))
            if(hatch)
-             do.call("add.texture", append(list(W=W), hatchargs))
+             do.call(add.texture, append(list(W=W), hatchargs))
          },
          stop(paste("Don't know how to plot window of type", sQuote(W$type)))
          )

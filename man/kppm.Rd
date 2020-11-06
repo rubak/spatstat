@@ -3,6 +3,10 @@
 \alias{kppm.formula}
 \alias{kppm.ppp}
 \alias{kppm.quad}
+\concept{point process model}
+\concept{Cox point process}
+\concept{cluster process}
+\concept{Neyman-Scott cluster process}
 \title{Fit Cluster or Cox Point Process Model}
 \description{
   Fit a homogeneous or inhomogeneous cluster process or
@@ -22,6 +26,7 @@
        data = NULL,
        ...,
        covariates=data,
+       subset,
        method = c("mincon", "clik2", "palm"),
        improve.type = c("none", "clik1", "wclik1", "quasi"),
        improve.args = list(),
@@ -41,6 +46,7 @@
        data = NULL,
        ...,
        covariates=data,
+       subset,
        method = c("mincon", "clik2", "palm"),
        improve.type = c("none", "clik1", "wclik1", "quasi"),
        improve.args = list(),
@@ -79,6 +85,15 @@
   \item{\dots}{
     Additional arguments. See Details.
   }
+  \item{subset}{
+    Optional.
+    A subset of the spatial domain,
+    to which the model-fitting should be restricted.
+    A window (object of class \code{"owin"})
+    or a logical-valued pixel image (object of class \code{"im"}),
+    or an expression (possibly involving the names of entries in \code{data})
+    which can be evaluated to yield a window or pixel image.
+  }
   \item{method}{
     The fitting method. Either 
     \code{"mincon"} for minimum contrast,
@@ -115,8 +130,8 @@
   }
   \item{algorithm}{
     Character string determining the mathematical optimisation algorithm
-    to be used by \code{\link[stats]{optim}}. See
-    the argument \code{method} of \code{\link[stats]{optim}}.
+    to be used by \code{\link[stats]{optim}}. This argument is
+    passed to  \code{\link[stats]{optim}} as the argument \code{method}.
   }
   \item{statistic}{
     Name of the summary statistic to be used
@@ -143,7 +158,7 @@
   The type of model is determined by the argument \code{clusters}.
   Currently the options 
   are \code{clusters="Thomas"} for the Thomas process,
-  \code{clusters="MatClust"} for the Matern cluster process,
+  \code{clusters="MatClust"} for the \Matern cluster process,
   \code{clusters="Cauchy"} for the Neyman-Scott cluster process
   with Cauchy kernel,
   \code{clusters="VarGamma"} for the Neyman-Scott cluster process
@@ -153,7 +168,6 @@
   require additional arguments passed through \code{\dots}; see
   \code{\link{rLGCP}} for details on argument names).
   The first four models are Neyman-Scott cluster processes.
-  Fitting the LGCP model requires the \pkg{RandomFields} package.
   
   The algorithm first estimates the intensity function
   of the point process using \code{\link{ppm}}.
@@ -182,7 +196,7 @@
   \code{improve.args}.
   
   The clustering parameters of the model are then fitted
-  either by minimum contrast estimation, or by maximum
+  either by minimum contrast estimation, or by maximising a
   composite likelihood.
 
   \describe{
@@ -217,7 +231,7 @@
       as shown in the Examples.
 
       Additional arguments \code{\dots} will be passed to
-      \code{\link{mincontrast}} to control the minimum contrast fitting
+      \code{\link{clusterfit}} to control the minimum contrast fitting
       algorithm.
     }
     \item{Composite likelihood:}{
@@ -269,18 +283,55 @@
   In all three methods, the optimisation is performed by the generic
   optimisation algorithm \code{\link[stats]{optim}}.
   The behaviour of this algorithm can be modified using the
-  argument \code{control}.
+  arguments \code{control} and \code{algorithm}.
   Useful control arguments include
   \code{trace}, \code{maxit} and \code{abstol}
   (documented in the help for \code{\link[stats]{optim}}).
+
+  Fitting the LGCP model requires the \pkg{RandomFields} package,
+  except in the default case where the exponential covariance
+  is assumed.
+}
+\section{Log-Gaussian Cox Models}{
+  To fit a log-Gaussian Cox model with non-exponential covariance,
+  specify \code{clusters="LGCP"} and use additional arguments
+  to specify the covariance structure. These additional arguments can
+  be given individually in the call to \code{kppm}, or they can be
+  collected together in a list called \code{covmodel}.
+
+  For example a \Matern model with parameter \eqn{\nu=0.5} could be specified
+  either by \code{kppm(X, clusters="LGCP", model="matern", nu=0.5)} or by
+  \code{kppm(X, clusters="LGCP", covmodel=list(model="matern", nu=0.5))}.
+
+  The argument \code{model} specifies the type of covariance
+  model: the default is \code{model="exp"} for an exponential covariance.
+  Alternatives include \code{"matern"}, \code{"cauchy"} and \code{"spheric"}.
+  Model names correspond to functions beginning with \code{RM} in the
+  \pkg{RandomFields} package: for example \code{model="matern"}
+  corresponds to the function \code{RMmatern} in the 
+  \pkg{RandomFields} package.
+  
+  Additional arguments are passed to the
+  relevant function in the \pkg{RandomFields} package:
+  for example if \code{model="matern"} then the additional argument
+  \code{nu} is required, and is passed to the function
+  \code{RMmatern} in the \pkg{RandomFields} package.
+
+  Note that it is not possible to use \emph{anisotropic} covariance models
+  because the \code{kppm} technique assumes the pair correlation function
+  is isotropic.
 }
 \value{
   An object of class \code{"kppm"} representing the fitted model.
   There are methods for printing, plotting, predicting, simulating
   and updating objects of this class.
 }
+\section{Error and warning messages}{
+  See \code{\link{ppm.ppp}} for a list of common error messages
+  and warnings originating from the first stage of model-fitting.
+}
 \seealso{
-  methods for \code{kppm} objects:
+  Methods for \code{kppm} objects:
   \code{\link{plot.kppm}},
   \code{\link{fitted.kppm}},
   \code{\link{predict.kppm}},
@@ -289,11 +340,13 @@
   \code{\link{vcov.kppm}},
   \code{\link[spatstat:methods.kppm]{methods.kppm}},
   \code{\link{as.ppm.kppm}},
+  \code{\link{as.fv.kppm}},
   \code{\link{Kmodel.kppm}},
   \code{\link{pcfmodel.kppm}}.
 
   Minimum contrast fitting algorithm:
-  \code{\link{mincontrast}}.
+  higher level interface \code{\link{clusterfit}};
+  low-level algorithm \code{\link{mincontrast}}.
 
   Alternative fitting algorithms:
   \code{\link{thomas.estK}},
@@ -324,7 +377,7 @@
 
   Jalilian, A., Guan, Y. and Waagepetersen, R. (2012)
   Decomposition of variance for spatial Cox processes.
-  \emph{Scandinavian Journal of Statistics}, in press.
+  \emph{Scandinavian Journal of Statistics} \bold{40}, 119--137.
 
   Tanaka, U. and Ogata, Y. and Stoyan, D. (2008)
   Parameter estimation and model selection for
@@ -342,30 +395,32 @@
   # method for formulas
   kppm(redwood ~ 1, "Thomas")
 
-  kppm(redwood ~ 1, "Thomas", method="c")
-  kppm(redwood ~ 1, "Thomas", method="p")
-
+  # different models for clustering
   kppm(redwood ~ x, "MatClust") 
   kppm(redwood ~ x, "MatClust", statistic="pcf", statargs=list(stoyan=0.2)) 
-  kppm(redwood ~ 1, "LGCP", statistic="pcf")
   kppm(redwood ~ x, cluster="Cauchy", statistic="K")
   kppm(redwood, cluster="VarGamma", nu = 0.5, statistic="pcf")
-  if(requireNamespace("RandomFields")) {
-     kppm(redwood ~ x, "LGCP", statistic="pcf",
-           model="matern", nu=0.3,
-           control=list(maxit=10))
+
+  # log-Gaussian Cox process (LGCP) models
+  kppm(redwood ~ 1, "LGCP", statistic="pcf")
+  if(require("RandomFields")) {
+    # Random Fields package is needed for non-default choice of covariance model
+    kppm(redwood ~ x, "LGCP", statistic="pcf",
+                              model="matern", nu=0.3,
+                              control=list(maxit=10))
   }
 
-  # fit intensity with quasi-likelihood method
+  # Different fitting techniques
+  kppm(redwood ~ 1, "Thomas", method="c")
+  kppm(redwood ~ 1, "Thomas", method="p")
+  # composite likelihood method
+  kppm(redwood ~ x, "VarGamma", method="clik2", nu.ker=-3/8)
+  # quasi-likelihood method
   kppm(redwood ~ x, "Thomas", improve.type = "quasi")
+
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors,
   with contributions from Abdollah Jalilian and Rasmus Waagepetersen.
 }
 \keyword{spatial}

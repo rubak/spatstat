@@ -8,7 +8,7 @@
   for the kernel estimation of point process intensity.
 }
 \usage{
-   bw.diggle(X, ..., correction="good", hmax=NULL, nr=512)
+   bw.diggle(X, ..., correction="good", hmax=NULL, nr=512, warn=TRUE)
 }
 \arguments{
   \item{X}{
@@ -27,25 +27,30 @@
     Integer. Number of steps in the distance value \eqn{r} to use in computing
     numerical integrals. 
   }
+  \item{warn}{
+    Logical. If \code{TRUE}, issue a warning if the minimum of
+    the cross-validation criterion occurs at one of the ends of the
+    search interval.
+  }
 }
 \details{
   This function selects an appropriate bandwidth \code{sigma}
   for the kernel estimator of point process intensity
   computed by \code{\link{density.ppp}}.
 
-  The bandwidth \eqn{\sigma}{sigma} is chosen to 
+  The bandwidth \eqn{\sigma}{\sigma} is chosen to 
   minimise the mean-square error criterion defined by Diggle (1985).
   The algorithm uses the method of Berman and Diggle (1989) to
   compute the quantity
   \deqn{
     M(\sigma) = \frac{\mbox{MSE}(\sigma)}{\lambda^2} - g(0)
   }{
-    M(sigma) = MSE(sigma)/lambda^2 - g(0)
+    M(\sigma) = MSE(\sigma)/\lambda^2 - g(0)
   }
-  as a function of bandwidth \eqn{\sigma}{sigma},
-  where \eqn{\mbox{MSE}(\sigma)}{MSE(sigma)} is the
-  mean squared error at bandwidth \eqn{\sigma}{sigma},
-  while \eqn{\lambda}{lambda} is the mean intensity,
+  as a function of bandwidth \eqn{\sigma}{\sigma},
+  where \eqn{\mbox{MSE}(\sigma)}{MSE(\sigma)} is the
+  mean squared error at bandwidth \eqn{\sigma}{\sigma},
+  while \eqn{\lambda}{\lambda} is the mean intensity,
   and \eqn{g} is the pair correlation function. 
   See Diggle (2003, pages 115-118) for a summary of this method.
 
@@ -76,7 +81,9 @@
 \seealso{
   \code{\link{density.ppp}},
   \code{\link{bw.ppl}},
-  \code{\link{bw.scott}}
+  \code{\link{bw.scott}},
+  \code{\link{bw.CvL}},
+  \code{\link{bw.frac}}.
 }
 \examples{
   data(lansing)
@@ -103,11 +110,8 @@
   \emph{Statistical analysis of spatial point patterns},
   Second edition. Arnold.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{methods}

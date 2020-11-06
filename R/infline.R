@@ -3,7 +3,7 @@
 #
 # Infinite lines
 #
-# $Revision: 1.19 $ $Date: 2013/10/06 08:26:59 $
+# $Revision: 1.28 $ $Date: 2017/02/07 07:47:20 $
 #
 
 infline <- function(a=NULL, b=NULL, h=NULL, v=NULL, p=NULL, theta=NULL) {
@@ -53,17 +53,16 @@ is.infline <- function(x) { inherits(x, "infline") }
 
 plot.infline <- function(x, ...) {
   for(i in seq_len(nrow(x))) {
-    xi <- x[i, 1:4]
-    xi <- lapply(as.list(xi), function(z){if(is.na(z)) NULL else z})
-    do.call("abline", append(xi, list(...)))
+    xi <- as.list(x[i, 1:4])
+    xi[sapply(xi, is.na)] <- NULL
+    do.call(abline, append(xi, list(...)))
   }
   return(invisible(NULL))
 }
 
 print.infline <- function(x, ...) {
   n <- nrow(x)
-  cat(paste(if(n > 1) n else NULL, "infinite ",
-            ngettext(n, "line", "lines"), "\n"))
+  splat(n, "infinite", ngettext(n, "line", "lines"))
   print(as.data.frame(x), ...)
   return(invisible(NULL))
 }
@@ -72,6 +71,10 @@ clip.infline <- function(L, win) {
   # clip a set of infinite straight lines to a window
   win <- as.owin(win)
   stopifnot(inherits(L, "infline"))
+  nL <- nrow(L)
+  if(nL == 0)
+    return(psp(numeric(0),numeric(0),numeric(0),numeric(0), window=win))
+  seqL <- seq_len(nL)
   # determine circumcircle of win
   xr <- win$xrange
   yr <- win$yrange
@@ -81,21 +84,27 @@ clip.infline <- function(L, win) {
   height <- diff(yr)
   rmax <- sqrt(width^2 + height^2)/2
   boundbox <- owin(xmid + c(-1,1) * rmax, ymid + c(-1,1) * rmax)
-  # compute intersection points with circumcircle 
+  # convert line coordinates to origin (xmid, ymid)
   p <- L$p
   theta <- L$theta
+  co <- cos(theta)
+  si <- sin(theta)
+  p <- p - xmid * co - ymid * si
+  # compute intersection points with circumcircle 
   hit <- (abs(p) < rmax)
   if(!any(hit)) 
     return(psp(numeric(0),numeric(0),numeric(0),numeric(0), window=win))
   p <- p[hit]
   theta <- theta[hit]
   q <- sqrt(rmax^2 - p^2)
-  co <- cos(theta)
-  si <- sin(theta)
+  co <- co[hit]
+  si <- si[hit]
+  id <- seqL[hit]
   X <- psp(x0= xmid + p * co + q * si,
            y0= ymid + p * si - q * co,
            x1= xmid + p * co - q * si,
            y1= ymid + p * si + q * co,
+           marks = factor(id, levels=seqL),
            window=boundbox, check=FALSE)
   # clip to window
   X <- X[win]
@@ -120,12 +129,12 @@ chop.tess <- function(X, L) {
       # line i chops window into two pieces
       if(!is.na(h <- L[i, "h"])) {
         # horizontal line
-        if(h > yr[1] && h < yr[2]) 
+        if(h > yr[1L] && h < yr[2L]) 
           Zmat <- 2 * Zmat + (ymat > h)
       } else if(!is.na(v <- L[i, "v"])) {
         # vertical line
-        if(v > xr[1] && v < xr[2])
-          Zmat <- 2 * Zmat + (xmat < h)
+        if(v > xr[1L] && v < xr[2L])
+          Zmat <- 2 * Zmat + (xmat < v)
       } else {
         # generic line y = a + bx
         a <- L[i, "a"]
@@ -150,20 +159,20 @@ chop.tess <- function(X, L) {
     # line i chops box B into two pieces
     if(!is.na(h <- L[i, "h"])) {
       # horizontal line
-      if(h < yr[1] || h > yr[2])
+      if(h < yr[1L] || h > yr[2L])
         Z <- NULL
       else {
-        lower <- owin(xr, c(yr[1], h))
-        upper <- owin(xr, c(h, yr[2]))
+        lower <- owin(xr, c(yr[1L], h))
+        upper <- owin(xr, c(h, yr[2L]))
         Z <- tess(tiles=list(lower,upper), window=B)
       }
     } else if(!is.na(v <- L[i, "v"])) {
       # vertical line
-      if(v < xr[1] || v > xr[2])
+      if(v < xr[1L] || v > xr[2L])
         Z <- NULL
       else {
-        left <- owin(c(xr[1], v), yr)
-        right <- owin(c(v, xr[2]), yr)
+        left <- owin(c(xr[1L], v), yr)
+        right <- owin(c(v, xr[2L]), yr)
         Z <- tess(tiles=list(left,right), window=B)
       }
     } else {
@@ -171,13 +180,13 @@ chop.tess <- function(X, L) {
       a <- L[i, "a"]
       b <- L[i, "b"]
       # Intersect with extended left and right sides of B
-      yleft <- a + b * xr[1]
-      yright <- a + b * xr[2]
-      ylo <- min(yleft, yright, yr[1]) - 1
-      yhi <- max(yleft, yright, yr[2]) + 1
-      lower <- owin(poly=list(x=xr[c(1,1,2,2)],
+      yleft <- a + b * xr[1L]
+      yright <- a + b * xr[2L]
+      ylo <- min(yleft, yright, yr[1L]) - 1
+      yhi <- max(yleft, yright, yr[2L]) + 1
+      lower <- owin(poly=list(x=xr[c(1L,1L,2L,2L)],
                               y=c(yleft,ylo,ylo,yright)))
-      upper <- owin(poly=list(x=xr[c(1,2,2,1)],
+      upper <- owin(poly=list(x=xr[c(1L,2L,2L,1L)],
                               y=c(yleft,yright,yhi,yhi)))
       Bplus <- owin(xr, c(ylo, yhi), unitname=unitname(B))
       Z <- tess(tiles=list(lower,upper), window=Bplus)
@@ -191,5 +200,56 @@ chop.tess <- function(X, L) {
   return(X)
 }
 
+whichhalfplane <- function(L, x, y=NULL) {
+  verifyclass(L, "infline")
+  xy <- xy.coords(x, y)
+  x <- xy$x
+  y <- xy$y
+  m <- length(x)
+  n <- nrow(L)
+  Z <- matrix(as.logical(NA_integer_), n, m)
+  for(i in seq_len(n)) {
+    if(!is.na(h <- L[i, "h"])) {
+      #' horizontal line
+      Z[i,] <- (y < h)
+    } else if(!is.na(v <- L[i, "v"])) {
+      #' vertical line
+      Z[i,] <- (x < v)
+    } else {
+      #' generic line y = a + bx
+      a <- L[i, "a"]
+      b <- L[i, "b"]
+      Z[i,] <- (y < a + b * x)
+    }
+  }
+  return(Z)
+}
 
+rotate.infline <- function(X, angle=pi/2, ...) {
+  if(nrow(X) == 0) return(X)
+  Y <- with(X, infline(p = p, theta=theta + angle))
+  return(Y)
+}
+
+shift.infline <- function(X, vec=c(0,0), ...) {
+  if(nrow(X) == 0) return(X)
+  vec <- as2vector(vec)
+  Y <- with(X, infline(p = p + vec[1L] * cos(theta) + vec[2L] * sin(theta),
+                       theta=theta))
+  return(Y)
+}
+
+reflect.infline <- function(X) {
+  if(nrow(X) == 0) return(X)
+  Y <- with(X, infline(p = p,
+                       theta=(theta + pi) %% (2 * pi)))
+  return(Y)
+}
+
+flipxy.infline <- function(X) {
+  if(nrow(X) == 0) return(X)
+  Y <- with(X, infline(p = p,
+                       theta=(pi/2 - theta) %% (2 * pi)))
+  return(Y)
+}
 

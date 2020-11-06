@@ -1,6 +1,9 @@
 \name{ppm}
 \alias{ppm}
 \alias{ppm.formula}
+\concept{point process model}
+\concept{Poisson point process}
+\concept{Gibbs point process}
 \title{
   Fit Point Process Model to Data
 }
@@ -20,7 +23,8 @@
   \item{interaction}{
     An object of class \code{"interact"}
     describing the point process interaction
-    structure, or \code{NULL} indicating that a Poisson process (stationary
+    structure, or a function that makes such an object,
+    or \code{NULL} indicating that a Poisson process (stationary
     or nonstationary) should be fitted.
   }
   \item{\dots}{
@@ -34,10 +38,15 @@
     functions, windows, tessellations or single numbers. See Details.
   }
   \item{subset}{
-    Optional. An expression (typically involving the Cartesian coordinates
-    \code{x} and \code{y} or the names of entries in \code{data})
+    Optional.
+    An expression (which may involve the names of the
+    Cartesian coordinates \code{x} and \code{y}
+    and the names of entries in \code{data})
     defining a subset of the spatial domain,
     to which the model-fitting should be restricted.
+    The result of evaluating the expression should be either a logical
+    vector, or a window (object of class \code{"owin"})
+    or a logical-valued pixel image (object of class \code{"im"}).
   }
 }
 \value{
@@ -52,6 +61,12 @@
   to an observed point pattern.
   The model may include
   spatial trend, interpoint interaction, and dependence on covariates.
+
+  The model fitted by \code{ppm}
+  is either a Poisson point process (in which different points
+  do not interact with each other) or a Gibbs point process (in which
+  different points typically inhibit each other).
+  For clustered point process models, use \code{\link{kppm}}.
 
   The function \code{ppm} is generic, with methods for
   the classes \code{formula}, \code{ppp} and \code{quad}.
@@ -92,31 +107,10 @@
   are defined by the argument \code{interaction}. This is an object of
   class \code{"interact"} which is initialised in a very similar way to the
   usage of family objects in \code{\link{glm}} and \code{gam}.
-  The models currently available are:
-  \code{\link{Poisson}},
-  \code{\link{AreaInter}},
-  \code{\link{BadGey}},
-  \code{\link{Concom}},
-  \code{\link{DiggleGatesStibbard}},
-  \code{\link{DiggleGratton}},
-  \code{\link{Fiksel}},
-  \code{\link{Geyer}},
-  \code{\link{Hardcore}},
-  \code{\link{LennardJones}},
-  \code{\link{MultiStrauss}},
-  \code{\link{MultiStraussHard}},
-  \code{\link{OrdThresh}}, 
-  \code{\link{Ord}},
-  \code{\link{Pairwise}},
-  \code{\link{PairPiece}},
-  \code{\link{Penttinen}},
-  \code{\link{Saturated}},
-  \code{\link{SatPiece}},
-  \code{\link{Softcore}},
-  \code{\link{Strauss}} and 
-  \code{\link{StraussHard}}.
+  The interaction models currently available are:
+  \GibbsInteractionsList.
   See the examples below.
-  It is also possible to combine several interactions
+  Note that it is possible to combine several interactions
   using \code{\link{Hybrid}}.
  
   If \code{interaction} is missing or \code{NULL},
@@ -173,6 +167,9 @@
       For each spatial location, the factor value indicates
       which tile of the tessellation it belongs to.
       This should be an object of class \code{"tess"}.
+      (To make a covariate in which each tile of the tessellation
+      has a numerical value, convert the tessellation to a \code{function(x,y)}
+      using \code{\link{as.function.tess}}.)
     }
     \item{a single number,}{indicating a covariate that is
       constant in this dataset.
@@ -239,7 +236,21 @@
   Useful techniques include maximum profile pseudolikelihood, which
   is implemented in the command \code{\link{profilepl}},
   and Newton-Raphson maximisation, implemented in the
-  experimental command \code{\link{ippm}}.
+  experimental command \code{\link{ippm}}. 
+
+  Some irregular parameters can be estimated directly from data:
+  the hard-core radius in the model \code{\link{Hardcore}}
+  and the matrix of hard-core radii in \code{\link{MultiHard}} can be
+  estimated easily from data. In these cases, \code{ppm} allows the user
+  to specify the interaction without giving
+  the value of the irregular parameter. The user can give the
+  hard core interaction as \code{interaction=Hardcore()}
+  or even \code{interaction=Hardcore}, and 
+  the hard core radius will then be estimated from the data.
+}
+\section{Technical Warnings and Error Messages}{
+  See \code{\link{ppm.ppp}} for some technical warnings about the
+  weaknesses of the algorithm, and explanation of some common error messages.
 }
 \references{
   Baddeley, A., Coeurjolly, J.-F., Rubak, E. and Waagepetersen, R. (2014)
@@ -280,7 +291,6 @@
   \emph{Annals of the Institute of Statistical Mathematics}
   \bold{46}, 475--486.
 }
-
 \seealso{
   \code{\link{ppm.ppp}} and \code{\link{ppm.quad}} for
   more details on the fitting technique and edge correction.
@@ -291,36 +301,18 @@
   \code{\link{ppp}} and \code{\link{quadscheme}}
   for constructing data.
   
-  Interactions: 
-      \code{\link{Poisson}},
-      \code{\link{AreaInter}},
-      \code{\link{BadGey}},
-      \code{\link{DiggleGatesStibbard}},
-      \code{\link{DiggleGratton}},
-      \code{\link{Geyer}},
-      \code{\link{Fiksel}},
-      \code{\link{Hardcore}},
-      \code{\link{Hybrid}},
-      \code{\link{LennardJones}},
-      \code{\link{MultiStrauss}},
-      \code{\link{MultiStraussHard}},
-      \code{\link{OrdThresh}}, 
-      \code{\link{Ord}},
-      \code{\link{Pairwise}},
-      \code{\link{PairPiece}},
-      \code{\link{Penttinen}},
-      \code{\link{Saturated}},
-      \code{\link{SatPiece}},
-      \code{\link{Softcore}},
-      \code{\link{Strauss}} and 
-      \code{\link{StraussHard}}.
+  Interactions: \GibbsInteractionsList.
 
-      See \code{\link{profilepl}} for advice on
-      fitting nuisance parameters in the interaction,
-      and \code{\link{ippm}} for irregular parameters in the trend.
+  See \code{\link{profilepl}} for advice on
+  fitting nuisance parameters in the interaction,
+  and \code{\link{ippm}} for irregular parameters in the trend.
 
-      See \code{\link{valid.ppm}} and \code{\link{project.ppm}} for
-      ensuring the fitted model is a valid point process.
+  See \code{\link{valid.ppm}} and \code{\link{project.ppm}} for
+  ensuring the fitted model is a valid point process.
+
+  See \code{\link{kppm}} for fitting Cox point process models
+  and cluster point process models, and \code{\link{dppm}} for fitting
+  determinantal point process models.
 }
 \examples{
  # fit the stationary Poisson process
@@ -383,11 +375,13 @@ coef(summary(fit1))
  # using the periodic correction.
 
 
-# Compare Maximum Pseudolikelihood and Huang-Ogata fits:
+# Compare Maximum Pseudolikelihood, Huang-Ogata and Variational Bayes fits:
 \dontrun{ppm(swedishpines ~ 1, Strauss(9))}
 
 \dontrun{ppm(swedishpines ~ 1, Strauss(9), method="ho")}
 \testonly{ppm(swedishpines ~ 1, Strauss(9), method="ho", nd=16, nsim=8)}
+
+ppm(swedishpines ~ 1, Strauss(9), method="VBlogi")
 
  # COVARIATES
  #
@@ -433,13 +427,8 @@ ppm(X ~ x + f, covfunargs=list(a=1/2))
 \testonly{b <- ppm(ama ~  marks * polynom(x,y,2), Poisson(), nd=16)}
 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{models}

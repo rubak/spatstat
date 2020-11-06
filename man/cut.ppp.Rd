@@ -17,7 +17,7 @@
   \item{z}{
     Data determining the classification. A numeric vector,
     a factor, a pixel image, a window, a tessellation, or a string
-    giving the name of a column of marks.
+    giving the name of a column of marks or the name of a spatial coordinate.
   }
   \item{\dots}{
     Arguments passed to \code{\link{cut.default}}.
@@ -60,6 +60,9 @@
     \item
     a character string, giving the name of one of the columns
     of \code{marks(x)}, if this is a data frame.
+    \item
+    a character string \code{"x"} or \code{"y"} identifying one of the
+    spatial coordinates.
   }
   The default is to take \code{z} to be the vector of marks in
   \code{x} (or the first column in the data frame of marks of \code{x},
@@ -74,8 +77,8 @@
   which has numeric marks into a multitype point pattern,
   for example to plot it or analyse it. See the examples.
 
-  To select some points from a point pattern, use the subset operator
-  \code{\link{[.ppp}} instead.
+  To select some points from a point pattern, use the subset operators
+  \code{\link{[.ppp}} or \code{\link{subset.ppp}} instead.
 }
 \seealso{
   \code{\link{cut}},
@@ -85,26 +88,26 @@
 \examples{
  # (1) cutting based on numeric marks of point pattern
  
- data(longleaf)
+ trees <- longleaf
  # Longleaf Pines data
  # the marks are positive real numbers indicating tree diameters.
 
  \testonly{
 	# smaller dataset
-	longleaf <- longleaf[seq(1, longleaf$n, by=80)]
+	trees <- trees[seq(1, npoints(trees), by=80)]
  }
  \dontrun{
- plot(longleaf)
+ plot(trees)
  }
 
  # cut the range of tree diameters into three intervals
- long3 <- cut(longleaf, breaks=3)
+ long3 <- cut(trees, breaks=3)
  \dontrun{
  plot(long3)
  }
 
  # adult trees defined to have diameter at least 30 cm
- long2 <- cut(longleaf, breaks=c(0,30,100), labels=c("Sapling", "Adult"))
+ long2 <- cut(trees, breaks=c(0,30,100), labels=c("Sapling", "Adult"))
  plot(long2)
  plot(long2, cols=c("green","blue"))
 
@@ -112,7 +115,7 @@
  # Divide Swedish Pines data into 3 classes
  # according to nearest neighbour distance
 
- data(swedishpines)
+ swedishpines
  plot(cut(swedishpines, nndist(swedishpines), breaks=3))
 
  # (3) cutting based on tessellation
@@ -123,16 +126,16 @@
  plot(cut(swedishpines, tes))
  plot(tes, lty=2, add=TRUE)
 
- # (4) multivariate marks
- data(finpines)
+ # (4) inside/outside a given region
+ with(murchison, cut(gold, greenstone))
+
+ # (5) multivariate marks
+ finpines
  cut(finpines, "height", breaks=4)
 }
 
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{methods}

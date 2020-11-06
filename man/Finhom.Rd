@@ -10,7 +10,8 @@
 \usage{
   Finhom(X, lambda = NULL, lmin = NULL, ...,
         sigma = NULL, varcov = NULL,
-        r = NULL, breaks = NULL, ratio = FALSE, update = TRUE)
+        r = NULL, breaks = NULL, ratio = FALSE,
+        update = TRUE, warn.bias=TRUE, savelambda=FALSE)
 }
 \arguments{
   \item{X}{
@@ -68,6 +69,16 @@
     before the fitted intensity is computed.
     If \code{update=FALSE}, the fitted intensity of the
     model will be computed without fitting it to \code{X}.
+  }
+  \item{warn.bias}{
+    Logical value specifying whether to issue a warning
+    when the inhomogeneity correction factor takes extreme values,
+    which can often lead to biased results. This usually occurs
+    when insufficient smoothing is used to estimate the intensity.
+  }
+  \item{savelambda}{
+    Logical value specifying whether to save the values of
+    \code{lmin} and \code{lambda} as attributes of the result.
   }
 }
 \details{
@@ -134,8 +145,7 @@
   vector with length equal to the number of points in \code{X}.
 
   If \code{lambda} is omitted, then it will be estimated using
-  a `leave-one-out' kernel smoother, as described in Baddeley, \ifelse{latex}{\out{M\o ller}}{Moller}
-  and Waagepetersen (2000).  The estimate \code{lambda[i]} for the
+  a `leave-one-out' kernel smoother.  The estimate \code{lambda[i]} for the
   point \code{X[i]} is computed by removing \code{X[i]} from the
   point pattern, applying kernel smoothing to the remaining points using
   \code{\link{density.ppp}}, and evaluating the smoothed intensity
@@ -169,10 +179,8 @@
 }
 \author{
   Original code by Marie-Colette van Lieshout.
-  C implementation and R adaptation by Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Ege Rubak.
+  C implementation and R adaptation
+  by \adrian and \ege.
 }
 \keyword{spatial}
 \keyword{nonparametric}

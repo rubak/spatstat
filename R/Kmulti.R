@@ -4,7 +4,7 @@
 #	Compute estimates of cross-type K functions
 #	for multitype point patterns
 #
-#	$Revision: 5.47 $	$Date: 2015/02/22 03:00:48 $
+#	$Revision: 5.52 $	$Date: 2020/10/30 03:59:52 $
 #
 #
 # -------- functions ----------------------------------------
@@ -42,12 +42,13 @@
 #
 # ------------------------------------------------------------------------
 
-"Lcross" <- function(X, i, j, ..., from, to) {
+"Lcross" <- function(X, i, j, ..., from, to, correction) {
   if(!is.multitype(X, dfok=FALSE)) 
 	stop("Point pattern must be multitype")
   if(missing(i)) i <- if(!missing(from)) from else levels(marks(X))[1]
   if(missing(j)) j <- if(!missing(to)) to else levels(marks(X))[2]
-  K <- Kcross(X, i, j, ...)
+  if(missing(correction)) correction <- NULL
+  K <- Kcross(X, i, j, ..., correction=correction)
   L <- eval.fv(sqrt(K/pi))
   # relabel the fv object
   iname <- make.parseable(paste(i))
@@ -62,11 +63,12 @@
   return(L)  
 }
 
-"Ldot" <- function(X, i, ..., from) {
+"Ldot" <- function(X, i, ..., from, correction) {
   if(!is.multitype(X, dfok=FALSE)) 
 	stop("Point pattern must be multitype")
   if(missing(i)) i <- if(!missing(from)) from else levels(marks(X))[1]
-  K <- Kdot(X, i, ...)
+  if(missing(correction)) correction <- NULL
+  K <- Kdot(X, i, ..., correction=correction)
   L <- eval.fv(sqrt(K/pi))
   # relabel the fv object
   iname <- make.parseable(paste(i))
@@ -98,26 +100,22 @@ function(X, i, j, r=NULL, breaks=NULL,
     stop(paste("No points have mark i =", i))
 
   if(i == j) {
-    result <- Kest(X[I],
-                   r=r, breaks=breaks, correction=correction, ...,
-                   ratio=ratio)
+    ## use Kest
+    result <- do.call(Kest,
+                      resolve.defaults(list(X=X[I],
+                                            r=r, breaks=breaks,
+                                            correction=correction, ratio=ratio),
+                                       list(rmax=NULL), ## forbidden 
+                                       list(...)))
   } else {
     J <- (marx == j)
     if(!any(J))
       stop(paste("No points have mark j =", j))
     result <- Kmulti(X, I, J,
-                     r=r, breaks=breaks, correction=correction, ...,
-                     ratio=ratio)
+                     r=r, breaks=breaks,
+                     correction=correction, ratio=ratio, ...)
   }
-  iname <- make.parseable(paste(i))
-  jname <- make.parseable(paste(j))
-  result <-
-    rebadge.fv(result, 
-               substitute(Kcross[i,j](r), list(i=iname,j=jname)),
-               c("K", paste0("list(", iname, ",", jname, ")")), 
-               new.yexp=substitute(K[list(i,j)](r),
-                                   list(i=iname,j=jname)))
-  return(result)
+  result <- rebadge.as.crossfun(result, "K", NULL, i, j)
 }
 
 "Kdot" <- 
@@ -142,12 +140,7 @@ function(X, i, r=NULL, breaks=NULL,
 	
   result <- Kmulti(X, I, J,
                    r=r, breaks=breaks, correction=correction, ..., ratio=ratio)
-  iname <- make.parseable(paste(i))
-  result <-
-    rebadge.fv(result,
-               substitute(K[i ~ dot](r), list(i=iname)),
-               c("K", paste0(iname, "~ symbol(\"\\267\")")),
-               new.yexp=substitute(K[i ~ symbol("\267")](r), list(i=iname)))
+  result <- rebadge.as.dotfun(result, "K", NULL, i)
   return(result)
 }
 
@@ -373,3 +366,4 @@ function(X, I, J, r=NULL, breaks=NULL,
   }
   return(K)
 }
+

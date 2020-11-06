@@ -83,6 +83,7 @@ F3est(X, ..., rmax = NULL, nrval = 128, vside = NULL,
       the Chiu-Stoyan or Hanisch estimator (Chiu and Stoyan, 1998).
     }
   }
+  Alternatively \code{correction="all"} selects all options.
 
   The result includes a column \code{theo} giving the 
   theoretical value of \eqn{F_3(r)}{F3(r)} for
@@ -131,9 +132,9 @@ F3est(X, ..., rmax = NULL, nrval = 128, vside = NULL,
   \emph{Statistica Neerlandica} \bold{52}, 239--246.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
+  
+  
   and Rana Moyeed.
 }
 \section{Warnings}{
@@ -146,9 +147,16 @@ F3est(X, ..., rmax = NULL, nrval = 128, vside = NULL,
   \code{\link{spatstat.options}("nvoxel")}.
 }
 \seealso{
+  \code{\link{pp3}} to create a three-dimensional point
+  pattern (object of class \code{"pp3"}).
+  
   \code{\link{G3est}},
   \code{\link{K3est}},
-  \code{\link{pcf3est}}.
+  \code{\link{pcf3est}} for other summary functions of
+  a three-dimensional point pattern.
+
+  \code{\link{Fest}} to estimate the empty space function of
+  point patterns in two dimensions.
 }
 \examples{
   \testonly{op <- spatstat.options(nvoxel=2^18)}

@@ -3,7 +3,7 @@
 ##
 ##  Spatial scan statistics
 ##
-##  $Revision: 1.14 $  $Date: 2015/07/11 08:19:26 $
+##  $Revision: 1.17 $  $Date: 2017/06/05 10:31:58 $
 ##
 
 scanmeasure <- function(X, ...){
@@ -43,7 +43,8 @@ scanmeasure.ppp <- function(X, r, ..., method=c("counts", "fft")) {
                     nr=as.integer(nr),
                     nc=as.integer(nc),
                     R=as.double(r),
-                    counts=as.integer(numeric(prod(dimyx))))
+                    counts=as.integer(numeric(prod(dimyx))),
+                    PACKAGE = "spatstat")
            zzz <- matrix(zz$counts, nrow=dimyx[1], ncol=dimyx[2], byrow=TRUE)
            Z <- im(zzz, xrange=xr, yrange=yr, unitname=unitname(X))
          },
@@ -235,16 +236,19 @@ scan.test <- function(X, r, ...,
              nullname <- "Complete Spatial Randomness (CSR)"
              lambda <- intensity(X)
              simexpr <- expression(runifpoispp(lambda, Xwin))
+             dont.complain.about(lambda)
            } else if(is.ppm(baseline)) {
              nullname <- baseline$callstring
              rmhstuff <- rmh(baseline, preponly=TRUE, verbose=FALSE)
              simexpr <- expression(rmhEngine(rmhstuff))
+             dont.complain.about(rmhstuff)
            } else if(is.im(baseline) || is.function(baseline)) {
              nullname <- "Poisson process with intensity proportional to baseline"
              base <- as.im(baseline, W=Xmask)
              alpha <- npoints(X)/integral.im(base)
              lambda <- eval.im(alpha * base)
              simexpr <- expression(rpoispp(lambda))
+             dont.complain.about(lambda)
            } else stop(paste("baseline should be",
                              "a pixel image, a function, or a fitted model"))
            methodname <- c("Spatial scan test",
@@ -293,7 +297,7 @@ plot.scan.test <- function(x, ..., what=c("statistic", "radius"),
   xname <- short.deparse(substitute(x))
   what <- match.arg(what)
   Z <- as.im(x, what=what)
-  do.call("plot", resolve.defaults(list(x=Z), list(...), list(main=xname)))
+  do.call(plot, resolve.defaults(list(x=Z), list(...), list(main=xname)))
   if(do.window) {
     X <- attr(x, "X")
     plot(as.owin(X), add=TRUE, invert=TRUE)

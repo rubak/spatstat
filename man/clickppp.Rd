@@ -67,7 +67,7 @@
   passed to \code{\link[graphics]{locator}} through \code{\dots} include
   \code{pch} (plotting character), \code{cex} (character expansion
   factor) and \code{col} (colour). See \code{\link[graphics]{locator}}
-  and \code{\link{par}}.
+  and \code{\link[graphics]{par}}.
 }
 \seealso{
   \code{\link{identify.ppp}},
@@ -77,11 +77,7 @@
   \code{\link{clickdist}}
 }
 \author{Original by Dominic Schuhmacher.
-  Adapted by Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+  Adapted by \adrian and \rolf.
 }
 \keyword{spatial}
 \keyword{iplot}

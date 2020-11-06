@@ -10,7 +10,7 @@
 \usage{
 dg.progress(X, fun = Lest, \dots,
             exponent = 2, nsim = 19, nsimsub = nsim - 1,
-            nrank = 1, alpha, interpolate = FALSE,
+            nrank = 1, alpha, leaveout=1, interpolate = FALSE, rmin=0,
             savefuns = FALSE, savepatterns = FALSE, verbose=TRUE)
 }
 \arguments{
@@ -31,7 +31,7 @@ dg.progress(X, fun = Lest, \dots,
   }  
   \item{exponent}{
     Positive number. The exponent of the \eqn{L^p} distance.
-v    See Details.
+    See Details.
   }
   \item{nsim}{
     Number of repetitions of the basic test.
@@ -53,6 +53,12 @@ v    See Details.
     Equivalent to \code{nrank/(nsim+1)} where \code{nsim} is the
     number of simulations.
   }
+  \item{leaveout}{
+    Optional integer 0, 1 or 2 indicating how to calculate the
+    deviation between the observed summary function and the
+    nominal reference value, when the reference value must be estimated
+    by simulation. See Details.
+  }
   \item{interpolate}{
     Logical value indicating how to compute the critical value.
     If \code{interpolate=FALSE} (the default), a standard Monte Carlo test
@@ -62,6 +68,10 @@ v    See Details.
     If \code{interpolate=TRUE}, kernel density estimation
     is applied to the simulated values, and the critical value is
     the upper \code{alpha} quantile of this estimated distribution.
+  }
+  \item{rmin}{
+    Optional. Left endpoint for the interval of \eqn{r} values
+    on which the test statistic is calculated.
   }
   \item{savefuns}{
     Logical value indicating whether to save the simulated
@@ -87,7 +97,7 @@ v    See Details.
   
   The command \code{dg.progress} effectively performs 
   \code{\link{dg.test}} on \code{X} using all possible intervals
-  of the form \eqn{c(0,R)}, and returns the resulting values of the test
+  of the form \eqn{[0,R]}, and returns the resulting values of the test
   statistic, and the corresponding critical values of the test,
   as a function of \eqn{R}. 
 
@@ -112,6 +122,20 @@ v    See Details.
     Otherwise, new simulations will be performed,
     and \code{fun} defaults to  \code{\link{Lest}}.
   }
+  If the argument \code{rmin} is given, it specifies the left endpoint
+  of the interval defining the test statistic: the tests are
+  performed using intervals \eqn{[r_{\mbox{\scriptsize min}},R]}{[rmin,R]}
+  where \eqn{R \ge r_{\mbox{\scriptsize min}}}{R \ge rmin}.
+
+  The argument \code{leaveout} specifies how to calculate the
+  discrepancy between the summary function for the data and the
+  nominal reference value, when the reference value must be estimated
+  by simulation. The values \code{leaveout=0} and
+  \code{leaveout=1} are both algebraically equivalent (Baddeley et al, 2014,
+  Appendix) to computing the difference \code{observed - reference}
+  where the \code{reference} is the mean of simulated values.
+  The value \code{leaveout=2} gives the leave-two-out discrepancy
+  proposed by Dao and Genton (2014).
 }
 \value{
   An object of class \code{"fv"} that can be plotted to
@@ -135,16 +159,16 @@ v    See Details.
   \bold{23}, 497--517.
 }
 \author{
-  Adrian Baddeley, Andrew Hardegen, Tom Lawrence,
+  \adrian, Andrew Hardegen, Tom Lawrence,
   Robin Milne, Gopalan Nair and Suman Rakshit.
   Implemented by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  \adrian
+  
+  
+  \rolf
+  
+  and \ege
+  
 }
 \seealso{
   \code{\link{dg.test}},

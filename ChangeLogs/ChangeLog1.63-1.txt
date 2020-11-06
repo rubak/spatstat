@@ -1,0 +1,454 @@
+Change log from 1.63-0 to 1.63-1
+================================
+
+24 jan 2020
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Require spatstat.data 1.4-2
+	Nickname changed to 'Deuterocanonical'
+	Version 1.63-0.001
+
+   as.owin.Rd
+	Modified 'require(spatial)' call to satisfy package checker.
+	
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+26 jan 2020
+
+   uniquemap.R
+	Modified code to remove dependence on R 3.6.0
+
+   markcorr.R
+	Accelerated markconnect and markvario
+	by avoiding O(n^2) calculation of the reference value.
+
+   intensity.R
+   markcorr.R
+   spatstat-internal.Rd
+	New internal function 'getpointweights'
+	(gives more flexible options for argument 'weights')
+
+   parres.R
+	Fix rare bug arising when the number of useable values is very small.
+	
+   interact.R
+   ord.R
+	Minor tweaks to accommodate Ord(f)
+	
+   tests/density.R
+   tests/NAinCov.R
+   tests/lppstuff.R
+   tests/rmhBasic.R
+   tests/rmhMulti.R
+   tests/segments.R
+   tests/triplets.R
+   tests/undoc.R
+	More tests of code blocks
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to 'Happy Invasion Day'
+	Version 1.63-0.002
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+27 jan 2020
+
+   intensity.R
+   pointweights.R [New file]
+   markcorr.R
+   spatstat-internal.Rd
+       Moved 'getpointweights' to new file and renamed 'pointweights'.
+       Extended its functionality.
+
+   smooth.ppp.R
+	Use 'pointweights'
+
+   Smooth.ppp.Rd
+   markcorr.Rd
+   markvario.Rd
+   markconnect.Rd
+	weights can be a function, pixel image, etc.
+
+   evalcovar.R
+	Now computes more internal data.
+	
+   linim.R
+   is.linim.Rd [New file]
+        New function.
+
+   rhohat.R
+	Numerous bug fixes in rhohat, predict.rhohat, simulate.rhohat
+	for the case of a linear network.
+	
+   randomlpp.R
+	Now handles lambda=<list of linim> when L is missing.
+	
+   tests/density.R
+   tests/segments.R
+   tests/lppstuff.R
+	More better tests
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Version 1.63-0.003
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+28 jan 2020
+
+   nndistlpp.R
+	Modified logical flow so that unreachable code
+	(alternative algorithm) is now reachable.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to 'Unforced error'
+	Version 1.63-0.004
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+30 jan 2020
+
+   blur.R
+	Fixed rarely-occurring bug in safelookup()
+
+   anova.ppm.R
+   anova.mppm.R
+   sdr.R
+   vcov.ppm.R
+	Slightly accelerated.
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Version 1.63-0.005
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+31 jan 2020
+
+   tests/imageops.R
+	Test all code blocks in safelookup()
+	Test Smooth.im
+	
+   updates.Rnw
+   bugfixes.Rnw
+	Updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.006
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+02 feb 2020
+
+   lixellate.R
+	Hardened against erroneous arguments.
+
+   tests/closeshave.R
+	Test handling of memory overflow.
+	
+   tests/lppstuff.R
+   tests/sumfun.R
+	Tests of special cases.
+
+   rmh.default.Rd
+	Improved example of saving the intermediate states.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.007
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+	
+03 feb 2020
+
+   utilmatrix.R 
+	Bug fix in spatstat.utils::blockdiagarray [=> spatstat.utils 1.16-0]
+
+   leverage.R
+	Bug fix in handling (absence of) Hessian of irregular parameters
+
+   tests/leverinf.R
+	Test whether irregular score and Hessian computed by
+	symbolic differentiation can be safely extracted
+	(provided spatstat.utils >= 1.16-0)
+
+   util.R
+   requireversion.Rd
+	requireversion has new argument 'fatal'
+   
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.008
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+04 feb 2020
+
+   smooth.ppp.R
+	Numerical underflow is now handled in a similar way
+	whether the marks are a data frame or a vector.
+
+   tests/density.R
+	Test handling of numerical underflow
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.009
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   model.depends.R
+   spatstat-internal.Rd
+	New internal function 'check.separable'
+
+   parres.R
+	Use check.separable
+	
+   tests/testparres.R
+	More tests of infrastructure
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.010
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/imageops.R
+	Corrected an example.
+
+   blur.R
+   nearestValue.Rd [New file]
+   	New function nearestValue.
+
+   linim.R
+   plot.linim.Rd
+	plot.linim has new argument 'fatten'.
+
+   updates.Rnw
+   bugfixes.Rnw
+	Updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.011
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   linim.R
+	Improved 'fatten' behaviour
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.012
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   linim.R
+   plot.linim.Rd
+	More improvements
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.013
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+05 feb 2020
+
+   linim.R
+	Accelerated
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.014
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+06 feb 2020
+
+   wingeom.R
+	Buglet fixes
+	
+   close3Dpairs.R
+	new secret option crosspairs.pp3(nsize=)
+	to test the memory overflow code.
+
+   tests/closeshave.R
+	Test of memory overflow case.
+	
+   tests/prediction.R
+   tests/sumfun.R
+   tests/windows.R
+	More tests of code blocks in fundamental code
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.015
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/leverinf.R
+	Remove test of version number 
+
+   DESCRIPTION
+   NEWS
+	Require spatstat.utils 1.17-0
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.016
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+07 feb 2020
+
+   Kest.R
+	rmax.rule modified to handle very large numbers of points.
+
+   markconnect.Rd
+	Mentions the option of correction="none".
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.017
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+10 feb 2020
+
+   Kest.R
+	rmax.rule reverted to previous rule.
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.018
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+18 feb 2020
+
+   plot.owin.R
+   plot.im.R
+	Buglet fixes in plotting axes and axis labels
+
+   plot.owin.Rd
+   plot.im.Rd
+	Added information about plotting axes and axis labels.
+
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.019
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+20 feb 2020
+
+   Hest.R
+	Internal reorganisation to support secret arguments.
+	
+   GJfox.R
+   Gfox.Rd
+	Reorganisation to handle the 'checkspacing' bug.
+	Jfox has new argument warn.trim
+	
+   DESCRIPTION
+   NEWS
+	Version 1.63-0.020
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+21 feb 2020
+
+   linearmarkequal.Rd
+	Bug fix in example
+
+   dendrite.Rd
+   linearKcross.inhom.Rd
+   linearKcross.Rd
+   linearKdot.inhom.Rd
+   linearKdot.Rd
+   linearmarkconnect.Rd
+   linearmarkequal.Rd
+   linearpcfcross.inhom.Rd
+   linearpcfcross.Rd
+   linearpcfdot.inhom.Rd
+   linearpcfdot.Rd
+	Updated bibliographic reference (to dendrite paper)
+
+   updates.Rnw
+	Updated to cover all the above.
+
+   bugtable.R
+	Added option sincedate='all' or sinceversion='all'
+
+   bugfixes.Rd
+	Improved explanation.
+
+   evalcovar.R
+   plot.im.R
+   markcorr.R
+   parres.R
+	Remove unused variables detected by codetools
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nicknamed 'Made from recycled electrons'
+	Version 1.63-1
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+::::::::::  passed codetools usage check  :::::::::::::::
+::::::::::  ran all code from the book    :::::::::::::::
+
+^^^^^^^^^^^^  passed R-devel CMD check ^^^^^^^^^^^^^^^
+             (2020-02-20 r77838)

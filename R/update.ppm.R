@@ -2,7 +2,7 @@
 #  update.ppm.R
 #
 #
-#  $Revision: 1.57 $    $Date: 2015/06/10 08:33:34 $
+#  $Revision: 1.61 $    $Date: 2017/10/04 03:51:04 $
 #
 #
 #
@@ -24,7 +24,7 @@ update.ppm <- local({
     verifyclass(object, "ppm")
     new.callstring <- short.deparse(sys.call())
     aargh <- list(...)
-    
+
     if(inherits(object, "ippm")) {
       call <- object$dispatched$call
       callframe <- object$dispatched$callframe
@@ -39,7 +39,8 @@ update.ppm <- local({
     callfun <- as.character(call[[1]])
     newstyle <- (callfun == "ppm.formula")
     oldstyle <- !newstyle
-    
+
+
     ## Special cases 
     ## (1) no new information given
     if(length(aargh) == 0 && !identical(use.internal, TRUE)) {
@@ -282,7 +283,8 @@ update.ppm <- local({
     ## ****** Special action when Q is a point pattern *************
     ## *************************************************************
     if(X.is.new && fixdummy && oldstyle &&
-       inherits((X <- eval(call$Q, as.list(envir), enclos=callframe)), "ppp")) {
+       is.ppp(X <- eval(call$Q, as.list(envir), enclos=callframe)) &&
+       identical(Window(X), Window(data.ppm(object)))) {
       ## Instead of allowing default.dummy(X) to occur,
       ## explicitly create a quadrature scheme from X,
       ## using the same dummy points and weight parameters
@@ -291,11 +293,11 @@ update.ppm <- local({
       if(is.marked(Qold)) {
         dpar <- Qold$param$dummy
         wpar <- Qold$param$weight
-        Qnew <- do.call("quadscheme", append(list(X), append(dpar, wpar)))
+        Qnew <- do.call(quadscheme, append(list(X), append(dpar, wpar)))
       } else {
         Dum <- Qold$dummy
         wpar <- Qold$param$weight
-        Qnew <- do.call("quadscheme", append(list(X, Dum), wpar))
+        Qnew <- do.call(quadscheme, append(list(X, Dum), wpar))
       }
       ## replace X by new Q
       call$Q <- Qnew

@@ -52,14 +52,7 @@
 }
 \author{
   Original idea by Ute Hahn.
-  Code by 
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+  Code by \spatstatAuthors.
 }
 \seealso{
   \code{\link{split.ppp}},

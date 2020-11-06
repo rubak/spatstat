@@ -3,7 +3,7 @@
 #
 #   model compensated K-function
 #
-# $Revision: 1.13 $ $Date: 2015/02/22 03:00:48 $
+# $Revision: 1.16 $ $Date: 2018/10/19 03:20:51 $
 #
 
 Kcom <- local({
@@ -16,9 +16,9 @@ Kcom <- local({
                    trend=~1, interaction=Poisson(), rbord=reach(interaction),
                    compute.var=TRUE,
                    truecoef=NULL, hi.res=NULL) {
-  if(inherits(object, "ppm")) {
+  if(is.ppm(object)) {
     fit <- object
-  } else if(is.ppp(object) || inherits(object, "quad")) {
+  } else if(is.ppp(object) || is.quad(object)) {
     if(is.ppp(object)) object <- quadscheme(object, ...)
     if(!is.null(model)) {
       fit <- update(model, Q=object, forcefit=TRUE)
@@ -31,6 +31,12 @@ Kcom <- local({
   
   if(missing(conditional) || is.null(conditional))
     conditional <- !is.poisson(fit)
+
+  restrict <- isTRUE(restrict)
+  if(restrict && !conditional) {
+    warning("restrict=TRUE ignored because conditional=FALSE", call.=FALSE)
+    restrict <- FALSE
+  }
 
 #  rfixed <- !is.null(r) || !is.null(breaks)
   
@@ -180,7 +186,8 @@ Kcom <- local({
                  "border")
     # reduced sample for adjustment integral
     RSD <- Kwtsum(dIJ[okI], bI[okI], wcIJ[okI],
-                  b[Z & USED], rep.int(1, npts.used), breaks)
+                  b[Z & USED], rep.int(1, npts.used), breaks,
+                  fatal=FALSE)
 #    lambdaU <- (npts.used + 1)/area.used
     lambdaU <- (npts + 1)/areaW
     Kb <- RSD$numerator/((RSD$denominator + 1) * lambdaU)
@@ -244,7 +251,7 @@ Kcom <- local({
       iOK <- I[okI]
       denom <- lambda2U * area.used
       variso <- varsumiso <- 0 * Kiso
-      for(i in sort(unique(iOK))) {
+      for(i in sortunique(iOK)) {
         relevant <- (iOK == i)
         tincrem <- whist(dOK[relevant], breaks$val, eOK[relevant])
         localterm <- cumsum(tincrem)/denom

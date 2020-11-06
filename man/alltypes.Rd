@@ -74,7 +74,7 @@
 
   If \code{fun="F"} then this routine
   calculates, for each possible type \eqn{i},
-  an estimate of the Empty Space Function \eqn{F_i(r)} of
+  an estimate of the Empty Space Function \eqn{F_i(r)}{F[i](r)} of
   \eqn{X_i}{X[i]}. See \code{\link{Fest}}
   for explanation of the empty space function.
   The estimate is computed by applying \code{\link{Fest}}
@@ -133,6 +133,15 @@
   \code{\link{envelope}} to control the number of
   simulations, the random process generating the simulations,
   the construction of envelopes, and so on. 
+
+  When \code{envelope=TRUE} it is possible that errors could occur
+  because the simulated point patterns do not satisfy the requirements
+  of the summary function (for example, because the simulated pattern
+  is empty and \code{fun} requires at least one point). If the number
+  of such errors exceeds the maximum permitted number \code{maxnerr},
+  then the envelope algorithm will give up, and will return
+  the empirical summary function for the data point pattern,
+  \code{fun(X)}, in place of the envelope.
 }
 \value{
   A function array (an object of class \code{"fasp"},
@@ -245,11 +254,8 @@
    as.fv(bKE[1,1])
    
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf.
 }
 \keyword{spatial}
 \keyword{nonparametric}

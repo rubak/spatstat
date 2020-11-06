@@ -8,15 +8,19 @@
   Computes the leverage measure for a fitted spatial point process model.
 }
 \usage{
-leverage(model, ...)
-\method{leverage}{ppm}(model, ..., drop = FALSE, iScore=NULL, iHessian=NULL, iArgs=NULL)
+leverage(model, \dots)
+
+\method{leverage}{ppm}(model, \dots,
+         drop = FALSE, iScore=NULL, iHessian=NULL, iArgs=NULL)
 }
 \arguments{
   \item{model}{
     Fitted point process model (object of class \code{"ppm"}).
   }
   \item{\dots}{
-    Ignored.
+    Ignored, except for the arguments \code{dimyx} and \code{eps}
+    which are passed to \code{\link{as.mask}}
+    to control the spatial resolution of the result.
   }
   \item{drop}{
     Logical. Whether to include (\code{drop=FALSE}) or
@@ -38,7 +42,8 @@ leverage(model, ...)
   
   Given a fitted spatial point process model \code{model},
   the function \code{leverage.ppm} computes the leverage of the model,
-  described in Baddeley, Chang and Song (2013).
+  described in Baddeley, Chang and Song (2013)
+  and Baddeley, Rubak and Turner (2019).
   
   The leverage of a spatial point process model
   is a function of spatial location, and is typically
@@ -49,8 +54,8 @@ leverage(model, ...)
   A relatively large value of \eqn{h()} indicates a 
   part of the space where the data have a \emph{potentially}
   strong effect on the fitted model (specifically, a strong effect
-  on the intensity or trend of the fitted model) due to the values
-  of the covariates. 
+  on the intensity or conditional intensity of the fitted model)
+  due to the values of the covariates. 
   
   If the point process model trend has irregular parameters that were
   fitted (using \code{\link{ippm}})
@@ -67,34 +72,41 @@ leverage(model, ...)
   pair of irregular parameters.  
 
   The result of \code{leverage.ppm} is an object of
-  class \code{"leverage.ppm"}. It can be plotted
-  (by \code{\link{plot.leverage.ppm}}) or converted to a pixel
-  image by \code{as.im} (see \code{\link{as.im.leverage.ppm}}).
+  class \code{"leverage.ppm"}. It can be printed or plotted.
+  It can be converted to a pixel image
+  by \code{as.im} (see \code{\link{as.im.leverage.ppm}}).
+  There are also methods for \code{contour}, \code{persp},
+  \code{[}, \code{as.function}, 
+  \code{\link{as.owin}}, \code{\link{domain}}, \code{\link{Smooth}},
+  \code{\link{integral}},  and \code{mean}.
 }
 \value{
-  An object of class \code{"leverage.ppm"} that can be plotted
-  (by \code{\link{plot.leverage.ppm}}). There are also methods
-  for \code{print}, \code{[}, \code{as.im} and \code{as.owin}.
+  An object of class \code{"leverage.ppm"}.
 }
 \references{
   Baddeley, A., Chang, Y.M. and Song, Y. (2013)
   Leverage and influence diagnostics for spatial point process models.
   \emph{Scandinavian Journal of Statistics} \bold{40}, 86--104.
+  
+  Baddeley, A., Rubak, E. and Turner, R. (2019)
+  Leverage and influence diagnostics for Gibbs spatial point processes.
+  \emph{Spatial Statistics} \bold{29}, {15--48}.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{influence.ppm}},
   \code{\link{dfbetas.ppm}},
+  \code{\link{ppmInfluence}},
   \code{\link{plot.leverage.ppm}}
+  \code{\link{as.function.leverage.ppm}}
 }
 \examples{
    X <- rpoispp(function(x,y) { exp(3+3*x) })
-   fit <- ppm(X, ~x+y)
-   plot(leverage(fit))
+   fit <- ppm(X ~x+y)
+   plot(le <- leverage(fit))
+   mean(le)
 }
 \keyword{spatial}
 \keyword{models}

@@ -1,0 +1,950 @@
+Change log from 1.55-0 to 1.55-1
+================================
+
+30 jan 2018
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Initialised as version 1.55-0.001
+	Nicknamed 'Phugoid'
+
+   plot.solist.Rd
+	Minor addition
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+31 jan 2018
+
+   mpl.R
+   spatstat-internal.Rd
+	Bug fix in deltasuffstat when the brute-force algorithm is required.
+
+   leverage.R
+	Brute force algorithm for deltasuffstat is now permitted (force=TRUE)
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.002
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   mpl.R
+   spatstat-internal.Rd
+	Brute force algorithm extended to sparse arrays
+
+   indices.R
+	Added check for internal error
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.003
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   mpl.R
+	Bug fix in brute force algorithm
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.004
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+01 feb 2018
+
+   mpl.R
+	Further bug fixes in brute force algorithm
+
+   sparse3Darray.R
+	Bug fix in Summary.sparse3Darray
+	in handling empty array
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-0.005
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   mpl.R
+	Typo
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.006
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   strauss.R
+   spatstat-internal.Rd
+	Internal function 'weightedclosepairs' now has argument 'what'.
+	
+   strausshard.R
+	Consequential changes.
+	
+   geyer.R
+	geyerdelta2 and Geyer()$delta2 now do fast computation
+	for isotropic and translation corrections.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.007
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+03 feb 2018
+
+   periodic.c [New file]
+   	Algorithm for closepairs with periodic edge correction.
+
+   closepairs.R
+   closepairs.Rd
+	closepairs.ppp has new argument 'periodic'.
+
+   tests/closeshave.R
+	Added a test of closepairs (periodic=TRUE)
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-0.008
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 feb 2018
+
+   evalcovar.R
+	'info' list now includes 'ispois' = is.poisson(model)
+
+   cdftest.R
+   spatstat-internal.Rd
+	new internal function 'spatialCDFtestCalc'
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-0.009
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+10 feb 2018
+
+   window.R
+   as.owin.Rd
+	as.owin.default accepts 'xmin, xmax, ymin, ymax'
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.010
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   has.close.Rd
+	Added 3D example.
+
+   as.im.Rd
+	Added distfun examples.
+
+   nnmap.R
+	Bug fix.
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.011
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 feb 2018
+
+   cdf.test.mppm.Rd
+	Added example of Gibbs case.
+
+   sparsecommon.R
+	Bug fix.
+
+   tests/sparse3Darray.R
+	More tests of sparse array code.
+
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.012
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   mpl.R
+   spatstat-internal.Rd
+	Added progress reports in deltasuffstat brute force algorithm
+
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.013
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 feb 2018
+
+   ppmclass.R
+   lppm.R
+   pseudoR2.Rd
+	pseudoR2.ppm and pseudoR2.lppm have new argument 'keepoffset'
+
+   DESCRIPTION
+   NEWS
+	version 1.55-0.014
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Jens Astrom and Angela Li
+
+14 feb 2018
+
+   nnmark.R
+	Bug fix
+
+   window.R
+	as.owin.default detects SpatialPolygons and issues helpful message
+
+   ssf.R
+   methods.ssf.Rd
+   spatstat-internal.Rd
+	New methods summary.ssf and print.summary.ssf
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-0.015
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+15 feb 2018
+
+   vcov.kppm.Rd
+	Tweaked
+	
+   vcov.kppm.R
+	Secret argument 'splitup' introduced for testing purposes
+	
+   tests/kppm.R
+	More tests of code for vcov.kppm
+
+   tests/density.R
+	More tests of different cases of density.ppp
+
+   tests/ppmtricks.R
+	Tests of suffstat.poisson and killinteraction
+
+   mpl.R
+	Buglet fix in partialModelMatrix
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-0.016
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 feb 2018
+
+   nndistlpp.R
+	Bug fix.
+
+   tests/lppstuff.R
+        Added test of case triggering this bug.
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Ines Moncada.
+	
+   DESCRIPTION
+   NEWS
+	version 1.55-0.017
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+25 feb 2018
+
+   tests/imageops.R
+	Added test of smudge() and rasterfilter()
+
+   unstack.R
+	Bug fixes
+
+   unstack.solist.Rd [New file]
+   spatstat-internal.Rd
+        Documented 'unstack' methods for solist, layered
+
+   solist.R
+	Bug fix in as.solist when x is a layered object
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        version 1.55-0.018
+	Nickname 'Sandwich Board Preacher'
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+26 feb 2018
+
+   funxy.R
+   distfun.R
+      Summary methods now accept pixel resolution arguments via "..."
+
+   summary.distfun.Rd [New file]
+   spatstat-internal.Rd
+       Added documentation
+       
+   funxy.Rd
+   distfun.Rd 
+      Added cross-references
+      
+   funxy.R
+       Improved z axis label in persp.funxy
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.019
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+28 feb 2018
+
+   tests/envelopes.R
+	Tests for cases not covered elsewhere
+
+   tests/indices.R [New file]
+   	Tests of code for understanding index vectors
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.020
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   sparse3Darray.R
+	Bug fixes
+
+   tests/sparse3Darrays.R
+	More tests of sparse code.
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.021
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 mar 2018
+
+   units.R
+	'makeunits' hardened against other classes of data
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.022
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+   
+06 mar 2018
+
+   plot.im.R
+      return value includes 'ribside'
+      
+   tess.R
+   plot.tess.Rd
+      Now supports colour fill in each tile
+      with values determined by marks
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.023
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+ 07 mar 2018
+
+    unstack.R
+    unstack.Rd
+	New method unstack.tess
+
+   measures.R
+	Bug fix when the result of integral.msr is a matrix;
+	it is now transposed
+
+   linim.R
+   integral.linim.Rd
+	integral.linim and integral.linfun now accept domain=<tessellation>
+
+   linim.R
+	Bug fix in [.linim
+
+   linnet.R
+	Bug fix in linnet
+	Bug fix in [.linnet
+	
+   nearestsegment.R
+	Bug fix in ppllengine in trivial case
+
+   ssf.R
+   methods.ssf.Rd
+	integral.ssf now accepts domain = <tessellation>
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        version 1.55-0.024
+	Nickname "Stoned Crow"
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   ssf.R
+       Bug fix
+       
+   DESCRIPTION
+   NEWS
+        version 1.55-0.025
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tess.R
+   plot.tess.Rd
+	plot.tess has new argument 'ribargs'
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.026
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 mar 2018
+
+   pairwise.family.R
+	evalPairPotential now handles finite=TRUE.
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.027
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+09 mar 2018
+
+   pairwise.family.R
+	pairwise.family$eval() now handles finite=TRUE.
+
+   mpl.R
+	evalInteraction handles finite=TRUE.
+
+   strausshard.R
+	fasteval() handles finite=TRUE.
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.028
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 mar 2018
+
+   mpl.R
+   spatstat-internal.Rd
+	Simpler approach to 'finite=TRUE' case.
+	Removed 'finite' from arguments of evalPairPotential.
+
+   pairwise.family.R
+	Redesigned handling of finite=TRUE case.
+
+   strausshard.R
+	Removed argument 'finite' from potential.
+	Function delta2 still returns attr(, "-Inf").
+
+   predict.ppm.R
+   predict.ppm.Rd
+	Argument 'finite' renamed 'ignore.hardcore'.
+
+   spatstat-package.Rd
+        Scandinavian accents in surname 'Astrom'.
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.029
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12-14 mar 2018
+
+   Redesigned handling of infinite potential values.
+
+   mpl.R
+   spatstat-internal.Rd
+	evalInteraction and evalInterEngine have argument 'splitInf'
+	If splitInf=TRUE the return value has attr(, "-Inf")
+
+   pairwise.family
+	$eval() has argument 'splitInf' 
+	If splitInf=TRUE the return value has attr(, "-Inf")
+
+   diggra.c
+	Additional functions to support splitInf=TRUE.
+	
+   dg.R
+   fiksel.R
+   hardcore.R
+   strausshard.R
+	'fasteval' has argument 'splitInf' 
+	If splitInf=TRUE the return value has attr(, "-Inf")
+
+   dgs.R
+   geyer.R
+   strauss.R
+	'fasteval' has argument 'splitInf' which is ignored.
+
+   strausshard.R
+	delta2() completely rewritten (inc bug fix)
+	delta2() returns attr(, "deltaInf")
+
+   pairwise.family.R
+	delta2() completely rewritten (inc bug fix)
+
+   mpl.R
+   spatstat-internal.Rd
+	mpl.prepare has argument 'splitInf' 
+	Hence bt.frame handles 'splitInf'
+	(the results have component 'forbid')
+
+   ppmclass.R
+   spatstat-internal.Rd
+	model.matrix.ppm now handles 'splitInf'
+	(the result has attribute "-Inf")
+
+   mpl.R
+	partialModelMatrix handles 'splitInf'
+	(the result has attribute "-Inf")
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	New nickname 'Remove Before Flight'
+        version 1.55-0.030
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+15 mar 2018
+
+   man/macros/defns.Rd
+      Correction to a macro
+      
+   areainter.R	
+   badgey.R	
+   concom.R	
+   dgs.R		
+   dg.R		
+   fiksel.R	
+   geyer.R		
+   hardcore.R	
+   hierhard.R
+   hierstrauss.R
+   hierstrhard.R
+   hybrid.R	
+   lennard.R	
+   multihard.R	
+   multistrauss.R	
+   multistrhard.R	
+   ordthresh.R	
+   ord.R		
+   pairpiece.R	
+   pairwise.R	
+   penttinen.R	
+   satpiece.R	
+   saturated.R	
+   softcore.R	
+   strauss.R	
+   strausshard.R	
+   triplets.R	
+      All interactions have a component $hasInf = TRUE, FALSE or NA
+      indicating whether they sometimes return -Inf values.
+
+   mpl.R
+      deltasuffstat generic code (deltasufX, deltasufQ)
+      now handles attr(,"-Inf") data
+
+   hybrid.family.R
+   hierpair.family.R
+      delta2 function now handles attr(,"deltainf") from each interaction
+
+   quadclass.R
+   spatstat-internal.Rd
+	new function is.quad
+
+   areainter.R
+   anova.ppm.R
+   Gcom.R
+   geyer.R
+   kppm.R
+   measures.R
+   mpl.R
+   ppm.R
+   predictmppm.R
+   psstA.R
+   psstG.R
+   psst.R
+   residppm.R
+   rho2hat.R
+   strausshard.R
+	replaced inherits(x,"quad") by is.quad(x)
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.031
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+19 mar 2018
+
+   dgs.R
+   hardcore.R
+   strausshard.R
+	Buglet fixes in fasteval 
+	
+   predict.ppm.R
+	Tweaked
+	
+   fitted.ppm.R
+   fitted.ppm.Rd
+	New argument 'ignore.hardcore'.
+	
+   leverage.R
+	Major edit.
+	Code for pseudolikelihood case now adjusts for presence of hard core.
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.032
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+20 mar 2018
+
+   leverage.R
+	Code for logistic likelihood now adjusts for presence of hard core.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Nickname 'Pierce in Two Places With a Fork'
+        version 1.55-0.033
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   leverage.R
+	Removed unused variables detected by codetools
+
+   updates.Rnw
+	Updated to cover all of the above.
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.034
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+
+21 mar 2018
+
+   measures.R
+        Changed default rule for smoothing bandwidth in augment.msr
+	Save value of smoothing bandwidth in augment.msr
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.035
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+21 mar 2018
+
+   measures.R
+	Bug fix in Ops.msr
+	
+   measures.R
+   spatstat-internal.Rd
+	augment.msr has new argument 'recompute'
+
+   updates.Rnw
+	updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.036
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   measures.R
+	Buglet fix
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.037
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+22 mar 2018
+
+   symbolmap.R
+   spatstat-internal.Rd
+	New internal function 'symbolmapdomain'
+
+   plot.ppp.R
+	Improved placement of symbol legend for non-default symbol map
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Nickname 'Potatorship'
+        version 1.55-0.038
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+23 mar 2018
+
+   lineardisc.R
+	In countends(), added a check that the network is
+	stored in non-sparse matrix format.
+	[Thanks to Mehdi]
+	
+   lineardisc.Rd
+	Explained that countends() requires non-sparse matrix format.
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.039
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+27 mar 2018
+
+   pairwise.family.R
+   hierpair.family.R
+	Bug fix in $delta2
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.040
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
++++++++++++++  passed 'make bookcheck'  ++++++++++++++
+
+28 mar 2018
+
+   predictmppm.R
+	Bug fix affecting random effects models.
+	[Thanks to Nick Read]
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname: "Open Other End"
+        Acknowledged Nick Read
+        version 1.55-0.041
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/vcovppm.R 
+   tests/deltasuffstat.R [New file]
+	More tests of 'deltasuffstat' algorithms
+
+   hierpair.family.R
+	Disabled the $delta2 algorithm as it may be incorrect
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.042
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+ 29 march 2018
+ 
+   hierpair.family.R
+	Fixed $delta2 and reinstated it
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Nickname 'Ground Effect'
+        version 1.55-0.043
+	
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
++++++++++++++  passed 'make bookcheck'  ++++++++++++++
++++++++++++++  installed R 3.4.4        ++++++++++++++
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+
+------------- passed R-devel CMD check ---------------
+-------------  (2018-03-28 r74482)     ---------------
+
+   updates.Rnw
+	Updated to cover all the above.
+
+ 03 april 2018
+
+    Softcore.Rd
+	Improved explanation.
+	Extended examples.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'April Fish'
+        version 1.55-0.044
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   updates.Rnw
+	Rearranged the section about bug fixes.
+	Mentioned the command 'bugfixes'.
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.045
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+ 04 april 2018
+
+   tests/closeshave.R
+	Fixed bug in test, caused by GCC bug 323
+
+   DESCRIPTION
+   NEWS
+        version 1.55-0.046
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+ 05 apr 2018
+
+   leverage.R
+	Calculates mean leverage directly (=> correctly) in Gibbs case,
+	rather than using trace formula.
+
+   updates.Rnw
+	Updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+        version 1.55-0.047
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+        Nickname 'Gamble Responsibly'
+	version 1.55-1
+
+------------- passed R-3.4.4 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+------------- passed R-devel CMD check ---------------
+-------------  (2018-04-02 r74505)     ---------------
+!!!!!!!!!!!!  submitted to CRAN        !!!!!!!!!!!!!!!
+
+   

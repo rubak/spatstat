@@ -7,7 +7,7 @@ from a point pattern in a window of arbitrary shape,
 using the Fast Fourier Transform.
 }
 \usage{
-  Kest.fft(X, sigma, r=NULL, breaks=NULL)
+  Kest.fft(X, sigma, r=NULL, \dots, breaks=NULL)
 }
 \arguments{
   \item{X}{The observed point pattern, 
@@ -16,15 +16,19 @@ using the Fast Fourier Transform.
     in any format acceptable to \code{\link{as.ppp}()}.
   }
   \item{sigma}{
-    standard deviation of the isotropic Gaussian
+    Standard deviation of the isotropic Gaussian
     smoothing kernel.
   }
   \item{r}{
-    vector of values for the argument \eqn{r} at which \eqn{K(r)} 
+    Optional. Vector of values for the argument \eqn{r} at which \eqn{K(r)} 
     should be evaluated. There is a sensible default.
   }
+  \item{\dots}{
+    Arguments passed to \code{\link{as.mask}} determining the
+    spatial resolution for the FFT calculation.
+  }
   \item{breaks}{
-	This argument is for internal use only.
+    This argument is for internal use only.
   }
 }
 \value{
@@ -53,7 +57,7 @@ using the Fast Fourier Transform.
 
   The result is an approximation whose accuracy depends on the
   resolution of the pixel raster. The resolution is controlled
-  by setting the parameter \code{npixel} in 
+  by the arguments \code{\dots}, or by setting the parameter \code{npixel} in 
   \code{\link{spatstat.options}}.
 }
 \references{
@@ -87,9 +91,6 @@ using the Fast Fourier Transform.
 }
 \examples{
  pp <- runifpoint(10000)
- \dontrun{
- spatstat.options(npixel=512)
- }
  \testonly{
   op <- spatstat.options(npixel=125)
  }
@@ -97,11 +98,8 @@ using the Fast Fourier Transform.
  plot(Kpp)
  \testonly{spatstat.options(op)}
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -9,11 +9,20 @@
   by the shortest path in the network.
 }
 \usage{
-\method{nndist}{lpp}(X, ..., method="C")
+\method{nndist}{lpp}(X, ..., k=1, by=NULL, method="C")
 }
 \arguments{
   \item{X}{
     Point pattern on linear network (object of class \code{"lpp"}).
+  }
+  \item{k}{
+    Integer, or integer vector. The algorithm will compute the distance to the
+    \code{k}th nearest neighbour. 
+  }
+  \item{by}{
+    Optional. A factor, which separates \code{X} into groups.
+    The algorithm will compute the distance to
+    the nearest point in each group. 
   }
   \item{method}{
     Optional string determining the method of calculation.
@@ -33,20 +42,37 @@
   code in the C language. If \code{method="interpreted"} then the
   computation is performed using interpreted \R code. The \R code is
   much slower, but is provided for checking purposes.
+
+  The \code{k}th nearest neighbour distance is infinite
+  if the \code{k}th nearest neighbour does not exist. This can occur
+  if there are fewer than \code{k+1} points in the dataset, or if
+  the linear network is not connected.
+
+  If the argument \code{by} is given, it should be a \code{factor},
+  of length equal to the number of points in \code{X}.
+  This factor effectively partitions \code{X} into subsets,
+  each subset associated with one of the levels of \code{X}.
+  The algorithm will then compute, for each point of \code{X},
+  the distance to the nearest neighbour \emph{in each subset}.
 }
 \value{
-  A numeric vector, of length equal to the number of points in \code{X}.
+  A numeric vector, of length equal to the number of points in \code{X},
+  or a matrix, with one row for each point in \code{X} and one column
+  for each entry of \code{k}. Entries are nonnegative numbers or
+  infinity (\code{Inf}).
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
 }
 \seealso{
   \code{\link{lpp}}
 }
 \examples{
-   example(lpp)
+   X <- runiflpp(12, simplenet)
    nndist(X)
+   nndist(X, k=2)
+
+   marks(X) <- factor(rep(letters[1:3], 4))
+   nndist(X, by=marks(X))
 }
 \keyword{spatial}

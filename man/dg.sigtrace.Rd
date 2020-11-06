@@ -11,8 +11,9 @@
   dg.sigtrace(X, fun = Lest, \dots,
               exponent = 2, nsim = 19, nsimsub = nsim - 1,
               alternative = c("two.sided", "less", "greater"),
+              rmin=0, leaveout=1,
               interpolate = FALSE, confint = TRUE, alpha = 0.05,
-              savefuns=FALSE, savepatterns=FALSE)
+              savefuns=FALSE, savepatterns=FALSE, verbose=FALSE)
 }
 \arguments{
   \item{X}{
@@ -51,6 +52,16 @@
     If \code{alternative="less"} the alternative hypothesis is that the
     true value of the summary function is lower than the theoretical value.
   }
+  \item{rmin}{
+    Optional. Left endpoint for the interval of \eqn{r} values
+    on which the test statistic is calculated.
+  }
+  \item{leaveout}{
+    Optional integer 0, 1 or 2 indicating how to calculate the
+    deviation between the observed summary function and the
+    nominal reference value, when the reference value must be estimated
+    by simulation. See Details.
+  }
   \item{interpolate}{
     Logical value indicating whether to interpolate the distribution of
     the test statistic by kernel smoothing, as described in
@@ -72,6 +83,9 @@
     Logical flag indicating whether to save the simulated
     point patterns (from the first stage). 
   }
+  \item{verbose}{
+    Logical flag indicating whether to print progress reports.
+  }
 }
 \details{
   The Dao and Genton (2014) test for a spatial point pattern
@@ -86,7 +100,7 @@
   
   The command \code{dg.sigtrace} effectively performs 
   \code{\link{dg.test}} on \code{X} using all possible intervals
-  of the form \eqn{c(0,R)}, and returns the resulting \eqn{p}-values
+  of the form \eqn{[0,R]}, and returns the resulting \eqn{p}-values
   as a function of \eqn{R}.
 
   The result is an object of class \code{"fv"} that can be plotted to
@@ -101,6 +115,21 @@
 
   If \code{X} is an envelope object and \code{fun=NULL} then
   the code will re-use the simulated functions stored in \code{X}.
+
+  If the argument \code{rmin} is given, it specifies the left endpoint
+  of the interval defining the test statistic: the tests are
+  performed using intervals \eqn{[r_{\mbox{\scriptsize min}},R]}{[rmin,R]}
+  where \eqn{R \ge r_{\mbox{\scriptsize min}}}{R \ge rmin}.
+
+  The argument \code{leaveout} specifies how to calculate the
+  discrepancy between the summary function for the data and the
+  nominal reference value, when the reference value must be estimated
+  by simulation. The values \code{leaveout=0} and
+  \code{leaveout=1} are both algebraically equivalent (Baddeley et al, 2014,
+  Appendix) to computing the difference \code{observed - reference}
+  where the \code{reference} is the mean of simulated values.
+  The value \code{leaveout=2} gives the leave-two-out discrepancy
+  proposed by Dao and Genton (2014).
 }
 \value{
   An object of class \code{"fv"} that can be plotted to
@@ -134,16 +163,10 @@
   \bold{23}, 497--517.
 }
 \author{
-  Adrian Baddeley, Andrew Hardegen, Tom Lawrence,
+  \adrian, Andrew Hardegen, Tom Lawrence,
   Robin Milne, Gopalan Nair and Suman Rakshit.
   Implemented by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{dg.test}} for the Dao-Genton test,

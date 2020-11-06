@@ -1,7 +1,7 @@
 #
 #           pixellate.R
 #
-#           $Revision: 1.17 $    $Date: 2015/03/12 11:23:56 $
+#           $Revision: 1.25 $    $Date: 2017/11/15 07:23:16 $
 #
 #     pixellate            convert an object to a pixel image
 #
@@ -16,24 +16,33 @@ pixellate <- function(x, ...) {
   UseMethod("pixellate")
 }
 
-pixellate.ppp <- function(x, W=NULL, ..., weights=NULL, padzero=FALSE) {
+pixellate.ppp <- function(x, W=NULL, ..., weights=NULL, padzero=FALSE,
+                          fractional=FALSE, preserve=FALSE,
+                          DivideByPixelArea=FALSE, savemap=FALSE) {
   verifyclass(x, "ppp")
 
   if(is.null(W))
     W <- Window(x)
-
-  W <- do.call.matched("as.mask",
+  isrect <- is.rectangle(W)
+  preserve <- preserve && !isrect
+  iscount <- is.null(weights) && !fractional && !preserve
+  
+  W <- do.call.matched(as.mask,
                        resolve.defaults(list(...),
                                         list(w=W)))
+
+  nx <- npoints(x)
   
   insideW <- W$m
   dimW   <- W$dim
+  nr <- dimW[1L]
+  nc <- dimW[2L]
   xcolW <- W$xcol
   yrowW <- W$yrow
   xrangeW <- W$xrange
   yrangeW <- W$yrange
   unitsW <- unitname(W)
-    
+  
   # multiple columns of weights?
   if(is.data.frame(weights) || is.matrix(weights)) {
     k <- ncol(weights)
@@ -48,10 +57,11 @@ pixellate.ppp <- function(x, W=NULL, ..., weights=NULL, padzero=FALSE) {
   }
 
   # handle empty point pattern
-  if(x$n == 0) {
-    zeroimage <- as.im(as.double(0), W)
+  if(nx == 0) {
+    zerovalue <- if(iscount) 0L else as.double(0)
+    zeroimage <- as.im(zerovalue, W)
     if(padzero) # map NA to 0
-      zeroimage <- na.handle.im(zeroimage, 0)
+      zeroimage <- na.handle.im(zeroimage, zerovalue)
     result <- zeroimage
     if(k > 1) {
       result <- as.solist(rep(list(zeroimage), k))
@@ -60,23 +70,70 @@ pixellate.ppp <- function(x, W=NULL, ..., weights=NULL, padzero=FALSE) {
     return(result)
   }
 
-  # perform calculation
-  pixels <- nearest.raster.point(x$x, x$y, W)
-  nr <- dimW[1]
-  nc <- dimW[2]
-  rowfac <- factor(pixels$row, levels=1:nr)
-  colfac <- factor(pixels$col, levels=1:nc)
+  # map points to pixels 
+  xx <- x$x
+  yy <- x$y
+  if(!fractional) {
+    #' map (x,y) to nearest raster point
+    pixels <- if(preserve) nearest.valid.pixel(xx, yy, W) else 
+              nearest.raster.point(xx, yy, W)
+    rowfac <- factor(pixels$row, levels=1:nr)
+    colfac <- factor(pixels$col, levels=1:nc)
+  } else {
+    #' attribute fractional weights to the 4 pixel centres surrounding (x,y)
+    #' find surrounding pixel centres
+    jj <- findInterval(xx, xcolW, rightmost.closed=TRUE)
+    ii <- findInterval(yy, yrowW, rightmost.closed=TRUE)
+    jleft <- pmax(jj, 1)
+    jright <- pmin(jj + 1, nr) 
+    ibot <- pmax(ii, 1)
+    itop <- pmin(ii+1, nc)
+    #' compute fractional weights
+    wleft <- pmin(1, abs(xcolW[jright] - xx)/W$xstep)
+    wright <- 1 - wleft
+    wbot <- pmin(1, abs(yrowW[itop] - yy)/W$ystep)
+    wtop <- 1 - wbot
+    #' pack together
+    ww <- c(wleft * wbot, wleft * wtop, wright * wbot, wright * wtop)
+    rowfac <- factor(c(ibot, itop, ibot, itop), levels=1:nr)
+    colfac <- factor(c(jleft, jleft, jright, jright), levels=1:nc)
+    if(preserve) {
+      #' normalise fractions for each data point to sum to 1 inside window
+      ok <- insideW[cbind(as.integer(rowfac), as.integer(colfac))]
+      wwok <- ww * ok
+      denom <- .colSums(wwok, 4, nx, na.rm=TRUE)
+      recip <- ifelse(denom == 0, 1, 1/denom)
+      ww <- wwok * rep(recip, each=4)
+    }
+    #' data weights must be replicated
+    if(is.null(weights)) {
+      weights <- ww
+    } else if(k == 1) {
+      weights <- ww * rep(weights, 4)
+    } else {
+      weights <- ww * apply(weights, 2, rep, times=4)
+    }
+  }
+  
+  #' sum weights
   if(is.null(weights)) {
     ta <- table(row = rowfac, col = colfac)
   } else if(k == 1) {
-    ta <- tapply(weights, list(row = rowfac, col=colfac), sum)
-    ta[is.na(ta)] <- 0
+    ta <- tapplysum(weights, list(row = rowfac, col=colfac))
   } else {
     ta <- list()
     for(j in 1:k) {
-      taj <- tapply(weights[,j], list(row = rowfac, col=colfac), sum)
-      taj[is.na(taj)] <- 0
-      ta[[j]] <- taj
+      ta[[j]] <- tapplysum(weights[,j], list(row = rowfac, col=colfac))
+    }
+  }
+
+  #' divide by pixel area?
+  if(DivideByPixelArea) {
+    pixelarea <- W$xstep * W$ystep
+    if(k == 1) {
+      ta <- ta/pixelarea
+    } else {
+      ta <- lapply(ta, "/", e2=pixelarea)
     }
   }
 
@@ -93,7 +150,7 @@ pixellate.ppp <- function(x, W=NULL, ..., weights=NULL, padzero=FALSE) {
   } else {
     # case k > 1
     # create template image to reduce overhead
-    template <- im(ta[[1]],
+    template <- im(ta[[1L]],
                    xcol = xcolW, yrow = yrowW,
                    xrange = xrangeW, yrange = yrangeW,
                    unitname=unitsW)
@@ -112,10 +169,13 @@ pixellate.ppp <- function(x, W=NULL, ..., weights=NULL, padzero=FALSE) {
     out <- as.solist(out)
     names(out) <- names(weights)
   }
+  if(savemap)
+    attr(out, "map") <- cbind(row=as.integer(rowfac),
+                              col=as.integer(colfac))
   return(out)
 }
 
-pixellate.owin <- function(x, W=NULL, ...) {
+pixellate.owin <- function(x, W=NULL, ..., DivideByPixelArea=FALSE) {
   stopifnot(is.owin(x))
   P <- as.polygonal(x)
   R <- as.rectangle(x)
@@ -124,20 +184,22 @@ pixellate.owin <- function(x, W=NULL, ...) {
   else if(!is.subset.owin(R, as.rectangle(W)))
     stop("W does not cover the domain of x")
   
-  W <- do.call.matched("as.mask",
+  W <- do.call.matched(as.mask,
                        resolve.defaults(list(...),
                                         list(w=W)))
   ## compute
-  Zmat <- polytileareaEngine(P, W$xrange, W$yrange, nx=W$dim[2], ny=W$dim[1])
+  Zmat <- polytileareaEngine(P, W$xrange, W$yrange, nx=W$dim[2L], ny=W$dim[1L],
+                             DivideByPixelArea)
   ## convert to image
   Z <- im(Zmat, xcol=W$xcol, yrow=W$yrow, xrange=W$xrange, yrange=W$yrange,
           unitname=unitname(W))
   return(Z)
 }
 
-polytileareaEngine <- function(P, xrange, yrange, nx, ny) {
-  x0 <- xrange[1]
-  y0 <- yrange[1]
+polytileareaEngine <- function(P, xrange, yrange, nx, ny,
+                               DivideByPixelArea=FALSE) {
+  x0 <- xrange[1L]
+  y0 <- yrange[1L]
   dx <- diff(xrange)/nx
   dy <- diff(yrange)/ny
   # process each component polygon
@@ -153,8 +215,8 @@ polytileareaEngine <- function(P, xrange, yrange, nx, ny) {
     yy <- RR$y
     nn <- length(xx)
     # close polygon
-    xx <- c(xx, xx[1])
-    yy <- c(yy, yy[1])
+    xx <- c(xx, xx[1L])
+    yy <- c(yy, yy[1L])
     nn <- nn+1
     # call C routine
     zz <- .C("poly2imA",
@@ -164,15 +226,19 @@ polytileareaEngine <- function(P, xrange, yrange, nx, ny) {
              ypoly=as.double(yy),
              npoly=as.integer(nn),
              out=as.double(numeric(nx * ny)),
-             status=as.integer(integer(1)))
+             status=as.integer(integer(1L)),
+             PACKAGE = "spatstat")
     if(zz$status != 0)
       stop("Internal error")
     # increment output 
     Z[] <- Z[] + zz$out
   }
-  # revert to original scale
-  pixelarea <- dx * dy
-  return(Z * pixelarea)
+  if(!DivideByPixelArea) {
+    #' revert to original scale
+    pixelarea <- dx * dy
+    Z <- Z * pixelarea
+  }
+  return(Z)
 }
 
 

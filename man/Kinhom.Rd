@@ -14,7 +14,9 @@
     leaveoneout=TRUE,
     nlarge = 1000,
     lambda2=NULL, reciplambda=NULL, reciplambda2=NULL,
-    sigma=NULL, varcov=NULL)
+    diagonal=TRUE,
+    sigma=NULL, varcov=NULL,
+    ratio=FALSE)
 }
 \arguments{
   \item{X}{
@@ -55,6 +57,7 @@
     \code{"translation"},
     \code{"none"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{renormalise}{
     Logical. Whether to renormalise the estimate. See Details.
@@ -64,14 +67,14 @@
     Normalisation power. See Details.
   }
   \item{update}{
-    Logical. If \code{lambda} is a fitted model
-    (class \code{"ppm"} or \code{"kppm"})
-    and \code{update=TRUE} (the default),
+    Logical value indicating what to do when \code{lambda} is a fitted model
+    (class \code{"ppm"}, \code{"kppm"} or \code{"dppm"}).
+    If \code{update=TRUE} (the default),
     the model will first be refitted to the data \code{X}
     (using \code{\link{update.ppm}} or \code{\link{update.kppm}})
     before the fitted intensity is computed.
     If \code{update=FALSE}, the fitted intensity of the
-    model will be computed without fitting it to \code{X}.
+    model will be computed without re-fitting it to \code{X}.
   }
   \item{leaveoneout}{
     Logical value (passed to \code{\link{density.ppp}} or
@@ -108,10 +111,19 @@
     of the intensities at each pair of data points 
     \eqn{x_i}{x[i]} and \eqn{x_j}{x[j]}. 
   }
+  \item{diagonal}{
+    Do not use this argument.
+  }
   \item{sigma,varcov}{
     Optional arguments passed to  \code{\link{density.ppp}}
     to control the smoothing bandwidth, when \code{lambda} is
     estimated by kernel smoothing.
+  }
+  \item{ratio}{
+    Logical. 
+    If \code{TRUE}, the numerator and denominator of
+    each edge-corrected estimate will also be saved,
+    for use in analysing replicated point patterns.
   }
 }
 \value{
@@ -119,10 +131,10 @@
   
   Essentially a data frame containing at least the following columns,
   \item{r}{the vector of values of the argument \eqn{r} 
-    at which \eqn{K_{\rm inhom}(r)}{Kinhom(r)} has been estimated
+    at which \eqn{K_{\mbox{\scriptsize\rm inhom}}(r)}{Kinhom(r)} has been estimated
   }
   \item{theo}{vector of values of \eqn{\pi r^2}{pi * r^2},
-    the theoretical value of \eqn{K_{\rm inhom}(r)}{Kinhom(r)}
+    the theoretical value of \eqn{K_{\mbox{\scriptsize\rm inhom}}(r)}{Kinhom(r)}
     for an inhomogeneous Poisson process
   }
   and containing additional columns
@@ -130,14 +142,20 @@
   argument. The additional columns are named
   \code{border}, \code{trans} and \code{iso}
   and give the estimated values of 
-  \eqn{K_{\rm inhom}(r)}{Kinhom(r)}
+  \eqn{K_{\mbox{\scriptsize\rm inhom}}(r)}{Kinhom(r)}
   using the border correction, translation correction,
   and Ripley isotropic correction, respectively.
+
+If \code{ratio=TRUE} then the return value also has two
+  attributes called \code{"numerator"} and \code{"denominator"}
+  which are \code{"fv"} objects
+  containing the numerators and denominators of each
+  estimate of \eqn{K_{\mbox{\scriptsize\rm inhom}}(r)}{Kinhom(r)}.
 }
 \details{
   This computes a generalisation of the \eqn{K} function
   for inhomogeneous point patterns, proposed by
-  Baddeley, \ifelse{latex}{\out{M\o ller}}{Moller} and Waagepetersen (2000).
+  Baddeley, \Moller and Waagepetersen (2000).
   
   The ``ordinary'' \eqn{K} function
   (variously known as the reduced second order moment function
@@ -146,11 +164,11 @@
   for stationary point processes.
   
   The inhomogeneous \eqn{K} function
-  \eqn{K_{\rm inhom}(r)}{Kinhom(r)}
+  \eqn{K_{\mbox{\scriptsize\rm inhom}}(r)}{Kinhom(r)}
   is a direct generalisation to nonstationary point processes.
   Suppose \eqn{x} is a point process with non-constant intensity
   \eqn{\lambda(u)}{lambda(u)} at each location \eqn{u}.
-  Define \eqn{K_{\rm inhom}(r)}{Kinhom(r)} to be the expected
+  Define \eqn{K_{\mbox{\scriptsize\rm inhom}}(r)}{Kinhom(r)} to be the expected
   value, given that \eqn{u} is a point of \eqn{x},
   of the sum of all terms
   \eqn{1/\lambda(x_j)}{1/lambda(x[j])}
@@ -160,7 +178,7 @@
   \eqn{\lambda()}{lambda()} is constant.
   If \eqn{x} is an inhomogeneous Poisson process with intensity
   function \eqn{\lambda(u)}{lambda(u)}, then
-  \eqn{K_{\rm inhom}(r) = \pi r^2}{Kinhom(r) = pi * r^2}.
+  \eqn{K_{\mbox{\scriptsize\rm inhom}}(r) = \pi r^2}{Kinhom(r) = pi * r^2}.
   
   Given a point pattern dataset, the 
   inhomogeneous \eqn{K} function can be estimated
@@ -172,7 +190,7 @@
   This allows us to inspect a point pattern for evidence of 
   interpoint interactions after allowing for spatial inhomogeneity
   of the pattern. Values 
-  \eqn{K_{\rm inhom}(r) > \pi r^2}{Kinhom(r) > pi * r^2}
+  \eqn{K_{\mbox{\scriptsize\rm inhom}}(r) > \pi r^2}{Kinhom(r) > pi * r^2}
   are suggestive of clustering.
 
   The argument \code{lambda} should supply the
@@ -189,7 +207,7 @@
       at all locations in the window. 
     }
     \item{a fitted point process model}{
-      (object of class \code{"ppm"} or \code{"kppm"})
+      (object of class \code{"ppm"}, \code{"kppm"} or \code{"dppm"})
       whose fitted \emph{trend} can be used as the fitted intensity.
       (If \code{update=TRUE} the model will first be refitted to the
       data \code{X} before the trend is computed.)
@@ -227,7 +245,7 @@
 
   If \code{lambda} is omitted, then it will be estimated using
   a `leave-one-out' kernel smoother,
-  as described in Baddeley, \ifelse{latex}{\out{M\o ller}}{Moller}
+  as described in Baddeley, \Moller
   and Waagepetersen (2000).  The estimate \code{lambda[i]} for the
   point \code{X[i]} is computed by removing \code{X[i]} from the
   point pattern, applying kernel smoothing to the remaining points using
@@ -237,15 +255,20 @@
   \code{\link{density.ppp}} along with any extra arguments.
   
   Edge corrections are used to correct bias in the estimation
-  of \eqn{K_{\rm inhom}}{Kinhom}.
-  Each edge-corrected estimate of \eqn{K_{\rm inhom}(r)}{Kinhom(r)} is
+  of \eqn{K_{\mbox{\scriptsize\rm inhom}}}{Kinhom}.
+  Each edge-corrected estimate of
+  \eqn{K_{\mbox{\scriptsize\rm inhom}}(r)}{Kinhom(r)} is
   of the form
-  \deqn{\widehat K_{\rm inhom}(r) = \sum_i \sum_j \frac{1\{d_{ij} \le
-      r\} e(x_i,x_j,r)}{\lambda(x_i)\lambda(x_j)}
-  }{K^inhom(r)= sum[i] sum[j] 1(d[i,j] <= r) * 
+  \deqn{
+    \widehat K_{\mbox{\scriptsize\rm inhom}}(r) = (1/A)
+    \sum_i \sum_j \frac{1\{d_{ij} \le r\}
+      e(x_i,x_j,r)}{\lambda(x_i)\lambda(x_j)}
+  }{
+    K^inhom(r)= (1/A) sum[i] sum[j] 1(d[i,j] <= r) * 
     e(x[i],x[j],r)/(lambda(x[i]) * lambda(x[j]))
   }
-  where \eqn{d_{ij}}{d[i,j]} is the distance between points
+  where \code{A} is a constant denominator, 
+  \eqn{d_{ij}}{d[i,j]} is the distance between points
   \eqn{x_i}{x[i]} and \eqn{x_j}{x[j]}, and
   \eqn{e(x_i,x_j,r)}{e(x[i],x[j],r)} is
   an edge correction factor. For the `border' correction,
@@ -284,8 +307,9 @@
   where \eqn{g(x_i,x_j)}{g(x[i],x[j])} is the fraction of the
   circumference of the circle with centre \eqn{x_i}{x[i]} and radius
   \eqn{||x_i - x_j||}{||x[i]-x[j]||} which lies inside the window.
-  
-  If \code{renormalise=TRUE} (the default), then the estimates 
+
+  If \code{renormalise=TRUE} (the default), then the estimates
+  described above 
   are multiplied by \eqn{c^{\mbox{normpower}}}{c^normpower} where 
   \eqn{
     c = \mbox{area}(W)/\sum (1/\lambda(x_i)).
@@ -320,7 +344,7 @@
 }
 \references{
   Baddeley, A.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2000)
+  \Moller, J. and Waagepetersen, R. (2000)
   Non- and semiparametric estimation of interaction in
   inhomogeneous point patterns.
   \emph{Statistica Neerlandica} \bold{54}, 329--350.
@@ -330,11 +354,10 @@
   \code{\link{pcf}}
 }
 \examples{
-  data(lansing)
   # inhomogeneous pattern of maples
   X <- unmark(split(lansing)$maple)
   \testonly{
-     sub <- sample(c(TRUE,FALSE), X$n, replace=TRUE, prob=c(0.1,0.9))
+     sub <- sample(c(TRUE,FALSE), npoints(X), replace=TRUE, prob=c(0.1,0.9))
      X <- X[sub]
   }
 
@@ -375,11 +398,11 @@
   plot(Ken)
   }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

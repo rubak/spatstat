@@ -1,7 +1,7 @@
 #
 #       images.R
 #
-#      $Revision: 1.133 $     $Date: 2015/09/01 01:56:46 $
+#      $Revision: 1.160 $     $Date: 2020/07/23 03:10:16 $
 #
 #      The class "im" of raster images
 #
@@ -34,9 +34,15 @@ im <- function(mat, xcol=seq_len(ncol(mat)), yrow=seq_len(nrow(mat)),
   miss.yrow <- missing(yrow)
   
   # determine dimensions
-  if(is.matrix(mat)) {
+  if(!is.null(dim(mat))) {
     nr <- nrow(mat)
     nc <- ncol(mat)
+    if(is.na(nc)) {
+      #' handle one-dimensional tables
+      nc <- 1
+      nr <- length(mat)
+      if(missing(xcol)) xcol <- seq_len(nc)
+    }
     if(length(xcol) != nc)
       stop("Length of xcol does not match ncol(mat)")
     if(length(yrow) != nr)
@@ -66,28 +72,28 @@ im <- function(mat, xcol=seq_len(ncol(mat)), yrow=seq_len(nrow(mat)),
   if((miss.xcol || length(xcol) <= 1) && !is.null(xrange) ) {
     # use 'xrange' 
     xstep <- diff(xrange)/nc
-    xcol <- seq(from=xrange[1] + xstep/2, to=xrange[2] - xstep/2, length.out=nc)
+    xcol <- seq(from=xrange[1L] + xstep/2, to=xrange[2L] - xstep/2, length.out=nc)
   } else if(length(xcol) > 1) {
     # use 'xcol'
     # ensure spacing is constant
     xcol <- seq(from=min(xcol), to=max(xcol), length.out=length(xcol))
-    xstep <- diff(xcol)[1]
+    xstep <- diff(xcol)[1L]
     xrange <- range(xcol) + c(-1,1) * xstep/2
   } else stop("Cannot determine pixel width")
   
   if((miss.yrow || length(yrow) <= 1) && !is.null(yrange)) {
     # use 'yrange'
     ystep <- diff(yrange)/nr
-    yrow <- seq(from=yrange[1] + ystep/2, to=yrange[2] - ystep/2, length.out=nr)
+    yrow <- seq(from=yrange[1L] + ystep/2, to=yrange[2L] - ystep/2, length.out=nr)
   } else if(length(yrow) > 1) {
     # use 'yrow'
     # ensure spacing is constant
     yrow <- seq(from=min(yrow), to=max(yrow), length.out=length(yrow))
-    ystep <- diff(yrow)[1]
+    ystep <- diff(yrow)[1L]
     yrange <- range(yrow) + c(-1,1) * ystep/2
   }  else stop("Cannot determine pixel height")
 
-  unitname <- as.units(unitname)
+  unitname <- as.unitname(unitname)
 
   out <- list(v   = mat,
               dim = c(nr, nc),
@@ -125,23 +131,16 @@ levels.im <- function(x) {
 shift.im <- function(X, vec=c(0,0), ..., origin=NULL) {
   verifyclass(X, "im")
   if(!is.null(origin)) {
-    stopifnot(is.character(origin))
     if(!missing(vec))
-      warning("argument vec ignored; overruled by argument origin")
-    origin <- pickoption("origin", origin, c(centroid="centroid",
-                                             midpoint="midpoint",
-                                             bottomleft="bottomleft"))
-    W <- as.owin(X)
-    locn <- switch(origin,
-                   centroid={ unlist(centroid.owin(W)) },
-                   midpoint={ c(mean(W$xrange), mean(W$yrange)) },
-                   bottomleft={ c(W$xrange[1], W$yrange[1]) })
-    return(shift(X, -locn))
+      warning("argument vec ignored; argument origin has precedence")
+    locn <- interpretAsOrigin(origin, Window(X))
+    vec <- -locn
   }
-  X$xrange <- X$xrange + vec[1]
-  X$yrange <- X$yrange + vec[2]
-  X$xcol <- X$xcol + vec[1]
-  X$yrow <- X$yrow + vec[2]
+  vec <- as2vector(vec)
+  X$xrange <- X$xrange + vec[1L]
+  X$yrange <- X$yrange + vec[2L]
+  X$xcol <- X$xcol + vec[1L]
+  X$yrow <- X$yrow + vec[2L]
   attr(X, "lastshift") <- vec
   return(X)
 }
@@ -158,9 +157,9 @@ shift.im <- function(X, vec=c(0,0), ..., origin=NULL) {
 
 "[.im" <- local({
 
-  disjoint <- function(r, s) { (r[2] < s[1]) || (r[1] > s[2])  }
-  clip <- function(r, s) { c(max(r[1],s[1]), min(r[2],s[2])) }
-  inrange <- function(x, r) { (x >= r[1]) & (x <= r[2]) }
+  disjoint <- function(r, s) { (r[2L] < s[1L]) || (r[1L] > s[2L])  }
+  clip <- function(r, s) { c(max(r[1L],s[1L]), min(r[2L],s[2L])) }
+  inrange <- function(x, r) { (x >= r[1L]) & (x <= r[2L]) }
 
   Extract.im <- function(x, i, j, ...,
                          drop=TRUE, tight=FALSE, raster=NULL,
@@ -265,7 +264,7 @@ shift.im <- function(X, vec=c(0,0), ..., origin=NULL) {
           if(ncolsub > 1) list(xcol = out$xcol[colsub]) else list(xrange=xr)
         yarg <-
           if(nrowsub > 1) list(yrow = out$yrow[rowsub]) else list(yrange=yr)
-        result <- do.call("im", c(marg, xarg, yarg))
+        result <- do.call(im, c(marg, xarg, yarg))
         return(result)
       }
       if(verifyclass(i, "im", fatal=FALSE)) {
@@ -279,6 +278,17 @@ shift.im <- function(X, vec=c(0,0), ..., origin=NULL) {
         } else stop("Subset argument \'i\' is an image, but not of logical type")
       }
 
+      if(inherits(i, "linnet")) {
+        #' linear network
+        if(jtype == "given")
+          warning("Argument j ignored")
+        W <- raster %orifnull% as.owin(x)
+        M <- as.mask.psp(as.psp(i), W=W, ...)
+        xM <- x[M, drop=drop]
+        if(is.im(xM)) xM <- linim(i, xM)
+        return(xM)
+      }
+      
       if(is.ppp(i)) {
         ## 'i' is a point pattern 
         if(jtype == "given")
@@ -308,6 +318,9 @@ shift.im <- function(X, vec=c(0,0), ..., origin=NULL) {
 
     ## Construct a matrix index call for possible re-use
     M <- as.matrix(x)
+    ## suppress warnings from code checkers
+    dont.complain.about(M)
+    ##
     ycall <- switch(itype,
                     given = {
                       switch(jtype,
@@ -336,13 +349,13 @@ shift.im <- function(X, vec=c(0,0), ..., origin=NULL) {
         RR <- row(x$v)
         CC <- col(x$v)
         rcall <- ycall
-        rcall[[2]] <- quote(RR)
+        rcall[[2L]] <- quote(RR)
         ccall <- ycall
-        ccall[[2]] <- quote(CC)
+        ccall[[2L]] <- quote(CC)
         rr <- eval(as.call(rcall))
         cc <- eval(as.call(ccall))
-        rseq <- sort(unique(as.vector(rr)))
-        cseq <- sort(unique(as.vector(cc)))
+        rseq <- sortunique(as.vector(rr))
+        cseq <- sortunique(as.vector(cc))
         if(all(diff(rseq) == 1) && all(diff(cseq) == 1) &&
            (length(rr) == length(rseq) * length(cseq)) &&
            all(rr == RR[rseq, cseq]) && all(cc == CC[rseq,cseq])) {
@@ -410,7 +423,7 @@ update.im <- function(object, ...) {
   return(X)
 }
 
-"[<-.im" <- function(x, i, j, value) {
+"[<-.im" <- function(x, i, j, ..., drop=TRUE, value) {
   # detect 'blank' arguments like second argument of x[i, ] 
   ngiven <- length(sys.call())
   nmatched <- length(match.call())
@@ -433,14 +446,23 @@ update.im <- function(object, ...) {
     value <- value$v
 
   if(itype == "missing" && jtype == "missing") {
-    # no index provided
-    # set all pixels to 'value'
+    #' no index provided
+    #' set all pixels to 'value'
+    #' (if drop=TRUE, this applies only to pixels inside the window)
     v <- X$v
     if(!is.factor(value)) {
-      v[!is.na(v)] <- value
+      if(!drop) {
+        v[] <- value
+      } else {
+        v[!is.na(v)] <- value
+      }
     } else {
       vnew <- matrix(NA_integer_, ncol(v), nrow(v))
-      vnew[!is.na(v)] <- as.integer(value)
+      if(!drop) {
+        vnew[] <- as.integer(value)
+      } else {
+        vnew[!is.na(v)] <- as.integer(value)
+      }
       v <- factor(vnew, labels=levels(value))
     }
     X$v <- v
@@ -567,15 +589,15 @@ update.im <- function(object, ...) {
 # the third argument 'im' and the different idiom for calculating
 # row & column - which could be used in nearest.raster.point()
 
-nearest.pixel <- function(x,y,im) {
-  verifyclass(im, "im")
+nearest.pixel <- function(x,y, Z) {
+  stopifnot(is.im(Z) || is.mask(Z))
   if(length(x) > 0) {
-    nr <- im$dim[1]
-    nc <- im$dim[2]
-    cc <- round(1 + (x - im$xcol[1])/im$xstep)
-    rr <- round(1 + (y - im$yrow[1])/im$ystep)
-    cc <- pmax.int(1,pmin.int(cc, nc))
-    rr <- pmax.int(1,pmin.int(rr, nr))
+    nr <- Z$dim[1L]
+    nc <- Z$dim[2L]
+    cc <- as.integer(round(1 + (x - Z$xcol[1L])/Z$xstep))
+    rr <- as.integer(round(1 + (y - Z$yrow[1L])/Z$ystep))
+    cc <- pmax.int(1L,pmin.int(cc, nc))
+    rr <- pmax.int(1L,pmin.int(rr, nr))
   } else cc <- rr <- integer(0)
   return(list(row=rr, col=cc))
 }
@@ -583,37 +605,77 @@ nearest.pixel <- function(x,y,im) {
 # Explores the 3 x 3 neighbourhood of nearest.pixel
 # and finds the nearest pixel that is not NA
 
-nearest.valid.pixel <- function(x,y,im) {
-  rc <- nearest.pixel(x,y,im)
-  rr <- rc$row
-  cc <- rc$col
-  # check whether any pixels are outside image domain
-  outside <- is.na(im$v)
-  miss <- outside[cbind(rr, cc)]
-  if(!any(miss))
-    return(rc)
-  # for offending pixels, explore 3 x 3 neighbourhood
-  nr <- im$dim[1]
-  nc <- im$dim[2]
-  xcol <- im$xcol
-  yrow <- im$yrow
-  for(i in which(miss)) {
-    rows <- rr[i] + c(-1,0,1)
-    cols <- cc[i] + c(-1,0,1)
-    rows <- unique(pmax.int(1, pmin.int(rows, nr)))
-    cols <- unique(pmax.int(1, pmin.int(cols, nc)))
-    rcp <- expand.grid(row=rows, col=cols)
-    ok <- !outside[as.matrix(rcp)]
-    if(any(ok)) {
-      # At least one of the neighbours is valid
-      # Find the closest one
-      rcp <- rcp[ok,]
-      dsq <- with(rcp, (x[i] - xcol[col])^2 + (y[i] - yrow[row])^2)
-      j <- which.min(dsq)
-      rc$row[i] <- rcp$row[j]
-      rc$col[i] <- rcp$col[j]
-    }
-  }
+nearest.valid.pixel <- function(x, y, Z,
+                                method=c("C","interpreted"),
+                                nsearch=1) {
+  method <- match.arg(method)
+  switch(method,
+         interpreted = {
+           rc <- nearest.pixel(x,y,Z) # checks that Z is an 'im' or 'mask'
+           rr <- rc$row
+           cc <- rc$col
+           #' check whether any pixels are outside image domain
+           inside <- as.owin(Z)$m
+           miss <- !inside[cbind(rr, cc)]
+           if(!any(miss))
+             return(rc)
+           #' for offending pixels, explore 3 x 3 neighbourhood
+           nr <- Z$dim[1L]
+           nc <- Z$dim[2L]
+           xcol <- Z$xcol
+           yrow <- Z$yrow
+           searching <- (-nsearch):(nsearch)
+           for(i in which(miss)) {
+             rows <- rr[i] + searching
+             cols <- cc[i] + searching
+             rows <- unique(pmax.int(1L, pmin.int(rows, nr)))
+             cols <- unique(pmax.int(1L, pmin.int(cols, nc)))
+             rcp <- expand.grid(row=rows, col=cols)
+             ok <- inside[as.matrix(rcp)]
+             if(any(ok)) {
+               #' At least one of the neighbours is valid
+               #' Find the closest one
+               rcp <- rcp[ok,]
+               dsq <- with(rcp, (x[i] - xcol[col])^2 + (y[i] - yrow[row])^2)
+               j <- which.min(dsq)
+               rc$row[i] <- rcp$row[j]
+               rc$col[i] <- rcp$col[j]
+             }
+           }
+         },
+         C = {
+           stopifnot(is.im(Z) || is.mask(Z))
+           n <- length(x)
+           if(n == 0) {
+             cc <- rr <- integer(0)
+           } else {
+             nr <- Z$dim[1L]
+             nc <- Z$dim[2L]
+             xscaled <- (x - Z$xcol[1])/Z$xstep
+             yscaled <- (y - Z$yrow[1])/Z$ystep
+             aspect  <- Z$ystep/Z$xstep
+             inside <- as.owin(Z)$m
+             zz <- .C("nearestvalidpixel",
+                      n = as.integer(n),
+                      x = as.double(xscaled),
+                      y = as.double(yscaled),
+                      nr = as.integer(nr),
+                      nc = as.integer(nc),
+                      aspect = as.double(aspect),
+                      z = as.integer(inside),
+                      nsearch = as.integer(nsearch),
+                      rr = as.integer(integer(n)),
+                      cc = as.integer(integer(n)),
+                      PACKAGE="spatstat")
+             rr <- zz$rr + 1L
+             cc <- zz$cc + 1L
+             if(any(bad <- (rr == 0 | cc == 0))) {
+               rr[bad] <- NA
+               cc[bad] <- NA
+             }
+           }
+           rc <- list(row=rr, col=cc)
+         })  
   return(rc)
 }
   
@@ -626,6 +688,11 @@ lookup.im <- function(Z, x, y, naok=FALSE, strict=TRUE) {
 
   if(Z$type == "factor")
     Z <- repair.old.factor.image(Z)
+
+  if((missing(y) || is.null(y)) && all(c("x", "y") %in% names(x))) {
+    y <- x$y
+    x <- x$x
+  }
   
   if(length(x) != length(y))
     stop("x and y must be numeric vectors of equal length")
@@ -643,8 +710,8 @@ lookup.im <- function(Z, x, y, naok=FALSE, strict=TRUE) {
   xr <- Z$xrange
   yr <- Z$yrange
   eps <- sqrt(.Machine$double.eps)
-  frameok <- (x >= xr[1] - eps) & (x <= xr[2] + eps) & 
-             (y >= yr[1] - eps) & (y <= yr[2] + eps)
+  frameok <- (x >= xr[1L] - eps) & (x <= xr[2L] + eps) & 
+             (y >= yr[1L] - eps) & (y <= yr[2L] + eps)
   
   if(!any(frameok)) {
     # all points OUTSIDE range - no further work needed
@@ -667,7 +734,7 @@ lookup.im <- function(Z, x, y, naok=FALSE, strict=TRUE) {
   # insert into answer
   value[frameok] <- vf
 
-  if(!naok && any(is.na(value)))
+  if(!naok && anyNA(value))
     warning("Internal error: NA's generated")
 
   return(value)
@@ -722,7 +789,7 @@ raster.y <- function(w, drop=FALSE) {
 raster.xy <- function(w, drop=FALSE) {
   if(is.owin(w)) return(rasterxy.mask(w, drop=drop))
   if(!is.im(w)) stop("w should be a window or an image")
-  y <- w$xcol[col(w)]
+  x <- w$xcol[col(w)]
   y <- w$yrow[row(w)]
   if(drop) {
     ok <- !is.na(w$v)
@@ -765,41 +832,68 @@ as.data.frame.im <- function(x, ...) {
   # 
   data.frame(x=xx, y=yy, value=vv, ...)
 }
-  
-mean.im <- function(x, ...) {
+
+mean.im <- function(x, trim=0, na.rm=TRUE, ...) {
   verifyclass(x, "im")
-  xvalues <- x[drop=TRUE]
-  return(mean(xvalues))
+  xvalues <- x[drop=na.rm]
+  return(mean(xvalues, trim=trim, na.rm=na.rm))
 }
 
-sum.im <- function(x, ...) {
-  verifyclass(x, "im")
-  xvalues <- x[drop=TRUE]
-  return(sum(xvalues, ...))
+## arguments of generic 'median' will change in R 3.4
+median.im <- if("..." %in% names(formals(median))) {
+   function(x, na.rm=TRUE, ...) {
+    verifyclass(x, "im")
+    xvalues <- x[drop=na.rm]
+    return(median(xvalues, ...))
+  }
+} else {
+   function(x, na.rm=TRUE) {
+    verifyclass(x, "im")
+    xvalues <- x[drop=na.rm]
+    return(median(xvalues))
+  }
 }
 
-median.im <- function(x, ...) {
-  verifyclass(x, "im")
-  xvalues <- x[drop=TRUE]
-  return(median(xvalues, ...))
+where.max <- function(x, first=TRUE) {
+  stopifnot(is.im(x))
+  if(first) { 
+    ## find the first maximum
+    v <- x$v
+    locn <- which.max(as.vector(v))  # ignores NA, NaN
+    locrow <- as.vector(row(v))[locn]
+    loccol <- as.vector(col(v))[locn]
+  } else {
+    ## find all maxima
+    xmax <- max(x)
+    M <- solutionset(x == xmax)
+    loc <- which(M$m, arr.ind=TRUE)
+    locrow <- loc[,1L]
+    loccol <- loc[,2L]
+  }
+  xx <- x$xcol[loccol]
+  yy <- x$yrow[locrow]
+  return(ppp(x=xx, y=yy, window=Window(x)))
 }
 
-range.im <- function(x, ...) {
-  verifyclass(x, "im")
-  xvalues <- x[drop=TRUE]
-  return(range(xvalues, ...))
-}
-
-max.im <- function(x, ...) {
-  verifyclass(x, "im")
-  xvalues <- x[drop=TRUE]
-  return(max(xvalues, ...))
-}
-
-min.im <- function(x, ...) {
-  verifyclass(x, "im")
-  xvalues <- x[drop=TRUE]
-  return(min(xvalues, ...))
+where.min <- function(x, first=TRUE) {
+  stopifnot(is.im(x))
+  if(first) { 
+    ## find the first minimum
+    v <- x$v
+    locn <- which.min(as.vector(v))  # ignores NA, NaN
+    locrow <- as.vector(row(v))[locn]
+    loccol <- as.vector(col(v))[locn]
+  } else {
+    ## find all minima
+    xmin <- min(x)
+    M <- solutionset(x == xmin)
+    loc <- which(M$m, arr.ind=TRUE)
+    locrow <- loc[,1L]
+    loccol <- loc[,2L]
+  }
+  xx <- x$xcol[loccol]
+  yy <- x$yrow[locrow]
+  return(ppp(x=xx, y=yy, window=Window(x)))
 }
 
 ## the following ensures that 'sd' works
@@ -808,8 +902,8 @@ as.double.im <- function(x, ...) { as.double(x[], ...) }
 
 ##
 
-hist.im <- function(x, ..., probability=FALSE) {
-  xname <- short.deparse(substitute(x))
+hist.im <- function(x, ..., probability=FALSE, xname) {
+  if(missing(xname) || is.null(xname)) xname <- short.deparse(substitute(x))
   verifyclass(x, "im")
   main <- paste("Histogram of", xname)
   # default plot arguments
@@ -828,7 +922,7 @@ hist.im <- function(x, ..., probability=FALSE) {
       heights <- tab
       ylab <- "Number of pixels"
     }
-    mids <- do.call("barplot",
+    mids <- do.call(barplot,
                    resolve.defaults(list(heights),
                                     list(...),
                                     list(xlab=paste("Pixel value"),
@@ -843,7 +937,7 @@ hist.im <- function(x, ..., probability=FALSE) {
     plotit <- resolve.defaults(list(...), list(plot=TRUE))$plot
     if(plotit) {
       ylab <- if(probability) "Probability density" else "Number of pixels"
-      out <- do.call("hist.default",
+      out <- do.call(hist.default,
                      resolve.defaults(list(values),
                                       list(...),
                                       list(freq=!probability,
@@ -853,7 +947,7 @@ hist.im <- function(x, ..., probability=FALSE) {
       out$xname <- xname
     } else {
       # plot.default whinges if `probability' given when plot=FALSE
-      out <- do.call("hist.default",
+      out <- do.call(hist.default,
                    resolve.defaults(list(values),
                                     list(...)))
       # hack!
@@ -864,7 +958,7 @@ hist.im <- function(x, ..., probability=FALSE) {
 }
 
 plot.barplotdata <- function(x, ...) {
-  do.call("barplot",
+  do.call(barplot,
           resolve.defaults(list(height=x$heights),
                            list(...),
                            list(main=paste("Histogram of ", x$xname))))
@@ -885,7 +979,7 @@ cut.im <- function(x, ...) {
 
 quantile.im <- function(x, ...) {
   verifyclass(x, "im")
-  q <- do.call("quantile",
+  q <- do.call(quantile,
                resolve.defaults(list(as.numeric(as.matrix(x))),
                                 list(...),
                                 list(na.rm=TRUE)))
@@ -901,10 +995,16 @@ integral.im <- function(f, domain=NULL, ...) {
   typ <- f$type
   if(!any(typ == c("integer", "real", "complex", "logical")))
     stop(paste("Don't know how to integrate an image of type", sQuote(typ)))
-  if(!is.null(domain)) {
-    if(is.tess(domain)) return(sapply(tiles(domain), integral.im, f=f))
-    f <- f[domain, drop=FALSE, tight=TRUE]
+  if(is.tess(domain)) {
+    doh <- as.im(domain, W=as.mask(f))
+    fx <- as.vector(as.matrix(f))
+    dx <- factor(as.integer(as.matrix(doh)))
+    a <- tapplysum(fx, list(dx)) * with(f, xstep * ystep)
+    names(a) <- tilenames(domain)
+    return(a)
   }
+  if(!is.null(domain)) 
+    f <- f[domain, drop=FALSE, tight=TRUE]
   a <- with(f, sum(v, na.rm=TRUE) * xstep * ystep)
   return(a)
 }
@@ -956,17 +1056,17 @@ rebound.im <- function(x, rect) {
   stopifnot(is.subset.owin(as.rectangle(x), rect))
   # compute number of extra rows/columns
   dx <- x$xstep
-  nleft  <- max(0, floor((x$xrange[1]-rect$xrange[1])/dx))
-  nright <- max(0, floor((rect$xrange[2]-x$xrange[2])/dx))
+  nleft  <- max(0, floor((x$xrange[1L]-rect$xrange[1L])/dx))
+  nright <- max(0, floor((rect$xrange[2L]-x$xrange[2L])/dx))
   dy <- x$ystep
-  nbot <- max(0, floor((x$yrange[1]-rect$yrange[1])/dy))
-  ntop <- max(0, floor((rect$yrange[2]-x$yrange[2])/dy))
+  nbot <- max(0, floor((x$yrange[1L]-rect$yrange[1L])/dy))
+  ntop <- max(0, floor((rect$yrange[2L]-x$yrange[2L])/dy))
   # determine exact x and y ranges (to preserve original pixel locations)
   xrange.new <- x$xrange + c(-nleft, nright) * dx
   yrange.new <- x$yrange + c(-nbot,  ntop) * dy
   # expand pixel data matrix
-  nr <- x$dim[1]
-  nc <- x$dim[2]
+  nr <- x$dim[1L]
+  nc <- x$dim[2L]
   nrnew <- nbot  + nr + ntop
   ncnew <- nleft + nc + nright
   naval <- switch(x$type,
@@ -1036,7 +1136,7 @@ scaletointerval.default <- function(x, from=0, to=1, xrange=range(x)) {
   rr <- if(missing(xrange)) range(x, na.rm=TRUE) else as.numeric(xrange)
   b <- as.numeric(to - from)/diff(rr)
   if(is.finite(b)) {
-    y <- from + b * (x - rr[1])
+    y <- from + b * (x - rr[1L])
   } else {
     y <- (from+to)/2 + 0 * x
   }
@@ -1083,34 +1183,34 @@ padimage <- function(X, value=NA, n=1, W=NULL) {
   if(!padW) {
     ## pad by 'n' pixels
     nn <- rep(n, 4)
-    nleft   <- nn[1]
-    nright  <- nn[2]
-    nbottom <- nn[3]
-    ntop    <- nn[4]
+    nleft   <- nn[1L]
+    nright  <- nn[2L]
+    nbottom <- nn[3L]
+    ntop    <- nn[4L]
   } else {
     ## pad out to window W
     FX <- Frame(X)
     B <- boundingbox(Frame(W), FX)
-    nleft   <- max(1, round((FX$xrange[1] - B$xrange[1])/X$xstep))
-    nright  <- max(1, round((B$xrange[2] - FX$xrange[2])/X$xstep))
-    nbottom <- max(1, round((FX$yrange[1] - B$yrange[1])/X$ystep))
-    ntop    <- max(1, round((B$yrange[2] - FX$yrange[2])/X$ystep))
+    nleft   <- max(1, round((FX$xrange[1L] - B$xrange[1L])/X$xstep))
+    nright  <- max(1, round((B$xrange[2L] - FX$xrange[2L])/X$xstep))
+    nbottom <- max(1, round((FX$yrange[1L] - B$yrange[1L])/X$ystep))
+    ntop    <- max(1, round((B$yrange[2L] - FX$yrange[2L])/X$ystep))
   }
   mX <- as.matrix(X)
   dd <- dim(mX)
-  mX <- cbind(matrix(value, dd[1], nleft, byrow=TRUE),
+  mX <- cbind(matrix(value, dd[1L], nleft, byrow=TRUE),
               as.matrix(X),
-              matrix(value, dd[1], nright, byrow=TRUE))
+              matrix(value, dd[1L], nright, byrow=TRUE))
   dd <- dim(mX)
-  mX <- rbind(matrix(rev(value), nbottom, dd[2]),
+  mX <- rbind(matrix(rev(value), nbottom, dd[2L]),
               mX,
-              matrix(value, ntop, dd[2]))
+              matrix(value, ntop, dd[2L]))
   xcol <- with(X,
-               c(xcol[1]     - (nleft:1) * xstep,
+               c(xcol[1L]     - (nleft:1) * xstep,
                  xcol,
                  xcol[length(xcol)] + (1:nright) * xstep))
   yrow <- with(X,
-               c(yrow[1]     - (nbottom:1) * ystep,
+               c(yrow[1L]     - (nbottom:1) * ystep,
                  yrow,
                  yrow[length(yrow)] + (1:ntop) * ystep))
   xr <- with(X, xrange + c(-nleft, nright) * xstep)
@@ -1130,4 +1230,25 @@ as.function.im <- function(x, ...) {
   f <- function(x,y) { Z[list(x=x, y=y)] }
   g <- funxy(f, Window(x))
   return(g)
+}
+
+anyNA.im <- function(x, recursive=FALSE) {
+  anyNA(x$v)
+}
+
+ZeroValue <- function(x) {
+  UseMethod("ZeroValue")
+}
+
+ZeroValue.im <- function(x) {
+  lev <- levels(x)
+  z <- switch(x$type,
+              factor  = factor(lev[1L], levels=lev),
+              integer = integer(1L),
+              logical = logical(1L),
+              real    = numeric(1L),
+              complex = complex(1L),
+              character = character(1L),
+              x$v[!is.na(x$v),drop=TRUE][1])
+  return(z)
 }

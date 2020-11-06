@@ -1,19 +1,19 @@
 ##
 ## boundingbox.R
 ##
-## $Revision: 1.6 $ $Date: 2015/03/04 09:34:07 $
+## $Revision: 1.11 $ $Date: 2017/12/30 05:04:44 $
 
-bounding.box <- function(...) {
-  .Deprecated("boundingbox", "spatstat")
-  boundingbox(...)
-}
+# bounding.box <- function(...) {
+#  .Deprecated("boundingbox", "spatstat")
+#  boundingbox(...)
+# }
 
 boundingbox <- function(...) {
   ## remove any NULL arguments
   arglist <- list(...)
   if(any(isnull <- sapply(arglist, is.null))) {
     if(length(arglist[!isnull]))
-       return(do.call("boundingbox", arglist[!isnull]))
+       return(do.call(boundingbox, arglist[!isnull]))
     stop("No non-null arguments given.\n")
   }
   UseMethod("boundingbox")
@@ -30,13 +30,15 @@ boundingbox.ppp  <-
 boundingbox.psp  <-
 boundingbox.owin <-
 boundingbox.list <-
+boundingbox.linnet <-
+boundingbox.lpp <-
 boundingbox.im   <- function(...) {
    bbEngine(...)
 }
 
 recognise.spatstat.type <- local({
 
-  knowntypes <- c("ppp","psp","owin","im")
+  knowntypes <- c("ppp","psp","owin","im", "lpp", "linnet")
 
   function(x) {
     for(kt in knowntypes)
@@ -55,13 +57,17 @@ bbEngine <- local({
 
   bb.listxy <- function(X) owin(range(X$x), range(X$y))
 
+  bb.linnet <- function(X) boundingbox(vertices(X))
+
+  bb.lpp <- function(X) boundingbox(as.ppp(X))
+  
   bbEngine <- function(...) {
     wins <- list(...)
     ## first detect any numeric vector arguments
     if(any(isnumvec <- unlist(lapply(wins, is.vector)) &
            unlist(lapply(wins, is.numeric)))) {
       ## invoke default method on these arguments
-      bb <- do.call("boundingbox", wins[isnumvec])
+      bb <- do.call(boundingbox, wins[isnumvec])
       ## repack
       wins <- append(wins[!isnumvec], list(bb))
     }
@@ -79,6 +85,10 @@ bbEngine <- local({
         wins[isppp] <- lapply(wins[isppp], boundingbox)
       if(any(islistxy <- (objtype == "listxy")))
         wins[islistxy] <- lapply(wins[islistxy], bb.listxy)
+      if(any(isnet <- (objtype == "linnet")))
+        wins[isnet] <- lapply(wins[isnet], bb.linnet)
+      if(any(islpp <- (objtype == "lpp")))
+        wins[islpp] <- lapply(wins[islpp], bb.lpp)
       ## then convert all windows to owin
       wins <- lapply(wins, as.owin)
       ## then take bounding box of each window
@@ -94,14 +104,14 @@ bbEngine <- local({
       ## that unit name to the bounding box.
       youse <- unique(t(sapply(boxes,unitname)))
       if(nrow(youse)==1) {
-        ute <- unlist(youse[1,])
+        ute <- unlist(youse[1L,])
         unitname(W) <- ute
       }
       return(W)
     }
 
     ## single argument
-    w <- wins[[1]]
+    w <- wins[[1L]]
     if(is.null(w))
       return(NULL)
     
@@ -110,10 +120,20 @@ bbEngine <- local({
     if(wtype == "ppp")
       return(boundingbox(coords(w)))
     
+    ## line segment pattern?
+    if(wtype == "psp")
+      return(boundingbox(endpoints.psp(w)))
+    
     ## list(x,y)
     if(wtype == "listxy")
       return(bb.listxy(w))
-          
+
+    if(wtype == "linnet")
+      w <- return(bb.linnet(w))
+
+    if(wtype == "lpp")
+      w <- return(bb.lpp(w))
+    
     ## convert to window
     w <- as.owin(w)
 
@@ -126,8 +146,8 @@ bbEngine <- local({
              bdry <- w$bdry
              if(length(bdry) == 0)
                return(NULL)
-             xr <- range(unlist(lapply(bdry, function(a) range(a$x))))
-             yr <- range(unlist(lapply(bdry, function(a) range(a$y))))
+             xr <- range(unlist(lapply(bdry, rangeofx)))
+             yr <- range(unlist(lapply(bdry, rangeofy)))
              return(owin(xr, yr, unitname=unitname(w)))
            },
            mask = {
@@ -142,6 +162,9 @@ bbEngine <- local({
            )
   }
 
+  rangeofx <- function(a) range(a$x)
+  rangeofy <- function(a) range(a$y)
+  
   bbEngine
 })
 
@@ -164,8 +187,8 @@ boundingbox.default <- local({
                    nvec, "were supplied"),
              call.=FALSE)
       vecs <- arglist[isnumvec]
-      x <- vecs[[1]]
-      y <- vecs[[2]]
+      x <- vecs[[1L]]
+      y <- vecs[[2L]]
       bb <- if(length(x) == length(y)) owin(range(x), range(y)) else NULL
       arglist <- arglist[!isnumvec]
     }
@@ -189,7 +212,7 @@ boundingbox.default <- local({
       ## handle list(x,y) objects 
       arglist[lxy] <- lapply(arglist[lxy], bb.listxy)
     }
-    result <- do.call("boundingbox",
+    result <- do.call(boundingbox,
                       if(is.null(bb)) arglist else append(list(bb), arglist))
     return(result)
   }

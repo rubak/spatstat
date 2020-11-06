@@ -9,7 +9,7 @@
 }
 \usage{
 transect.im(X, ..., from="bottomleft", to="topright",
-             click=FALSE, add=FALSE)
+            nsample=512, click=FALSE, add=FALSE)
 }
 \arguments{
   \item{X}{
@@ -24,6 +24,9 @@ transect.im(X, ..., from="bottomleft", to="topright",
     in a format acceptable to \code{\link{xy.coords}},
     or keywords \code{"bottom"}, \code{"left"}, \code{"top"},
     \code{"right"}, \code{"bottomleft"} etc.
+  }
+  \item{nsample}{
+    Integer. Number of sample locations along the transect.
   }
   \item{click}{
     Optional.
@@ -53,11 +56,11 @@ transect.im(X, ..., from="bottomleft", to="topright",
   An object of class \code{"fv"} which can be plotted.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+  \adrian
+  
+  
+  and \rolf
+  
 }
 \seealso{
   \code{\link{im}}
@@ -66,7 +69,9 @@ transect.im(X, ..., from="bottomleft", to="topright",
   Z <- density(redwood)
   plot(transect.im(Z))
   \dontrun{
+   if(FALSE) {
     plot(transect.im(Z, click=TRUE))
+   }
   }
 }
 \keyword{spatial}

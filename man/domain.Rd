@@ -5,12 +5,9 @@
 \alias{domain.im}
 \alias{domain.ppx}
 \alias{domain.pp3}
-\alias{domain.lpp}
 \alias{domain.ppm}
 \alias{domain.kppm}
 \alias{domain.dppm}
-\alias{domain.lpp}
-\alias{domain.lppm}
 \alias{domain.msr}
 \alias{domain.quad}
 \alias{domain.quadratcount}
@@ -24,6 +21,10 @@
 \alias{domain.rmhmodel}
 \alias{domain.leverage.ppm}
 \alias{domain.influence.ppm}
+\alias{domain.lpp}
+\alias{domain.lppm}
+\alias{domain.linfun}
+\alias{domain.lintess}
 \title{
   Extract the Domain of any Spatial Object
 }
@@ -44,17 +45,11 @@
 
    \method{domain}{pp3}(X, \dots)
 
-   \method{domain}{lpp}(X, \dots)
-
  \method{domain}{ppm}(X, \dots, from=c("points", "covariates"))
 
  \method{domain}{kppm}(X, \dots, from=c("points", "covariates"))
 
  \method{domain}{dppm}(X, \dots, from=c("points", "covariates"))
-
- \method{domain}{lpp}(X, \dots)
-
- \method{domain}{lppm}(X, \dots)
 
  \method{domain}{msr}(X, \dots)
 
@@ -65,6 +60,14 @@
  \method{domain}{quadrattest}(X, \dots)
 
  \method{domain}{tess}(X, \dots)
+
+ \method{domain}{lpp}(X, \dots)
+
+ \method{domain}{lppm}(X, \dots)
+
+ \method{domain}{linfun}(X, \dots)
+
+ \method{domain}{lintess}(X, \dots)
 
  \method{domain}{im}(X, \dots)
 
@@ -100,7 +103,7 @@
   defined.
 
   For a two-dimensional object \code{X}, typically \code{domain(X)}
-  is the same as \code{domain(X)}.
+  is the same as \code{Window(X)}.
 
   The exception is that, if \code{X} is a point pattern on a linear network
   (class \code{"lpp"}) or a point process model on a linear network
@@ -123,16 +126,12 @@
   a three-dimensional box (\code{"box3"}), a multidimensional
   box (\code{"boxx"}) or a linear network (\code{"linnet"}).
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
-  \code{\link{domain}}
+  \code{\link{Window}},
+  \code{\link{Frame}}
 }
 \examples{
   domain(cells)

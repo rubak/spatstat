@@ -6,7 +6,7 @@
   for a multitype point pattern.
 }
 \usage{
-  Lcross(X, i, j, ..., from, to)
+  Lcross(X, i, j, ..., from, to, correction)
 }
 \arguments{
   \item{X}{The observed point pattern, 
@@ -27,7 +27,7 @@
     converted to a character string).
     Defaults to the second level of \code{marks(X)}.
   }
-  \item{\dots}{
+  \item{correction,\dots}{
     Arguments passed to \code{\link{Kcross}}.
   }
   \item{from,to}{
@@ -83,11 +83,11 @@
  L <- Lcross(amacrine, "off", "on")
  plot(L)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -1,14 +1,14 @@
 #
 #       plot.fv.R   (was: conspire.S)
 #
-#  $Revision: 1.120 $    $Date: 2015/06/30 12:44:04 $
+#  $Revision: 1.130 $    $Date: 2020/10/30 01:57:57 $
 #
 #
 
-conspire <- function(...) {
-  .Deprecated("plot.fv", package="spatstat")
-  plot.fv(...)
-}
+# conspire <- function(...) {
+#  .Deprecated("plot.fv", package="spatstat")
+#  plot.fv(...)
+# }
 
 plot.fv <- local({
 
@@ -39,6 +39,11 @@ plot.fv <- local({
 
   pow10 <- function(x) { 10^x }
 
+  clip.to.usr <- function() {
+    usr <- par('usr')
+    clip(usr[1], usr[2], usr[3], usr[4])
+  }
+  
   plot.fv <- function(x, fmla, ..., subset=NULL, lty=NULL, col=NULL, lwd=NULL,
                       xlim=NULL, ylim=NULL, xlab=NULL, ylab=NULL,
                       ylim.covers=NULL, legend=!add, legendpos="topleft",
@@ -91,8 +96,8 @@ plot.fv <- local({
       } else {
         ## validate the found variables
         externvars <- lapply(sought, get, envir=env.user)
-        isnum <- unlist(lapply(externvars, is.numeric))
-        len <- unlist(lapply(externvars, length))
+        isnum <- sapply(externvars, is.numeric)
+        len <- lengths(externvars)
         ok <- isnum & (len == 1 | len == nrow(x))
         if(!all(ok)) {
           nnot <- sum(!ok)
@@ -132,7 +137,7 @@ plot.fv <- local({
       colnames(lhsdata) <-
         if(length(lhsvars) == 1) lhsvars else
         if(length(starnames) == 1 && (starnames %in% lhsvars)) starnames else 
-        paste(short.deparse(lhs), collapse="")
+        paste(deparse(lhs), collapse="")
     }
     ## check lhs names exist
     lnames <- colnames(lhsdata)
@@ -190,6 +195,7 @@ plot.fv <- local({
           uy <- as.name(fvnames(x, ".y"))
           foo <- eval(substitute(substitute(fom, list(.=u, .x=ux, .y=uy)),
                                  list(fom=fmla.original)))
+          dont.complain.about(u, ux, uy)
           lhsnew <- foo[[2]]
           morelhs <- eval(lhsnew, envir=indata)
           success <- identical(colnames(morelhs), extrashadevars)
@@ -266,7 +272,8 @@ plot.fv <- local({
     } else {
       ## if we're using the default argument, use its recommended range
       if(rhs == fvnames(x, ".x")) {
-        xlim <- attr(x, "alim") %orifnull% range(rhsdata, finite=TRUE)
+        xlim <- attr(x, "alim") %orifnull% range(as.vector(rhsdata),
+                                                 finite=TRUE)
         if(xlogscale && xlim[1] <= 0) 
           xlim[1] <- min(rhsdata[is.finite(rhsdata) & rhsdata > 0], na.rm=TRUE)
         ok <- !is.finite(rhsdata) | (rhsdata >= xlim[1] & rhsdata <= xlim[2])
@@ -274,7 +281,7 @@ plot.fv <- local({
         lhsdata <- lhsdata[ok, , drop=FALSE]
       } else { ## actual range of values to be plotted
         if(xlogscale) {
-          ok <- is.finite(rhsdata) & (rhsdata > 0) & apply(lhsdata > 0, 1, any)
+          ok <- is.finite(rhsdata) & (rhsdata > 0) & matrowany(lhsdata > 0)
           xlim <- range(rhsdata[ok])
         } else {
           xlim <- range(rhsdata, na.rm=TRUE)
@@ -294,7 +301,7 @@ plot.fv <- local({
     ## return x, y limits only?
     if(limitsonly)
       return(list(xlim=xlim, ylim=ylim))
-  
+
     ## -------------  work out how to label the plot --------------------
 
     ## extract plot labels, substituting function name
@@ -388,7 +395,7 @@ plot.fv <- local({
 
     ## create new plot
     if(!add)
-      do.call("plot.default",
+      do.call(plot.default,
               resolve.defaults(list(xlim, ylim, type="n", log=log),
                                list(xlab=xlab, ylab=ylab),
                                list(...),
@@ -436,6 +443,7 @@ plot.fv <- local({
       miss2 <- !is.finite(shdata2)
       if(!any(broken <- (miss1 | miss2))) {
         ## single polygon
+        clip.to.usr()
         polygon(xpoly, ypoly, border=shadecol, col=shadecol)
       } else {
         ## interrupted
@@ -446,6 +454,7 @@ plot.fv <- local({
                  with(z, {
                    xp <- c(rhsdata, rev(rhsdata))
                    yp <- c(shdata1, rev(shdata2))
+                   clip.to.usr()
                    polygon(xp, yp, border=shadecol, col=shadecol)
                  })
                })
@@ -475,8 +484,10 @@ plot.fv <- local({
   
     ## ----------------- plot lines ------------------------------
 
-    for(i in allind)
+    for(i in allind) {
+      clip.to.usr()
       lines(rhsdata, lhsdata[,i], lty=lty[i], col=col[i], lwd=lwd[i])
+    }
 
     if(nplots == 1)
       return(invisible(NULL))
@@ -494,7 +505,8 @@ plot.fv <- local({
     if(!is.null(ylab)) {
       if(is.language(ylab)) 
         ylab <- flat.deparse(ylab)
-      legdesc <- sprintf(legdesc, ylab)
+      if(any(grepl("%s", legdesc))) 
+        legdesc <- sprintf(legdesc, ylab)
     }
     ## compute legend info
     legtxt <- key
@@ -572,7 +584,7 @@ plot.fv <- local({
     
       ##  ********** plot legend *************************
       if(!is.null(legend) && legend) 
-        do.call("legend",
+        do.call(graphics::legend,
                 resolve.defaults(legendargs,
                                  legendbest,
                                  legendspec,
@@ -646,7 +658,7 @@ findbestlegendpos <- local({
                           preference="float", verbose=FALSE,
                           legendspec=NULL) {
     # find bounding box
-    W <- do.call("boundingbox", lapply(objects, as.rectangle))
+    W <- do.call(boundingbox, lapply(objects, as.rectangle))
     # convert to common box
     objects <- lapply(objects, rebound, rect=W)
     # comp
@@ -681,7 +693,8 @@ findbestlegendpos <- local({
       # evaluate preferred location (check for collision)
       if(!is.null(legendspec)) {
         # pretend to plot the legend as specified
-        legout <- do.call("legend", append(legendspec, list(plot=FALSE)))
+        legout <- do.call(graphics::legend,
+                          append(legendspec, list(plot=FALSE)))
         # determine bounding box
         legbox <- with(legout$rect, owin(c(left, left+w), c(top-h, top)))
         scaledlegbox <- affine(legbox, mat=mat)
@@ -710,7 +723,8 @@ findbestlegendpos <- local({
                           NULL)
         if(!is.null(testloc)) {
           # look up distance value at preferred location
-          val <- safelookup(D, list(x=testloc[1], y=testloc[2]))
+          testpat <- ppp(x=testloc[1], y=testloc[2], xr, yr, check=FALSE)
+          val <- safelookup(D, testpat)
           crit <- 0.15 * min(diff(xr), diff(yr))
           if(verbose)
             cat(paste("val=",val, ", crit=", crit, "\n"))

@@ -3,6 +3,7 @@
 \alias{coords}
 \alias{coords.ppp}
 \alias{coords.ppx}
+\alias{coords.quad}
 \alias{coords<-}
 \alias{coords<-.ppp}
 \alias{coords<-.ppx}
@@ -22,6 +23,7 @@
   coords(x, ...) <- value
   \method{coords}{ppp}(x, ...) <- value
   \method{coords}{ppx}(x, ..., spatial = TRUE, temporal = TRUE, local=TRUE) <- value
+  \method{coords}{quad}(x, ...)
 }
 \arguments{
   \item{x}{
@@ -29,7 +31,8 @@
     (object of class \code{"ppp"}), a three-dimensional point pattern
     (object of class \code{"pp3"}), or a 
     general multidimensional space-time point pattern 
-    (object of class \code{"ppx"}).
+    (object of class \code{"ppx"})
+    or a quadrature scheme (object of class \code{"quad"}).
   }
   \item{\dots}{
     Further arguments passed to methods.
@@ -60,11 +63,11 @@
   containing the coordinates.
   \code{coords<-} returns the altered point pattern.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \seealso{
   \code{\link{ppx}},

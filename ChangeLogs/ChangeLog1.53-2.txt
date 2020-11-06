@@ -1,0 +1,104 @@
+Change log from 1.53-1 to 1.53-xx
+================================
+
+29 sept 2017
+
+   DESCRIPTION
+   NEWS
+	Initialised as version 1.53-1.001
+	Nicknamed 'Necrotrophic'
+
+
+   newformula.R
+	Bug fix affecting update.ppm
+
+------------- passed R-3.4.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+02 oct 2017
+
+   lohboot.R
+   lohboot.Rd
+	Corrected implementation (thanks to Christophe Biscio and Rasmus W)
+
+   DESCRIPTION
+	Deleted nickname field, by order of CRAN.
+
+   doc/Nickname.txt [New file]
+   	File to contain the version nickname.
+
+   First.R
+	Nickname is now read from 'Nickname.txt'
+	Nickname changed to 'Edge Correction'
+	
+------------- passed R-3.4.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+   
+03 oct 2017
+
+   plot.im.R
+	Experimental secret arguments 'addcontour' and 'args.contour'
+
+   leverage.R
+   plot.leverage.ppm.Rd
+	plot.leverage.ppm now draws the contour on the ribbon
+	as well as the main image. New argument 'args.contour'.
+
+   DESCRIPTION
+   NEWS
+	Updated as version 1.53-1.003
+	
+------------- passed R-3.4.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   logistic.R
+   mpl.R
+   spatstat-internal.Rd
+	mpl.engine and logi.engine have new argument 'clipwin',
+	so far undocumented.
+
+   DESCRIPTION
+   NEWS
+	Updated as version 1.53-1.004
+	
+------------- passed R-3.4.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 oct 2017
+
+   update.ppm.R
+   update.ppm.Rd
+	Changed default behaviour of update(model, X)
+	when X is a point pattern with a different window
+
+   ppm.R
+   ppm.ppp.Rd
+   spatstat-internal.Rd
+	Methods for ppm have new argument 'clipwin'.
+
+   DESCRIPTION
+   NEWS
+	Updated as version 1.53-1.005
+	
+------------- passed R-3.4.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+05 oct 2017
+
+   profilepl.R
+   profilepl.Rd
+   fitin.Rd
+	New method fitin.profilepl
+
+   DESCRIPTION
+   NEWS
+	Updated as version 1.53-1.006
+	
+------------- passed R-3.4.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------

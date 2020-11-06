@@ -1,0 +1,353 @@
+Change log from 1.57-1 to 1.58-0
+================================
+
+05 nov 2018
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Initialised as version 1.57-1.001
+	Nicknamed 'Chocolate Teapot'
+
+   tests/ppp.R
+	Test plot.ppp for point patterns with rejected points, NA values 
+	
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/deepeepee.R [New file]
+   	Tests of code for determinantal models.
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.002
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 nov 2018
+
+   bw.relrisk.Rd
+	Minor corrections.
+
+10 nov 2018
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.003
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   summary.kppm.R
+	Prints more information about algorithm convergence.
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.004
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+23 nov 2018
+
+   clusterinfo.R
+	Tweaked experimental code.
+	
+   DESCRIPTION
+   NEWS
+	version 1.57-1.005
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+25 nov 2018
+
+   Finhom.Rd
+   Ginhom.Rd
+   Jinhom.Rd
+	Tweaked.
+
+   .travis.yml
+	Suppress testing under R-devel on Mac
+	as travis currently seems to be unable to install R-devel
+	
+   DESCRIPTION
+   NEWS
+	version 1.57-1.006
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+26 nov 2018
+
+   close3pair.c
+   close3Dpairs.R
+   closepairs.pp3.Rd
+	New option: what="ijd"
+	
+   markmark.R [New file]
+   markmarkscatter.Rd [New file]
+   	New "mark-mark scatter plot"
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Reliability You Can Count On'
+	version 1.57-1.007
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+27 nov 2018
+
+   persp.im.Rd
+	Minor improvements.
+
+   markmark.R
+	Bug fixes in handling trivial cases.
+
+   tests/closeshave.R
+   tests/lppstuff.R
+	Tests of markmarkscatter and closepairs code for 3D patterns.
+	
+   DESCRIPTION
+   NEWS
+	version 1.57-1.008
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   psib.Rd
+   plot.ssf.Rd
+	Updated bibliography.
+
+28 nov 2018
+
+   diagram.R
+	Return value of plot.onearrow now includes the diagram components.
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.009
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   diagram.R
+	Improved handling of saved graphical parameters.
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.010
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+03 dec 2018
+
+    markmark.R
+    markmarkscatter.Rd
+	Add option to jitter the marks
+	
+   DESCRIPTION
+   NEWS
+	version 1.57-1.011
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 dec 2018
+
+   kppm.R
+   clusterfit.Rd
+	clusterfit has new argument 'ctrl'
+
+   clusterinfo.R
+	the 'resolvedots' functions no longer have to handle
+	the minimum contrast control arguments q,p,rmin,rmax
+
+   zclustermodel.R
+	Consequential changes.
+	
+   kppm.Rd
+   dppm.Rd
+	Explained and corrected the description about
+	mincontrast algorithm parameters.
+	
+   DESCRIPTION
+   NEWS
+	version 1.57-1.012
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+15 dec 2018
+
+   tests/kppm.R
+	Added test of handling
+	the minimum contrast control arguments q,p,rmin,rmax
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.013
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+16 dec 2018
+
+   idw.c
+   idw.R
+	Added code for variance calculation
+
+   idw.R
+   idw.Rd
+	New argument 'se'.
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.014
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   idw.Rd
+	Added an explanation of the standard error calculation.
+
+18 dec 2018
+
+   src/*.c
+   src/*.h
+	Added copyright message if not already present.
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.015
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+19 dec 2018
+
+   rotmean.R
+	Bug fixes and improvements.
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Hamidreza Heydarian
+	
+   DESCRIPTION
+   NEWS
+	version 1.57-1.016
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+02 Jan 2019
+
+   ppx.R
+	Bug fixes in runifpointx
+
+   tests/ppx.R
+   tests/testparres.R
+	More tests.
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.017
+
+------------- passed R-3.5.1 CMD check ---------------
++++++++++++++ installed R-3.5.2 ++++++++++++++++++++++
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+05 jan 2019
+
+   spatstat-package.Rd
+   im.apply.Rd
+   eval.im.Rd
+	More cross-references.
+
+06 jan 2019
+
+   eval.im.R
+	Accelerated 'im.apply'
+	and added new arguments 'fun.handles.na' and 'check'.
+
+   im.apply.Rd
+	New arguments 'fun.handles.na' and 'check'.
+	More examples
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.018
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 Jan 2019
+
+    eval.im.R
+	Accelerated 'im.apply' for sum, mean
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.019
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 Jan 2019
+
+   leverage.R
+   measures.R
+   relrisk.R
+   relrisk.ppm.R
+   sdr.R
+	accelerated by replacing 'Reduce("+", X)' by 'im.apply(X, sum)'
+
+   DESCRIPTION
+   NEWS
+	version 1.57-1.020
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   updates.Rnw
+   bugfixes.Rnw
+	updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+	version 1.58-0
+	
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- passed 'make bookcheck'  ---------------
+--- passed R-3.5.2 CMD check --as-cran --run-donttest ---
+------------- passed R-devel CMD check ---------------
+              (2019-01-07 r75958)
+--- passed R-3.5.2 CMD check --use-valgrind --run-donttest ---
+>>>>>>>>>>>>   submitted to CRAN  <<<<<<<<<<<<<<<<<<<<<<<

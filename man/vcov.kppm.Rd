@@ -74,9 +74,8 @@
 }
 \author{
   Abdollah Jalilian and Rasmus Waagepetersen.
-  Ported to \pkg{spatstat} by Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  and Ege Rubak.
+  Ported to \pkg{spatstat} by \adrian
+  and \ege.
 }
 \seealso{
   \code{\link{kppm}}, 
@@ -84,7 +83,6 @@
   \code{\link{vcov.ppm}}
 }
 \examples{
-   data(redwood)
    fit <- kppm(redwood ~ x + y)
    vcov(fit)
    vcov(fit, what="corr")

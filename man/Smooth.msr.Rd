@@ -41,21 +41,20 @@
   belongs to the class \code{"solist"} so that it can be printed and plotted.
 }
 \references{
-  Baddeley, A., Turner, R.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005)
+  Baddeley, A., Turner, R., \Moller, J. and Hazelton, M. (2005)
   Residual analysis for spatial point processes.
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.
 
-  Baddeley, A., \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Pakes, A.G. (2008) 
+  Baddeley, A., \Moller, J. and Pakes, A.G. (2008) 
   Properties of residuals for spatial point processes.
   \emph{Annals of the Institute of Statistical Mathematics}
   \bold{60}, 627--649.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
+  
+  
 }
 \seealso{
   \code{\link{Smooth}},
@@ -63,7 +62,11 @@
   \code{\link{plot.msr}}
 }
 \examples{
-   example(msr)
+   X <- rpoispp(function(x,y) { exp(3+3*x) })
+   fit <- ppm(X, ~x+y)
+   rp <- residuals(fit, type="pearson")
+   rs <- residuals(fit, type="score")
+
    plot(Smooth(rp))
    plot(Smooth(rs))
 }

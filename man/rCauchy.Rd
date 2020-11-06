@@ -9,7 +9,7 @@
  rCauchy(kappa, scale, mu, win = owin(), thresh = 0.001,
          nsim=1, drop=TRUE, 
          saveLambda=FALSE, expand = NULL, \dots,
-         poisthresh=1e-6)
+         poisthresh=1e-6, saveparents=TRUE)
 }
 \arguments{
   \item{kappa}{
@@ -61,6 +61,10 @@
   \item{poisthresh}{
     Numerical threshold below which the model will be treated
     as a Poisson process. See Details.
+  }
+  \item{saveparents}{
+    Logical value indicating whether to save the locations of the
+    parent points as an attribute.
   }
 }
 \value{
@@ -153,9 +157,9 @@
   \emph{Biometrics} \bold{63}, 252--258.
 }
 \author{Abdollah Jalilian and Rasmus Waagepetersen.
-  Adapted for \pkg{spatstat} by Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  Adapted for \pkg{spatstat} by \adrian
+  
+  
 }
 \keyword{spatial}
 \keyword{datagen}

@@ -17,7 +17,10 @@
        double xi, yi, dx, dy, dx2, d2, r2max;
        double *x, *y;
 
-  $Revision: 1.3 $  $Date: 2013/05/27 02:09:10 $
+  $Revision: 1.5 $  $Date: 2018/12/18 02:43:11 $
+
+  Copyright (C) Adrian Baddeley, Ege Rubak and Rolf Turner 2001-2018
+  Licence: GNU Public Licence >= 2
 
 */
 
@@ -36,7 +39,7 @@
       INITIAL_I;					\
                                                         \
       if(i > 0) {					\
-	for(j=i-1; j > 0; j--) {			\
+	for(j=i-1; j >= 0; j--) {			\
 	  dx = x[j] - xi;				\
 	  dx2 = dx * dx;				\
 	  if(dx2 > r2max)				\

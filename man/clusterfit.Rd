@@ -6,9 +6,11 @@
   Cox point process model to a point pattern by the Method of Minimum Contrast.
 }
 \usage{
-clusterfit(X, clusters, lambda = NULL, startpar = NULL,
-           q = 1/4, p = 2, rmin = NULL, rmax = NULL, \dots,
-           statistic = NULL, statargs = NULL, algorithm="Nelder-Mead")
+clusterfit(X, clusters, lambda = NULL, startpar = NULL, \dots,
+           q = 1/4, p = 2, rmin = NULL, rmax = NULL,
+           ctrl=list(q=q, p=p, rmin=rmin, rmax=rmax),
+           statistic = NULL, statargs = NULL, algorithm="Nelder-Mead",
+           verbose=FALSE, pint=NULL)
 }
 \arguments{
   \item{X}{
@@ -38,9 +40,15 @@ clusterfit(X, clusters, lambda = NULL, startpar = NULL,
   }
   \item{q,p}{
     Optional. Exponents for the contrast criterion.
+    See \code{\link{mincontrast}}.
   }
   \item{rmin, rmax}{
     Optional. The interval of \eqn{r} values for the contrast criterion.
+    See \code{\link{mincontrast}}.
+  }
+  \item{ctrl}{
+    Optional. Named list containing values of the parameters
+    \code{q,p,rmin,rmax}.
   }
   \item{\dots}{
     Additional arguments passed to \code{\link{mincontrast}.}
@@ -58,6 +66,11 @@ clusterfit(X, clusters, lambda = NULL, startpar = NULL,
     to be used by \code{\link[stats]{optim}}. See
     the argument \code{method} of \code{\link[stats]{optim}}.
   }
+  \item{verbose}{
+    Logical value indicating whether to print detailed progress reports
+    for debugging purposes.
+  }
+  \item{pint}{For internal use by package code only.}
 }
 \details{
   This function fits the clustering parameters of a cluster or Cox point
@@ -100,7 +113,13 @@ clusterfit(X, clusters, lambda = NULL, startpar = NULL,
 
   After the clustering parameters of the model have been estimated by
   minimum contrast \code{lambda} (if non-null) is used to compute the
-  additional model parameter \eqn{\mu}{mu}.
+  additional model parameter \eqn{\mu}{\mu}.
+
+  The algorithm parameters \code{q,p,rmax,rmin} are described in the
+  help for \code{\link{mincontrast}}. They may be provided either
+  as individually-named arguments, or as entries in the list
+  \code{ctrl}. The individually-named arguments \code{q,p,rmax,rmin}
+  override the entries in the list \code{ctrl}.
 }
 \value{
   An object of class \code{"minconfit"}. There are methods for printing
@@ -112,7 +131,7 @@ clusterfit(X, clusters, lambda = NULL, startpar = NULL,
   \emph{Journal of the Royal Statistical Society, series B}
   \bold{46}, 193 -- 212.
 
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2003).
+  \Moller, J. and Waagepetersen, R. (2003).
   Statistical Inference and Simulation for Spatial Point Processes.
   Chapman and Hall/CRC, Boca Raton.
 
@@ -121,13 +140,8 @@ clusterfit(X, clusters, lambda = NULL, startpar = NULL,
   inhomogeneous Neyman-Scott processes.
   \emph{Biometrics} \bold{63} (2007) 252--258.
 }  
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{kppm}}
@@ -138,6 +152,8 @@ clusterfit(X, clusters, lambda = NULL, startpar = NULL,
   if(interactive()){
     plot(fit)
   }
+  K <- Kest(redwood)
+  fit2 <- clusterfit(K, "MatClust")
 }
 \keyword{spatial}
 \keyword{models}

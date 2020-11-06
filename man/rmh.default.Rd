@@ -10,7 +10,8 @@
 \usage{
    \method{rmh}{default}(model, start=NULL,
    control=default.rmhcontrol(model),
-   \dots, 
+   \dots,
+   nsim=1, drop=TRUE, saveinfo=TRUE,
    verbose=TRUE, snoop=FALSE)
 }
 
@@ -28,22 +29,36 @@
     Further arguments passed to \code{\link{rmhcontrol}}
     or to trend functions in \code{model}.
   }
-  \item{verbose}{Logical flag indicating whether to print progress
-    reports.
+  \item{nsim}{
+    Number of simulated point patterns that should be generated.
+  }
+  \item{drop}{
+    Logical. If \code{nsim=1} and \code{drop=TRUE} (the default), the
+    result will be a point pattern, rather than a list 
+    containing a single point pattern.
+  }
+  \item{saveinfo}{
+    Logical value indicating whether to save auxiliary information.
+  }
+  \item{verbose}{
+    Logical value indicating whether to print progress reports.
   }
   \item{snoop}{
     Logical. If \code{TRUE}, activate the visual debugger. 
   }
 }
 
-\value{A point pattern (an object of class \code{"ppp"}, see
-  \code{\link{ppp.object}}).
+\value{
+  A point pattern (an object of class \code{"ppp"}, see
+  \code{\link{ppp.object}}) or a list of point patterns.
 
   The returned value has an attribute \code{info} containing
   modified versions of the arguments
   \code{model}, \code{start}, and \code{control} which together specify
   the exact simulation procedure. The \code{info} attribute can be
   printed (and is printed automatically by \code{\link{summary.ppp}}).
+  For computational efficiency, the \code{info} attribute can be omitted
+  by setting \code{saveinfo=FALSE}.
 
   The value of \code{\link[base:Random]{.Random.seed}} at the start
   of the simulations is also saved and returned as an attribute
@@ -72,7 +87,7 @@
 
   This function executes a Metropolis-Hastings algorithm
   with birth, death and shift proposals as described in
-  Geyer and \ifelse{latex}{\out{M\o ller}}{Moller} (1994).
+  Geyer and \Moller (1994).
 
   The argument \code{model} specifies the point process model to be
   simulated. It is either a list, or an object of class
@@ -294,7 +309,7 @@
    A nonparametric estimator for pairwise-interaction point processes.
    Biometrika \bold{74}, 763 -- 770.
 
-   Geyer, C.J. and \ifelse{latex}{\out{M\o ller}}{Moller}, J. (1994)
+   Geyer, C.J. and \Moller, J. (1994)
    Simulation procedures and likelihood inference for spatial
    point processes.
    \emph{Scandinavian Journal of Statistics} \bold{21}, 359--373.
@@ -313,12 +328,12 @@ There is never a guarantee that the Metropolis-Hastings algorithm
 has converged to its limiting distribution.
 
 If \code{start$x.start} is specified then \code{expand} is set equal to 1
-and simulation takes place in \code{x.start$window}.  Any specified
+and simulation takes place in \code{Window(x.start)}.  Any specified
 value for \code{expand} is simply ignored.
 
 The presence of both a component \code{w} of \code{model} and a
-non-null value for \code{x.start$window} makes sense ONLY if \code{w}
-is contained in \code{x.start$window}.  
+non-null value for \code{Window(x.start)} makes sense ONLY if \code{w}
+is contained in \code{Window(x.start)}.  
 
 For multitype processes make sure that, even if there is to be no
 trend corresponding to a particular type, there is still a component
@@ -343,6 +358,7 @@ trend corresponding to a particular type, there is still a component
   \code{\link{MultiStrauss}},
   \code{\link{MultiStraussHard}},
   \code{\link{PairPiece}},
+  \code{\link{Penttinen}},
   \code{\link{Poisson}},
   \code{\link{Softcore}},
   \code{\link{Strauss}},
@@ -386,11 +402,11 @@ trend corresponding to a particular type, there is still a component
      nv  <- 5000
      ns <- 200
    } else {
-     nr  <- 10
+     nr  <- 20
      nv <- 5
      ns <- 20
      oldopt <- spatstat.options()
-     spatstat.options(expand=1.1)
+     spatstat.options(expand=1.05)
    }
    set.seed(961018)
    
@@ -407,12 +423,17 @@ trend corresponding to a particular type, there is still a component
                      control=list(p=1,nrep=nr,nverb=nv))
 
    # Tracking algorithm progress:
+   # (a) saving intermediate states:
    X <- rmh(model=mod01,start=list(n.start=ns),
-            control=list(nrep=nr, nsave=nr/5, nburn=nr/2, track=TRUE))
-   History <- attr(X, "history")
+            control=list(nrep=nr, nsave=nr/5, nburn=nr/2))
    Saved <- attr(X, "saved")
-   head(History)
    plot(Saved)
+
+   # (b) inspecting transition history:
+   X <- rmh(model=mod01,start=list(n.start=ns),
+            control=list(nrep=nr, track=TRUE))
+   History <- attr(X, "history")
+   head(History)
 
    # Hard core process:
    mod02 <- list(cif="hardcore",par=list(beta=2,hc=0.7),w=c(0,10,0,10))
@@ -443,7 +464,7 @@ trend corresponding to a particular type, there is still a component
    # polygonal window replace by a rectangular one.  At the end,
    # the generated pattern is clipped to the original polygonal window.
    xxx <- X4.strauss
-   xxx$window <- as.owin(c(0,1,0,1))
+   Window(xxx) <- as.owin(c(0,1,0,1))
    X6.strauss <- rmh(model=mod03,start=list(x.start=xxx),
                      control=list(nrep=nr,nverb=nv))
    
@@ -670,11 +691,11 @@ trend corresponding to a particular type, there is still a component
 
    if(!interactive()) spatstat.options(oldopt)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{datagen}

@@ -20,7 +20,7 @@ quadrat.test(X, ...)
                           alternative=c("two.sided", "regular", "clustered"),
                            method=c("Chisq", "MonteCarlo"),
                            conditional=TRUE, CR=1,
-                           lambda=NULL, 
+                           lambda=NULL, df.est=NULL,
                            ...,
                            xbreaks=NULL, ybreaks=NULL, tess=NULL,
                            nsim=1999)
@@ -28,7 +28,7 @@ quadrat.test(X, ...)
 \method{quadrat.test}{ppm}(X, nx=5, ny=nx, 
                           alternative=c("two.sided", "regular", "clustered"),
                            method=c("Chisq", "MonteCarlo"),
-                           conditional=TRUE, CR=1, 
+                           conditional=TRUE, CR=1, df.est=NULL,
                            ..., 
                            xbreaks=NULL, ybreaks=NULL, tess=NULL,
                            nsim=1999)
@@ -37,7 +37,7 @@ quadrat.test(X, ...)
                           alternative=c("two.sided", "regular", "clustered"),
                           method=c("Chisq", "MonteCarlo"),
                           conditional=TRUE, CR=1,
-                          lambda=NULL, 
+                          lambda=NULL, df.est=NULL,
                           ...,
                           nsim=1999)
 }
@@ -69,13 +69,19 @@ quadrat.test(X, ...)
     Ignored if \code{method="Chisq"}.
   }
   \item{CR}{
-    Optional. Numerical value of the index \eqn{\lambda}{lambda}
-    for the Cressie-Read test statistic. 
+    Optional. Numerical value. The exponent
+    for the Cressie-Read test statistic. See Details.
   }
   \item{lambda}{
     Optional. Pixel image (object of class \code{"im"})
     or function (class \code{"funxy"}) giving the predicted
     intensity of the point process.
+  }
+  \item{df.est}{
+    Optional. Advanced use only.
+    The number of fitted parameters, or the
+    number of degrees of freedom lost by estimation of
+    parameters. 
   }
   \item{\dots}{Ignored.}
   \item{xbreaks}{
@@ -175,14 +181,13 @@ quadrat.test(X, ...)
   Pearson \eqn{X^2} statistic, the Cressie-Read (1984) power divergence
   test statistic
   \deqn{
-    2nI = \frac{2}{\lambda(\lambda+1)}
-           \sum_i \left[ \left( \frac{X_i}{E_i} \right)^\lambda - 1 \right]
+    2nI = \frac{2}{CR(CR+1)}
+           \sum_i \left[ \left( \frac{X_i}{E_i} \right)^CR - 1 \right]
   }{
-    2nI = (2/(lambda * (lambda+1))) * sum((X[i]/E[i])^lambda - 1)
+    2nI = (2/(CR * (CR+1))) * sum((X[i]/E[i])^CR - 1)
   }
   is computed, where \eqn{X_i}{X[i]} is the \eqn{i}th observed count
-  and \eqn{E_i}{E[i]} is the corresponding expected count,
-  and the exponent \eqn{\lambda}{lambda} is equal to \code{CR}.
+  and \eqn{E_i}{E[i]} is the corresponding expected count.
   The value \code{CR=1} gives the Pearson \eqn{X^2} statistic;
   \code{CR=0} gives the likelihood ratio test statistic \eqn{G^2};
   \code{CR=-1/2} gives the Freeman-Tukey statistic \eqn{T^2};
@@ -226,12 +231,17 @@ quadrat.test(X, ...)
   \bold{46}, 440--464. 
 }
 \examples{
-  data(simdat)
   quadrat.test(simdat)
   quadrat.test(simdat, 4, 3)
 
   quadrat.test(simdat, alternative="regular")
   quadrat.test(simdat, alternative="clustered")
+
+  ## Likelihood ratio test
+  quadrat.test(simdat, CR=0)
+  ## Power divergence tests
+  quadrat.test(simdat, CR=-1)$p.value
+  quadrat.test(simdat, CR=-2)$p.value
 
   # Using Monte Carlo p-values
   quadrat.test(swedishpines) # Get warning, small expected values.
@@ -249,8 +259,11 @@ quadrat.test(X, ...)
   quadrat.test(qS)
 
   # fitted model: inhomogeneous Poisson
-  fitx <- ppm(simdat, ~x, Poisson())
+  fitx <- ppm(simdat ~ x)
   quadrat.test(fitx)
+
+  # an equivalent test (results differ due to discretisation effects):
+  quadrat.test(simdat, lambda=predict(fitx), df.est=length(coef(fitx)))
 
   te <- quadrat.test(simdat, 4)
   residuals(te)  # Pearson residuals
@@ -265,17 +278,14 @@ quadrat.test(X, ...)
   title(sub=sublab, cex.sub=3)
 
   # quadrats of irregular shape
-  B <- dirichlet(runifpoint(6, simdat$window))
+  B <- dirichlet(runifpoint(6, Window(simdat)))
   qB <- quadrat.test(simdat, tess=B)
   plot(simdat, main="quadrat.test(simdat, tess=B)", pch="+")
   plot(qB, add=TRUE, col="red", lwd=2, cex=1.2)
 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{htest}

@@ -2,8 +2,9 @@
 \Rdversion{1.1}
 \alias{methods.linfun} %DoNotExport
 \alias{print.linfun}
+\alias{summary.linfun}
 \alias{plot.linfun}
-\alias{as.linim.linfun}
+\alias{as.data.frame.linfun}
 \alias{as.owin.linfun}
 \alias{as.function.linfun}
 \title{
@@ -15,76 +16,75 @@
 \usage{
   \method{print}{linfun}(x, \dots)
 
-  \method{plot}{linfun}(x, \dots, L=NULL,
-                     eps = NULL, dimyx = NULL, xy = NULL,
-                     main)
+  \method{summary}{linfun}(object, \dots)
 
-  \method{as.linim}{linfun}(X, L, \dots, eps = NULL, dimyx = NULL, xy = NULL)
+  \method{plot}{linfun}(x, \dots, L=NULL, main) 
+
+  \method{as.data.frame}{linfun}(x, \dots)
 
   \method{as.owin}{linfun}(W, \dots)
 
   \method{as.function}{linfun}(x, \dots)
 }
 \arguments{
-  \item{X,x,W}{
+  \item{x,object,W}{
     A function on a linear network
     (object of class \code{"linfun"}).
   }
   \item{L}{A linear network}
-  \item{eps,dimyx,xy}{
-    Arguments passed to \code{\link{as.mask}} to control
-    the pixel resolution.
-  }
   \item{\dots}{
-    Extra arguments passed to \code{\link{plot.im}} or
-    \code{\link{print.default}}.
+    Extra arguments passed to \code{\link{as.linim}}, 
+    \code{\link{plot.linim}}, \code{\link{plot.im}}
+    or \code{\link{print.default}}, or arguments passed to
+    \code{x} if it is a function.
   }
   \item{main}{Main title for plot.}
 }
 \details{
   These are methods for the generic functions
-  \code{\link{plot}}, \code{\link{print}}
-  and the \pkg{spatstat} generic functions
-  \code{\link{as.owin}},
-  \code{\link{as.linim}}.
+  \code{\link{plot}}, \code{\link{print}}, \code{\link{summary}}
+  \code{\link{as.data.frame}} and \code{\link{as.function}},
+  and for the \pkg{spatstat} generic function
+  \code{\link{as.owin}}.
 
   An object of class \code{"linfun"} represents a
   mathematical function that could be evaluated at any location
   on a linear network. It is essentially an \R \code{function} with some
   extra attributes.
 
-  The method \code{as.linnet.linfun} extracts the linear network
-  on which the function is defined.
   The method \code{as.owin.linfun} extracts the two-dimensional spatial
   window containing the linear network.
-  The method \code{as.linim.linfun} converts the function to a pixel
-  image on the linear network (an object of class \code{"linim"}).
+
+  The method \code{plot.linfun} first converts the function to a
+  pixel image using \code{\link{as.linim.linfun}}, then plots the image using
+  \code{\link{plot.linim}}.
+
+  Note that a \code{linfun} function may have additional arguments,
+  other than those which specify the location on the network
+  (see \code{\link{linfun}}). These additional arguments may be passed
+  to \code{plot.linfun}. 
 }
 \value{
-  For \code{print.linfun} the result is \code{NULL}.
+  For \code{print.linfun} and \code{summary.linfun} the result is \code{NULL}.
 
   For \code{plot.linfun} the result is the same as
-  for \code{\link{plot.im}}.
+  for \code{\link{plot.linim}}.
   
   For the conversion methods, the result is an object of the
-  required type: \code{as.linim.linfun} returns an object of
-  class \code{"linim"}, and so on.
+  required type: \code{as.owin.linfun} returns an object of
+  class \code{"owin"}, and so on.
 }
 \examples{
-   data(letterR)
    X <- runiflpp(3, simplenet)
    f <- nnfun(X)
    f
    plot(f)
    as.function(f)
    as.owin(f)
-   as.linim(f)
+   head(as.data.frame(f))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{math}

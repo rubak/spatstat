@@ -3,7 +3,7 @@
 #
 #   convert ppm object into format palatable to rmh.default
 #
-#  $Revision: 2.59 $   $Date: 2014/12/09 08:49:17 $
+#  $Revision: 2.64 $   $Date: 2017/06/05 10:31:58 $
 #
 #   .Spatstat.rmhinfo
 #   rmhmodel.ppm()
@@ -14,24 +14,25 @@ list(
      "Multitype Hardcore process" =
      function(coeffs, inte) {
        # hard core radii r[i,j]
-       hradii <- inte$par$hradii
+       hradii <- inte$par[["hradii"]]
        return(list(cif='multihard',
                    par=list(hradii=hradii),
                    ntypes=ncol(hradii)))
      },
      "Lennard-Jones process" =
      function(coeffs, inte) {
-       sigma   <- inte$par$sigma
-       epsilon <- inte$par$epsilon
+       pa <- inte$interpret(coeffs,inte)$param
+       sigma   <- pa[["sigma"]]
+       epsilon <- pa[["epsilon"]]
        return(list(cif='lennard',
                    par=list(sigma=sigma, epsilon=epsilon),
                    ntypes=1))
      },
      "Fiksel process" =
      function(coeffs, inte) {
-       hc <- inte$par$hc
-       r  <- inte$par$r
-       kappa <- inte$par$kappa
+       hc <- inte$par[["hc"]]
+       r  <- inte$par[["r"]]
+       kappa <- inte$par[["kappa"]]
        a <- inte$interpret(coeffs,inte)$param$a
        return(list(cif='fiksel',
                    par=list(r=r,hc=hc,kappa=kappa,a=a),
@@ -39,7 +40,7 @@ list(
      },
      "Diggle-Gates-Stibbard process" =
      function(coeffs, inte) {
-       rho   <- inte$par$rho
+       rho   <- inte$par[["rho"]]
        return(list(cif='dgs',
                    par=list(rho=rho),
                    ntypes=1))
@@ -47,15 +48,15 @@ list(
      "Diggle-Gratton process" =
      function(coeffs, inte) {
        kappa <- inte$interpret(coeffs,inte)$param$kappa
-       delta <- inte$par$delta
-       rho   <- inte$par$rho
+       delta <- inte$par[["delta"]]
+       rho   <- inte$par[["rho"]]
        return(list(cif='diggra',
                    par=list(kappa=kappa,delta=delta,rho=rho),
                    ntypes=1))
      },
      "Hard core process" =
      function(coeffs, inte) {
-       hc <- inte$par$hc
+       hc <- inte$par[["hc"]]
        return(list(cif='hardcore',
                    par=list(hc=hc),
                    ntypes=1))
@@ -63,15 +64,15 @@ list(
      "Geyer saturation process" =
      function(coeffs, inte) {
        gamma <- inte$interpret(coeffs,inte)$param$gamma
-       r <- inte$par$r
-       sat <- inte$par$sat
+       r <- inte$par[["r"]]
+       sat <- inte$par[["sat"]]
        return(list(cif='geyer',
                    par=list(gamma=gamma,r=r,sat=sat),
                    ntypes=1))
      },
      "Soft core process" =
      function(coeffs, inte) {
-       kappa <- inte$par$kappa
+       kappa <- inte$par[["kappa"]]
        sigma <- inte$interpret(coeffs,inte)$param$sigma
        return(list(cif="sftcr",
                    par=list(sigma=sigma,kappa=kappa),
@@ -80,7 +81,7 @@ list(
      "Strauss process" =
      function(coeffs, inte) {
        gamma <- inte$interpret(coeffs,inte)$param$gamma
-       r <- inte$par$r
+       r <- inte$par[["r"]]
        return(list(cif = "strauss",
                    par = list(gamma = gamma, r = r),
                    ntypes=1))
@@ -88,8 +89,8 @@ list(
      "Strauss - hard core process" =
      function(coeffs, inte) {
        gamma <- inte$interpret(coeffs,inte)$param$gamma
-       r <- inte$par$r
-       hc <- inte$par$hc
+       r <- inte$par[["r"]]
+       hc <- inte$par[["hc"]]
        return(list(cif='straush',
                    par=list(gamma=gamma,r=r,hc=hc),
                    ntypes=1))
@@ -97,15 +98,23 @@ list(
      "Triplets process" =
      function(coeffs, inte) {
        gamma <- inte$interpret(coeffs,inte)$param$gamma
-       r <- inte$par$r
+       r <- inte$par[["r"]]
        return(list(cif = "triplets",
                    par = list(gamma = gamma, r = r),
+                   ntypes=1))
+     },
+     "Penttinen process" =
+     function(coeffs, inte) {
+       gamma <- inte$interpret(coeffs,inte)$param$gamma
+       r   <- inte$par[["r"]]
+       return(list(cif='penttinen',
+                   par=list(gamma=gamma, r=r),
                    ntypes=1))
      },
      "Multitype Strauss process" =
      function(coeffs, inte) {
        # interaction radii r[i,j]
-       radii <- inte$par$radii
+       radii <- inte$par[["radii"]]
        # interaction parameters gamma[i,j]
        gamma <- (inte$interpret)(coeffs, inte)$param$gammas
        return(list(cif='straussm',
@@ -115,9 +124,9 @@ list(
      "Multitype Strauss Hardcore process" =
      function(coeffs, inte) {
        # interaction radii r[i,j]
-       iradii <- inte$par$iradii
+       iradii <- inte$par[["iradii"]]
        # hard core radii r[i,j]
-       hradii <- inte$par$hradii
+       hradii <- inte$par[["hradii"]]
        # interaction parameters gamma[i,j]
        gamma <- (inte$interpret)(coeffs, inte)$param$gammas
        return(list(cif='straushm',
@@ -126,7 +135,7 @@ list(
      },
      "Piecewise constant pairwise interaction process" =
      function(coeffs, inte) {
-       r <- inte$par$r
+       r <- inte$par[["r"]]
        gamma <- (inte$interpret)(coeffs, inte)$param$gammas
        h <- stepfun(r, c(gamma, 1))
        return(list(cif='lookup', par=list(h=h),
@@ -134,14 +143,14 @@ list(
      },
      "Area-interaction process" =
      function(coeffs, inte) {
-       r <- inte$par$r
+       r <- inte$par[["r"]]
        eta <- (inte$interpret)(coeffs, inte)$param$eta
        return(list(cif='areaint', par=list(eta=eta,r=r), ntypes=1))
      },
      "hybrid Geyer process" =
      function(coeffs, inte) {
-       r <- inte$par$r
-       sat <- inte$par$sat
+       r <- inte$par[["r"]]
+       sat <- inte$par[["sat"]]
        gamma <- (inte$interpret)(coeffs,inte)$param$gammas
        return(list(cif='badgey',par=list(gamma=gamma,r=r,sat=sat), ntypes=1))
      },
@@ -231,14 +240,9 @@ rmhmodel.ppm <- function(model, w, ...,
   verifyclass(model, "ppm")
   argh <- list(...)
 
-  if(!is.null(new.coef)) {
-    ## hack the coefficients
-    co <- coef(model)
-    check.nvector(new.coef, length(co), things="coefficients")
-    model$coef.orig <- co
-    model$coef <- new.coef
-  }
-
+  if(!is.null(new.coef))
+    model <- tweak.coefs(model, new.coef)
+  
   ## Ensure the fitted model is valid
   ## (i.e. exists mathematically as a point process)
   if(!valid.ppm(model)) {
@@ -407,7 +411,7 @@ rmhResolveExpansion <- function(win, control, imagelist, itype="covariate") {
   # Expansion is limited to domain of image data
   # Determine maximum possible expansion window
   wins <- lapply(imagelist, as.owin)
-  cwin <- do.call("intersect.owin", unname(wins))
+  cwin <- do.call(intersect.owin, unname(wins))
   
   if(!is.subset.owin(wexp, cwin)) {
     # Cannot expand to proposed window

@@ -3,43 +3,9 @@
 #
 # Test statistics from Berman (1986)
 #
-#  $Revision: 1.17 $  $Date: 2015/04/14 17:18:06 $
+#  $Revision: 1.22 $  $Date: 2020/06/12 05:55:11 $
 #
 #
-
-# --------- outdated --------
-
-bermantest <- function(...) {
-  message("bermantest is out of date; use berman.test")
-#  .Deprecated("berman.test", package="spatstat")
-  berman.test(...)
-}
-
-bermantest.ppp <- function(...) {
-    message("bermantest.ppp is out of date; use berman.test.ppp")
-#  .Deprecated("berman.test.ppp", package="spatstat")
-  berman.test.ppp(...)
-}
-
-bermantest.ppm <- function(...) {
-    message("bermantest.ppm is out of date; use berman.test.ppm")
-#  .Deprecated("berman.test.ppm", package="spatstat")
-  berman.test.ppm(...)
-}
-
-bermantest.lpp <- function(...) {
-    message("bermantest.lpp is out of date; use berman.test.lpp")
-#  .Deprecated("berman.test.lpp", package="spatstat")
-  berman.test.lpp(...)
-}
-
-bermantest.lppm <- function(...) {
-    message("bermantest.lppm is out of date; use berman.test.lppm")
-#  .Deprecated("berman.test.lppm", package="spatstat")
-  berman.test.lppm(...)
-}
-
-# ---------------------------
 
 berman.test <- function(...) {
   UseMethod("berman.test")
@@ -56,7 +22,7 @@ berman.test.ppp <-
     which <- match.arg(which)
     alternative <- match.arg(alternative)
 
-    do.call("bermantestEngine",
+    do.call(bermantestEngine,
             resolve.defaults(list(ppm(X), covariate, which, alternative),
                              list(...),
                              list(modelname="CSR",
@@ -75,7 +41,7 @@ berman.test.ppm <- function(model, covariate,
   alternative <- match.arg(alternative)
   if(is.poisson(model) && is.stationary(model))
     modelname <- "CSR"
-  do.call("bermantestEngine",
+  do.call(bermantestEngine,
           resolve.defaults(list(model, covariate, which, alternative),
                            list(...),
                            list(modelname=modelname,
@@ -83,6 +49,7 @@ berman.test.ppm <- function(model, covariate,
                                 dataname=model$Qname)))
 }
 
+#%^!ifdef LINEARNETWORKS
 berman.test.lpp <-
   function(X, covariate,
            which=c("Z1", "Z2"),
@@ -94,7 +61,7 @@ berman.test.lpp <-
     which <- match.arg(which)
     alternative <- match.arg(alternative)
 
-    do.call("bermantestEngine",
+    do.call(bermantestEngine,
             resolve.defaults(list(lppm(X), covariate, which, alternative),
                              list(...),
                              list(modelname="CSR",
@@ -113,13 +80,14 @@ berman.test.lppm <- function(model, covariate,
   alternative <- match.arg(alternative)
   if(is.poisson(model) && is.stationary(model))
     modelname <- "CSR"
-  do.call("bermantestEngine",
+  do.call(bermantestEngine,
           resolve.defaults(list(model, covariate, which, alternative),
                            list(...),
                            list(modelname=modelname,
                                 covname=covname,
                                 dataname=model$Xname)))
 }
+#%^!endif
 
 bermantestEngine <- function(model, covariate,
                              which=c("Z1", "Z2"),
@@ -141,24 +109,45 @@ bermantestEngine <- function(model, covariate,
   if(!is.poisson(model))
     stop("Only implemented for Poisson point process models")
 
-  # ........... first assemble data ...............
+  #'  compute required data 
   fram <- spatialCDFframe(model, covariate, ...,
-                        modelname=modelname,
-                        covname=covname,
-                        dataname=dataname)
+                          modelname=modelname,
+                          covname=covname,
+                          dataname=dataname)
+  #'  evaluate berman test statistic 
+  result <- bermantestCalc(fram, which=which, alternative=alternative)
+
+  return(result)
+}
+
+bermantestCalc <- function(fram,
+                           which=c("Z1", "Z2"),
+                           alternative=c("two.sided", "less", "greater"),
+                           ...) {
+
+  which <- match.arg(which)
+  alternative <- match.arg(alternative)
+
+  verifyclass(fram, "spatialCDFframe")
   fvalues <- fram$values
   info    <- fram$info
-  # values of covariate at data points
+  
+  ## values of covariate at data points
   ZX <- fvalues$ZX
-  # transformed to Unif[0,1] under H0
+  ## transformed to Unif[0,1] under H0
   U  <- fvalues$U
-  # values of covariate at pixels
+  ## values of covariate at pixels
   Zvalues <- fvalues$Zvalues
-  # corresponding pixel areas/weights
+  ## corresponding pixel areas/weights
   weights <- fvalues$weights
-  # intensity of model
+  ## intensity of model
   lambda  <- fvalues$lambda
 
+  ## names 
+  modelname <- info$modelname
+  dataname  <- info$dataname
+  covname   <- info$covname
+  
   switch(which,
          Z1={
            #......... Berman Z1 statistic .....................
@@ -258,7 +247,7 @@ plot.bermantest <-
                            sQuote(info$covname)),
                      paste("Z1 statistic =", signif(x$statistic, 4)),
                      paste("p-value=", signif(x$p.value, 4)))
-           do.call("plot.default",
+           do.call(plot.default,
                    resolve.defaults(
                                     list(x=xxx, y=yyy, type="l"),
                                     list(...),
@@ -282,7 +271,7 @@ plot.bermantest <-
                            sQuote(info$covname)),
                      paste("Z2 statistic =", signif(x$statistic, 4)),
                      paste("p-value=", signif(x$p.value, 4)))
-           do.call("plot.ecdf",
+           do.call(plot.ecdf,
                    resolve.defaults(
                                     list(cdfU),
                                     list(...),

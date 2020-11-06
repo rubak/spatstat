@@ -72,6 +72,8 @@ clarkevans(X, correction=c("none", "Donnelly", "cdf"),
       distribution is calculated from the cdf. 
     }
   }
+  Alternatively \code{correction="all"} selects all options.
+
   If the argument \code{clipregion} is given, then the selected
   edge corrections will be assumed to include \code{correction="guard"}.
 
@@ -102,9 +104,9 @@ clarkevans(X, correction=c("none", "Donnelly", "cdf"),
 John Rudge
 \email{rudge@esc.cam.ac.uk}
 with modifications by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
+  
+  
 }
 \seealso{
   \code{\link{clarkevans.test}},
@@ -125,7 +127,7 @@ with modifications by
 
   # How to specify a clipping region
   clip1 <- owin(c(0.1,0.9),c(0.1,0.9))
-  clip2 <- erosion(cells$window, 0.1)
+  clip2 <- erosion(Window(cells), 0.1)
   clarkevans(cells, clipregion=clip1)
   clarkevans(cells, clipregion=clip2)
 }

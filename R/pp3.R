@@ -3,7 +3,7 @@
 #
 #  class of three-dimensional point patterns in rectangular boxes
 #
-#  $Revision: 1.22 $  $Date: 2015/05/04 05:02:31 $
+#  $Revision: 1.30 $  $Date: 2019/01/23 02:41:43 $
 #
 
 box3 <- function(xrange=c(0,1), yrange=xrange, zrange=yrange, unitname=NULL) {
@@ -11,7 +11,7 @@ box3 <- function(xrange=c(0,1), yrange=xrange, zrange=yrange, unitname=NULL) {
   stopifnot(is.numeric(yrange) && length(yrange) == 2 && diff(yrange) > 0)
   stopifnot(is.numeric(zrange) && length(zrange) == 2 && diff(zrange) > 0)
   out <- list(xrange=xrange, yrange=yrange, zrange=zrange,
-              units=as.units(unitname))
+              units=as.unitname(unitname))
   class(out) <- "box3"
   return(out)
 }
@@ -42,7 +42,7 @@ as.box3 <- function(...) {
     if(!is.list(a))
       stop("Don't know how to interpret data as a box")
   }
-  return(do.call("box3", a))
+  return(do.call(box3, a))
 }
 
 print.box3 <- function(x, ...) {
@@ -55,11 +55,15 @@ print.box3 <- function(x, ...) {
   invisible(NULL)
 }
 
-unitname.box3 <- function(x) { x$units }
+unitname.box3 <- function(x) { as.unitname(x$units) }
 
 "unitname<-.box3" <- function(x, value) {
-  x$units <- as.units(value)
+  x$units <- as.unitname(value)
   return(x)
+}
+
+grow.box3 <- function(W, left, right=left) {
+  as.box3(grow.boxx(as.boxx(W), left, right))
 }
 
 eroded.volumes <- function(x, r) { UseMethod("eroded.volumes") }
@@ -93,13 +97,14 @@ bounding.box3 <- function(...) {
   box3(xr, yr, zr)
 }
 
-pp3 <- function(x, y, z, ...) {
+pp3 <- function(x, y, z, ..., marks=NULL) {
   stopifnot(is.numeric(x))
   stopifnot(is.numeric(y))
   stopifnot(is.numeric(z)) 
   b <- as.box3(...)
   out <- ppx(data=data.frame(x=x,y=y,z=z), domain=b)
   class(out) <- c("pp3", class(out))
+  if(!is.null(marks)) marks(out) <- marks
   return(out)
 }
 
@@ -110,10 +115,33 @@ is.pp3 <- function(x) { inherits(x, "pp3") }
 npoints.pp3 <- function(x) { nrow(x$data) }
 
 print.pp3 <- function(x, ...) {
-  splat("Three-dimensional point pattern")
-  sd <- summary(x$data)
-  np <- sd$ncases
-  splat(np, ngettext(np, "point", "points"))
+  ism <- is.marked(x, dfok=TRUE)
+  nx <- npoints(x)
+  splat(if(ism) "Marked three-dimensional" else "Three-dimensional",
+        "point pattern:",
+        nx, ngettext(nx, "point", "points"))
+  if(ism) {
+    mks <- marks(x, dfok=TRUE)
+    if(is.data.frame(mks) | is.hyperframe(mks)) {
+      ## data frame of marks
+      exhibitStringList("Mark variables:", names(mks))
+    } else {
+      ## vector of marks
+      if(is.factor(mks)) {
+        exhibitStringList("Multitype, with levels =", levels(mks))
+      } else {
+        ## Numeric, or could be dates
+        if(inherits(mks, "Date")) {
+          splat("marks are dates, of class", sQuote("Date"))
+        } else if(inherits(mks, "POSIXt")) {
+          splat("marks are dates, of class", sQuote("POSIXt"))
+        } else {
+          splat(paste0("marks are", if(is.numeric(mks)) " numeric," else NULL),
+                "of storage type ", sQuote(typeof(mks)))
+        }
+      }
+    }
+  }
   print(x$domain)
   invisible(NULL)
 }
@@ -145,9 +173,18 @@ print.summary.pp3 <- function(x, ...) {
 }
 
 plot.pp3 <- function(x, ..., eye=NULL, org=NULL, theta=25, phi=15,
-                     type=c("p", "n", "h")) {
+                     type=c("p", "n", "h"),
+                     box.back=list(col="pink"),
+                     box.front=list(col="blue", lwd=2)) {
   xname <- short.deparse(substitute(x))
   type <- match.arg(type)
+  # given arguments
+  argh <- list(...)
+  if(!missing(box.front)) argh$box.front <- box.front
+  if(!missing(box.back))  argh$box.back  <- box.back
+  # Now apply formal defaults above
+  formaldefaults <- list(box.front=box.front, box.back=box.back)
+  #'
   coo <- as.matrix(coords(x))
   xlim <- x$domain$xrange
   ylim <- x$domain$yrange
@@ -163,12 +200,13 @@ plot.pp3 <- function(x, ..., eye=NULL, org=NULL, theta=25, phi=15,
   ## determine default eye position and centre of view
   do.call(plot3Dpoints,
           resolve.defaults(list(xyz=coo, eye=eye, org=org, type=type),
-                           list(...),
+                           argh,
                            deefolts,
+                           formaldefaults,
                            list(main=xname,
-                                xlim=x$domain$xrange,
-                                ylim=x$domain$yrange,
-                                zlim=x$domain$zrange)))
+                                xlim=xlim,
+                                ylim=ylim,
+                                zlim=zlim)))
 }
 
 "[.pp3" <- function(x, i, drop=FALSE, ...) {

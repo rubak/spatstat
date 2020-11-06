@@ -56,7 +56,7 @@
 
   For the character method \code{model} must be one of:
   \code{model="Thomas"} for the Thomas process,
-  \code{model="MatClust"} for the Matern cluster process,
+  \code{model="MatClust"} for the \Matern cluster process,
   \code{model="Cauchy"} for the Neyman-Scott cluster process with
   Cauchy kernel, or \code{model="VarGamma"} for the Neyman-Scott
   cluster process with Variance Gamma kernel. For all these models the
@@ -97,12 +97,12 @@
   X <- runifpoint(10)
   clusterfield(kernel, X, scal=0.05)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}.
+\author{\adrian
+  
+  ,
+  \rolf
+  
+  and \ege
+  .
 }
 \keyword{spatial}

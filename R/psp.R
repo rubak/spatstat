@@ -1,7 +1,7 @@
 #
 #  psp.R
 #
-#  $Revision: 1.79 $ $Date: 2015/05/20 03:07:30 $
+#  $Revision: 1.107 $ $Date: 2020/06/13 08:14:28 $
 #
 # Class "psp" of planar line segment patterns
 #
@@ -79,7 +79,7 @@ as.psp <- function(x, ..., from=NULL, to=NULL) {
       stop(paste("The point patterns", sQuote("from"), "and", sQuote("to"),
                  "have different numbers of points.\n"))
     uni <- union.owin(from$window, to$window)
-    Y <- do.call("psp",
+    Y <- do.call(psp,
                  resolve.defaults(list(from$x, from$y, to$x, to$y),
                                   list(...),
                                   list(window=uni)))
@@ -97,14 +97,15 @@ as.psp.psp <- function(x, ..., check=FALSE, fatal=TRUE) {
 }
 
 as.psp.data.frame <- function(x, ..., window=NULL, marks=NULL,
-                              check=spatstat.options("checksegments"), fatal=TRUE) {
+                              check=spatstat.options("checksegments"),
+                              fatal=TRUE) {
   window <- suppressWarnings(as.owin(window,fatal=FALSE))
   if(!is.owin(window)) {
     if(fatal) stop("Cannot interpret \"window\" as an object of class owin.\n")
     return(NULL)
   }
 
-  if(checkfields(x,"marks")) {
+  if(checkfields(x, "marks")) {
     if(is.null(marks)) marks <- x$marks
     else warning(paste("Column named \"marks\" ignored;\n",
                        "argument named \"marks\" has precedence.\n",sep=""))
@@ -115,8 +116,7 @@ as.psp.data.frame <- function(x, ..., window=NULL, marks=NULL,
     out <- psp(x$x0, x$y0, x$x1, x$y1, window=window,
                check=check)
     x <- x[-match(c("x0","y0","x1","y1"),names(x))]
-  }
-  else if(checkfields(x, c("xmid", "ymid", "length", "angle"))) {
+  } else if(checkfields(x, c("xmid", "ymid", "length", "angle"))) {
     rr <- x$length/2
     dx <- cos(x$angle) * rr
     dy <- sin(x$angle) * rr
@@ -127,26 +127,35 @@ as.psp.data.frame <- function(x, ..., window=NULL, marks=NULL,
                    window=bigbox,check=FALSE)
     out <- pattern[window]
     x <- x[-match(c("xmid","ymid","length","angle"),names(x))]
-  }
-  else if(ncol(x) >= 4) {
+  } else if(ncol(x) >= 4) {
     out <- psp(x[,1], x[,2], x[,3], x[,4], window=window,
                check=check)
     x <- x[-(1:4)]
+  } else {
+    ## data not understood
+    if(fatal) 
+      stop("Unable to interpret x as a line segment pattern.", call.=FALSE)
+    return(NULL)
   }
-  else if(fatal)
-    stop("Unable to interpret x as a line segment pattern.", call.=FALSE)
-  else out <- NULL
 
-  if(!is.null(out)) {
-    if(is.null(marks) & ncol(x) > 0) marks <- x
+  if(ncol(x) > 0) {
+    #' additional columns of mark data in 'x'
     if(is.null(marks)) {
-       out$markformat <- "none"
+      marks <- x
     } else {
-       out$marks <- marks
-       out$markformat <- if(is.data.frame(marks)) "dataframe" else "vector"
-       out <- as.psp(out,check=FALSE)
+      warning(paste("Additional columns in x were ignored",
+                    "because argument 'marks' takes precedence"),
+              call.=FALSE)
     }
   }
+
+  if(!is.null(marks)) {
+    #' SUPPRESSED: if(identical(ncol(marks), 1L)) marks <- marks[,1L]
+    #' assign marks directly to avoid infinite recursion
+    out$marks <- marks
+    out$markformat <- markformat(marks)
+  }
+
   return(out)
 }
 
@@ -190,6 +199,7 @@ as.psp.owin <- function(x, ..., window=NULL,
   edges(x, ..., window=window, check=check)
 }
 
+
 edges <- function(x, ...,
                   window=NULL, check=FALSE) {
   x <- as.owin(x)
@@ -210,6 +220,13 @@ edges <- function(x, ...,
   return(out)
 }
 
+xypolygon2psp <- function(p, w, check=spatstat.options("checksegments")) {
+  verify.xypolygon(p)
+  n <- length(p$x)
+  nxt <- c(2:n, 1)
+  return(psp(p$x, p$y, p$x[nxt], p$y[nxt], window=w, check=check))
+}
+         
 
 #################
 
@@ -224,6 +241,8 @@ as.data.frame.psp <- function(x, row.names=NULL, ...) {
 #######  manipulation ##########################
 
 append.psp <- function(A,B) {
+  if(is.null(A) && (is.psp(B) || is.null(B))) return(B)
+  if(is.null(B) && is.psp(A)) return(A)
   verifyclass(A, "psp")
   verifyclass(B, "psp")
   stopifnot(identical(A$window, B$window))
@@ -259,52 +278,40 @@ marks.psp <- function(x, ..., dfok = TRUE) {
 
 "marks<-.psp" <- function(x, ..., value) {
   stopifnot(is.psp(x))
-  if(is.null(value)) {
-    return(unmark(x))
-  }
+  if(is.null(value)) return(unmark(x))
   m <- value
+  if(is.hyperframe(m)) 
+    stop("Hyperframes of marks are not supported in psp objects.\n")
   if(!(is.vector(m) || is.factor(m) || is.data.frame(m) || is.matrix(m)))
     stop("Incorrect format for marks")
 
-    if (is.hyperframe(m)) 
-        stop("Hyperframes of marks are not supported in psp objects.\n")
-    nseg <- nsegments(x)
-    if (!is.data.frame(m) && !is.matrix(m)) {
-        if (length(m) == 1) 
-            m <- rep.int(m, nseg)
-        else if (nseg == 0) 
-            m <- rep.int(m, 0)
-        else if (length(m) != nseg) 
-            stop("Number of marks != number of line segments.\n")
-        marx <- m
-    }
-    else {
-        m <- as.data.frame(m)
-        if (ncol(m) == 0) {
-            marx <- NULL
-        }
-        else {
-            if (nrow(m) == nseg) {
-                marx <- m
-            }
-            else {
-                if (nrow(m) == 1 || nseg == 0) {
-                  marx <- as.data.frame(lapply(as.list(m),function(x,k) {
-                    rep.int(x, k)}, k = nseg))
-                }
-                else stop("Number of rows of data frame != number of points.\n")
-            }
-        }
-    }
-    Y <- as.psp(x$ends, window = x$window, marks = marx, check = FALSE)
-    return(Y)
+  nseg <- nsegments(x)
+  if (!is.data.frame(m) && !is.matrix(m)) {
+    ## vector/factor
+    if (length(m) == 1) 
+      m <- rep.int(m, nseg)
+    else if (nseg == 0) 
+      m <- rep.int(m, 0)
+    else if (length(m) != nseg) 
+      stop("Number of marks != number of line segments.\n")
+    marx <- m
+  } else {
+    ## multiple columns
+    m <- as.data.frame(m)
+    if (ncol(m) == 0) {
+      marx <- NULL
+    } else if (nrow(m) == nseg) {
+      marx <- m
+    } else if (nrow(m) == 1 || nseg == 0) {
+      marx <- as.data.frame(lapply(as.list(m), rep.int, times=nseg))
+    } else stop("Number of rows of data frame != number of line segments")
+  }
+  Y <- as.psp(x$ends, window = x$window, marks = marx, check = FALSE)
+  return(Y)
 }
 
 markformat.psp <- function(x) {
-    mf <- x$markformat
-    if(is.null(mf)) 
-      mf <- markformat(marks(x))
-    return(mf)
+  x$markformat %orifnull% markformat(marks(x))
 }
 
 unmark.psp <- function(X) {
@@ -313,122 +320,7 @@ unmark.psp <- function(X) {
   return(X)
 }
 
-#################################################
-#  plot and print methods
-#################################################
 
-plot.psp <- function(x, ..., main, add=FALSE, show.all=!add, which.marks=1,
-                     ribbon=show.all, ribsep=0.15, ribwid=0.05, ribn=1024,
-                     do.plot=TRUE) {
-  if(missing(main) || is.null(main))
-    main <- short.deparse(substitute(x))
-  verifyclass(x, "psp")
-  #
-  n <- nsegments(x)
-  marx <- marks(x)
-  #
-  use.colour <- !is.null(marx) && (n != 0)
-  do.ribbon <- identical(ribbon, TRUE) && use.colour 
-  ##
-  ## ....   initialise plot; draw observation window  ......
-  owinpars <- setdiff(graphicsPars("owin"), "col")
-  if(!do.ribbon) {
-    ## window of x only
-    bb.all <- as.rectangle(as.owin(x))
-    if(do.plot && show.all)
-      do.call.plotfun("plot.owin", 
-                      resolve.defaults(list(x=x$window, main=main,
-                                            add=add, show.all=show.all),
-                                       list(...)),
-                      extrargs=owinpars)
-  } else {
-    ## enlarged window with room for colour ribbon
-    ## x at left, ribbon at right
-    bb <- as.rectangle(as.owin(x))
-    xwidth <- diff(bb$xrange)
-    xheight <- diff(bb$yrange)
-    xsize <- max(xwidth, xheight)
-    bb.rib <- owin(bb$xrange[2] + c(ribsep, ribsep+ribwid) * xsize,
-                   bb$yrange)
-    bb.all <- boundingbox(bb.rib, bb)
-    if(do.plot) {
-      pt <- prepareTitle(main)
-      ## establish coordinate system
-      if(!add)
-      do.call.plotfun("plot.owin",
-                      resolve.defaults(list(x=bb.all,
-                                            type="n",
-                                            main=pt$blank),
-                                       list(...)),
-                      extrargs=owinpars)
-      ## now plot window of x
-      ## with title centred on this window
-      if(show.all) {
-        do.call.plotfun("plot.owin", 
-                        resolve.defaults(list(x=x$window,
-                                              add=TRUE,
-                                              main=main,
-                                              show.all=TRUE),
-                                         list(...)),
-                        extrargs=owinpars)
-        ## title done. 
-        main <- ""
-      }
-    }
-  }
-
-  # plot segments
-  if(n == 0) {
-    result <- symbolmap()
-    attr(result, "bbox") <- bb.all
-    return(invisible(result))
-  }
-  
-  # determine colours if any
-  if(!use.colour) {
-    # black
-    col <- colmap <- NULL
-  } else {
-    # multicoloured 
-    marx <- as.data.frame(marx)[, which.marks]
-    if(is.character(marx) || length(unique(marx)) == 1)
-      marx <- factor(marx)
-    if(is.factor(marx)) {
-      lev <- levels(marx)
-      colmap <- colourmap(col=rainbow(length(lev)), inputs=factor(lev))
-    } else {
-      if(!all(is.finite(marx)))
-        warning("Some mark values are infinite or NaN or NA")
-      colmap <- colourmap(col=rainbow(ribn), range=range(marx, finite=TRUE))
-    }
-    col <- colmap(marx)
-  }
-
-  ## convert to greyscale?
-  if(spatstat.options("monochrome")) {
-    col <- to.grey(col)
-    colmap <- to.grey(colmap)
-  }
-
-  if(do.plot) {
-    ## plot segments
-    do.call.plotfun("segments",
-                    resolve.defaults(as.list(x$ends),
-                                     list(...),
-                                     list(col=col),
-                                     .StripNull=TRUE),
-                    extrargs=names(par()))
-    ## plot ribbon
-    if(do.ribbon) 
-      plot(colmap, vertical=TRUE, add=TRUE,
-           xlim=bb.rib$xrange, ylim=bb.rib$yrange)
-  }
-  
-  # return colour map
-  result <- colmap %orifnull% colourmap()
-  attr(result, "bbox") <- bb.all
-  return(invisible(result))
-}
 
 print.psp <- function(x, ...) {
   verifyclass(x, "psp")
@@ -532,9 +424,12 @@ midpoints.psp <- function(x) {
   ppp(x=xm, y=ym, window=win, check=FALSE)
 }
 
-lengths.psp <- function(x) {
+lengths_psp <-
+  lengths.psp <-
+  function(x, squared=FALSE) {
   verifyclass(x, "psp")
-  eval(expression(sqrt((x1-x0)^2 + (y1-y0)^2)), envir=x$ends)
+  lengths2 <- eval(expression((x1-x0)^2 + (y1-y0)^2), envir=x$ends)
+  return(if(squared) lengths2 else sqrt(lengths2))
 }
 
 angles.psp <- function(x, directed=FALSE) {
@@ -547,7 +442,7 @@ angles.psp <- function(x, directed=FALSE) {
 
 summary.psp <- function(object, ...) {
   verifyclass(object, "psp")
-  len <- lengths.psp(object)
+  len <- lengths_psp(object)
   out <- list(n = object$n,
               len = summary(len),
               totlen = sum(len),
@@ -576,13 +471,21 @@ print.summary.psp <- function(x, ...) {
   return(invisible(NULL))
 }
 
-  
+extrapolate.psp <- function(x, ...) {
+  verifyclass(x, "psp")
+  theta <- (angles.psp(x) + pi/2) %% (2*pi)
+  p <- with(x$ends, x1*cos(theta) + y1 * sin(theta))
+  result <- infline(p=p, theta=theta)
+  return(result)
+}
+
+
 ########################################################
 #  subsets
 ########################################################
 
 "[.psp" <-
-  function(x, i, j, drop, ...) {
+  function(x, i, j, drop, ..., fragments=TRUE) {
 
     verifyclass(x, "psp")
     
@@ -593,7 +496,7 @@ print.summary.psp <- function(x, ...) {
       style <- if(inherits(i, "owin")) "window" else "index"
       switch(style,
              window={
-               x <- clip.psp(x, window=i, check=FALSE)
+               x <- clip.psp(x, window=i, check=FALSE, fragments=fragments)
              },
              index={
                enz <- x$ends[i, ]
@@ -628,22 +531,15 @@ affine.psp <- function(X,  mat=diag(c(1,1)), vec=c(0,0), ...) {
 
 shift.psp <- function(X, vec=c(0,0), ..., origin=NULL) {
   verifyclass(X, "psp")
+  W <- Window(X)
   if(!is.null(origin)) {
-    stopifnot(is.character(origin))
     if(!missing(vec))
-      warning("Argument vec ignored; argument origin has precedence.\n")
-    origin <- pickoption("origin", origin, c(centroid="centroid",
-                                             midpoint="midpoint",
-                                             bottomleft="bottomleft"))
-    W <- as.owin(X)
-    locn <- switch(origin,
-                   centroid={ unlist(centroid.owin(W)) },
-                   midpoint={ c(mean(W$xrange), mean(W$yrange)) },
-                   bottomleft={ c(W$xrange[1], W$yrange[1]) })
-    return(shift(X, -locn))
+      warning("argument vec ignored; argument origin has precedence")
+    locn <- interpretAsOrigin(origin, W)
+    vec <- -locn
   }
   # perform shift
-  W <- shift.owin(X$window, vec=vec, ...)
+  W <- shift.owin(W, vec=vec, ...)
   E <- X$ends
   ends0 <- shiftxy(list(x=E$x0,y=E$y0), vec=vec, ...)
   ends1 <- shiftxy(list(x=E$x1,y=E$y1), vec=vec, ...)
@@ -675,15 +571,17 @@ rotate.psp <- function(X, angle=pi/2, ..., centre=NULL) {
 
 is.empty.psp <- function(x) { return(x$n == 0) } 
 
-identify.psp <- function(x, ..., labels=seq_len(nsegments(x)), n=nsegments(x), plot=TRUE) {
+identify.psp <- function(x, ..., labels=seq_len(nsegments(x)),
+                         n=nsegments(x), plot=TRUE) {
   Y <- x
   W <- as.owin(Y)
   mids <- midpoints.psp(Y)
+  poz <- c(1, 2,4, 3)[(floor(angles.psp(Y)/(pi/4)) %% 4) + 1L]
   if(!(is.numeric(n) && (length(n) == 1) && (n %% 1 == 0) && (n >= 0)))
     stop("n should be a single integer")
   out <- integer(0)
   while(length(out) < n) {
-    xy <- locator(1)
+    xy <- spatstatLocator(1)
     # check for interrupt exit
     if(length(xy$x) == 0)
       return(out)
@@ -698,7 +596,11 @@ identify.psp <- function(x, ..., labels=seq_len(nsegments(x)), n=nsegments(x), p
         # Display
         mi <- mids[ident]
         li <- labels[ident]
-        text(mi$x, mi$y, labels=li)
+        po <- poz[ident]
+        do.call.matched(graphics::text.default,
+                        resolve.defaults(list(x=mi$x, y=mi$y, labels=li),
+                                         list(...),
+                                         list(pos=po)))
       }
       out <- c(out, ident)
     }
@@ -735,5 +637,55 @@ edit.psp <- function(name, ...) {
   y <- edit(as.data.frame(x), ...)
   xnew <- as.psp(y, window=Window(x))
   return(xnew)
+}
+
+text.psp <- function(x, ...) {
+  mids <- midpoints.psp(x)
+  poz <- c(1, 2,4, 3)[(floor(angles.psp(x)/(pi/4)) %% 4) + 1L]
+  do.call.matched(graphics::text.default,
+                  resolve.defaults(list(x=mids$x, y=mids$y),
+                                   list(...),
+                                   list(pos=poz),
+                                   .StripNull=TRUE))
+  return(invisible(NULL))
+}
+
+intensity.psp <- function(X, ..., weights=NULL) {
+  len <- lengths_psp(X)
+  a <- area(Window(X))
+  if(is.null(weights)) {
+    ## unweighted case - for efficiency
+    if(is.multitype(X)) {
+      mks <- marks(X)
+      answer <- tapply(len, mks, sum)/a
+      answer[is.na(answer)] <- 0
+      names(answer) <- levels(mks)
+    } else answer <- sum(len)/a
+    return(answer)
+  }
+  ## weighted case 
+  if(is.numeric(weights)) {
+    check.nvector(weights, nsegments(X), things="segments")
+  } else if(is.expression(weights)) {
+    # evaluate expression in data frame of coordinates and marks
+    df <- as.data.frame(X)
+    pf <- parent.frame()
+    eval.weights <- try(eval(weights, envir=df, enclos=pf))
+    if(inherits(eval.weights, "try-error"))
+      stop("Unable to evaluate expression for weights", call.=FALSE)
+    if(!check.nvector(eval.weights, nsegments(X), fatal=FALSE, warn=TRUE))
+      stop("Result of evaluating the expression for weights has wrong format")
+    weights <- eval.weights
+  } else stop("Unrecognised format for argument 'weights'")
+  ##
+  if(is.multitype(X)) {
+    mks <- marks(X)
+    answer <- as.vector(tapply(weights * len, mks, sum))/a
+    answer[is.na(answer)] <- 0
+    names(answer) <- levels(mks)
+  } else {
+    answer <- sum(weights)/a
+  }
+  return(answer)
 }
 

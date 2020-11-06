@@ -34,7 +34,7 @@ rmixpois(n, mu, sd, invlink = exp)
   }
   \item{lower.tail}{
     Logical. If \code{TRUE} (the default), probabilities are
-    \eqn{P[X <= x]}, otherwise, \eqn{P[X > x]}.
+    \eqn{P[X \le x]}, otherwise, \eqn{P[X > x]}.
   }
   \item{GHorder}{
     Number of quadrature points in the Gauss-Hermite quadrature approximation.
@@ -51,7 +51,7 @@ rmixpois(n, mu, sd, invlink = exp)
 
   In effect, the Poisson mean parameter \code{lambda} is randomised
   by setting \code{lambda = invlink(Z)} where \code{Z}
-  has a Gaussian \eqn{N(\mu,\sigma^2)}{N(mu, sigma^2)} distribution.
+  has a Gaussian \eqn{N(\mu,\sigma^2)}{N(\mu, \sigma^2)} distribution.
   The default is \code{invlink=exp} which means that
   \code{lambda} is lognormal. Set \code{invlink=I} to assume
   that \code{lambda} is approximately Normal.
@@ -86,11 +86,11 @@ rmixpois(n, mu, sd, invlink = exp)
   mean(x)
   var(x)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/},
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
+\author{\adrian
+  
+  ,
+  \rolf
+  
+  and \ege
 }
 \keyword{distribution}

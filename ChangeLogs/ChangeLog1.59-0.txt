@@ -1,0 +1,1262 @@
+Change log from 1.58-2 to 1.58-3
+================================
+
+13 jan 2019
+
+   wingeom.R
+	Bug fixes to incircle and inpoint (handling very thin windows) 
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Version 1.58-2.001
+	Nickname "Dog's Breakfast"
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   pairorient.R
+   pairorient.Rd
+	Default edge correction now includes 'bord.modif'.
+
+   tests/circular.R [New file]
+        Code for circular/periodic distributions
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.002
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   doc/datasets.Rnw
+	Minor correction
+
+14 jan 2019
+
+   effectfun.R
+	Bug fix in handling dataframes of covariates
+	
+   tests/prediction.R
+	Test handling of data frames of covariates
+
+   quadclass.R
+   coords.Rd
+	New method 'coords.quad'
+	
+   funxy.R
+	spatstat.xy.coords now handles quadrature schemes
+	so that 'funxy' objects can now be applied to quadrature schemes.
+
+   tests/func.R
+	Test funxy handling of ppp, lpp, quad
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.003
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+17 jan 2019
+
+   close3Dpairs.R
+	Bug fix.
+
+   tests/closeshave.R
+	More tests of 3D closepairs/crosspairs code
+
+   tests/windows.R
+	More tests of window geometry code
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.004
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+18 jan 2019
+
+   edgeTrans.R
+	Buglet fix in rmax.Rigid
+	
+   tests/Kfuns.R
+	Test edge correction computations and compare results.
+
+   laslett.Rd
+	More examples
+
+   tests/splitpea.R
+	More tests of splitppx class
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.005
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+20 jan 2019
+
+   treebranches.R
+	Bug fix in extractbranch.lpp
+
+   tests/lppstuff.R
+	Tests of tree branch code.
+
+   cut.ppp.Rd
+	Added example of cut(<ppp>, <owin>)
+
+   tests/quadschemes.R
+	Tests of code for quadrature weights.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.006
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   areadiff.R
+	Rationalised code.
+
+   tests/discarea.R
+	More tests of code blocks
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.007
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   demo/sumfun.R
+	Neatened plot margins
+	Added examples of rose diagrams.
+
+   anova.mppm.R
+	Fixed scoping problem in the single-model case
+	
+   anova.mppm.Rd
+   tests/mppm.R
+	Run more code blocks in anova.mppm
+
+   lohboot.R
+	Streamlined and neatened the code.
+
+   tests/Kfuns.R
+	Added tests of code blocks in lohboot.
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.008
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   tests/Kfuns.R
+	More tests of 'Ksector'
+
+22 jan 2019
+
+   anova.mppm.R
+        Improved handling of scope
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.009
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   nncorr.R
+   nncorr.Rd
+	New argument 'na.action' for nncorr, nnmean, nnvario
+
+   ewcdf.Rd
+	Tweaked example
+
+   tests/imageops.R
+	Added test of 'safelookup' code for fallback case.
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.010
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   sparsecommon.R
+	Bug fixes in mapSparseEntries
+
+   sparsecommon.R
+   spatstat-internal.Rd
+	mapSparseEntries now allows 'values' to be sparse.
+	New internal function 'check.anySparseVector'
+	
+   tests/leverinf.R
+	More tests of leverage code blocks.
+
+   pp3.R
+   pp3.Rd
+	pp3 has new argument 'marks'
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.011
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 jan 2019
+
+   news.R
+   latest.news.Rd
+	New argument 'major'
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.012
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+25 jan 2019
+
+    tests/kppm.R
+	More tests of cluster model infrastructure
+
+    tests/Kfuns.R
+	Added test of compareFit
+
+    tests/windows.R
+	Added test of dilated.areas(exact=FALSE)
+
+    tests/closeshave.R
+	Added tests of 'weightedclosepairs' (currently in strauss.R)
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.013
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+29 jan 2019
+
+    colourschemes.R
+	Bug fix in beachcolours (thanks to Tilman)
+	Improved position of 'sealevel' colour
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Caution Wake Turbulence'
+	Version 1.58-2.014
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   simulate.detPPF.R
+	Added checks for argument format in 'dppeigen'
+
+   tests/deepeepee.R
+	Added tests of code blocks in 'dppeigen'
+
+30 jan 2019
+
+   tests/density.R
+	Test more code blocks in Smooth.ppp
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.015
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+31 jan 2019
+
+   pspcross.R
+	Accelerated 'selfcut.psp'
+	Result of selfcut.psp now includes tracing information
+
+   linnet.R
+	Accelerated as.linnet.psp
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.016
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+02 feb 2019
+
+   tests/ippm.R
+	Added tests of update.ippm
+	
+   ippm.R
+	Tweak to improve handling when iScore=NULL.
+
+   adaptive.density.R
+   adaptive.density.Rd
+	adaptive.density is now generic with a method for class 'ppp'.
+	New arguments 'method' and 'fixed'
+	New code for smoothed Voronoi estimator
+
+   tests/density.R
+	Tests for new code in adaptive.density.ppp
+
+   deldir.R
+   relrisk.R
+   random.R
+	Bug fixes in handling trivial patterns (0 or 1 point)
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.017
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+06 feb 2019
+
+   adaptive.density.R
+	Bug fix
+	Accelerated computation when method='count'
+
+   adaptive.density.Rd
+	Tweak
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.018
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   adaptive.density.R -> densityVoronoi.R [renamed]
+   adaptive.density.Rd -> densityVoronoi.Rd [renamed]
+       Function renamed.
+
+   densityAdaptiveKernel.R [New file]
+   densityAdaptiveKernel.Rd [New file]
+       New function for variable-bandwidth kernel estimation
+       Currently a stub.
+       
+   adaptive.density.R 
+   adaptive.density.Rd
+       This is now a wrapper which calls either densityVoronoi
+       or densityAdaptiveKernel.
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.019
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   lintileindex.c [New file]
+       Experimental C code to compute tile index in a linear tessellation.
+
+   lintess.R
+   spatstat-internal.Rd
+	Experimental function 'lineartileindex' using C code
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.020
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   lintess.R
+   spatstat-internal.Rd
+	Bug fixes and extension of code
+
+   tests/lppstuff.R
+	Added tests of lineartileindex and related code
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.021
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   distbdry.R
+	rebound.owin handles unitnames
+	(suggested by Kass)
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.022
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 feb 2019
+
+   lintess.R
+	Accelerated 'lineartileindex'
+	Used 'lineartileindex' to accelerate 'as.linfun.lintess'
+
+   tests/lppstuff.R
+	Tests of validity of 'lineartileindex'
+
+   nndist.Rd
+	Added cross-references to other methods
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.023
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    lineartileindex.Rd [New file]
+    spatstat-internal.Rd
+	Exposed 'lineartileindex'
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.024
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 feb 2019
+
+   densitylppVoronoi.R [New file]
+   densityVoronoi.lpp.Rd [New file]
+   bw.voronoi.Rd [New file]
+   	Smoothed Voronoi intensity estimator on linear network
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname "J'ai omis les oeufs de caille"
+	Version 1.58-2.025
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+10 feb 2019
+
+   rescale.R
+   window.R
+	The geometrical type of the window is now preserved
+	(previous behaviour 'rescued' rectangles and this caused
+	a bug in inside.owin)
+
+  tests/windows.R
+	Test of bug in inside.owin
+
+  lurkmppm.R
+	Bug fix in lurking.mppm
+	and hardened against internal errors
+	
+  tests/mppm.R
+	Test of bug in lurking.mppm
+
+  tests/vcovppm.R
+	More tests of code blocks
+
+  tests/ppmtricks.R
+	Tests of class 'plotppm'
+
+  tests/factorbugs.R
+	Test relevel and mergeLevels for images and point patterns
+
+  tests/density.R
+	More tests of evaluate2Dkernel
+
+   densityVoronoi.lpp.Rd
+	Corrected some text
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.026
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+11 february 2019
+
+   tests/leverinf.R
+	Test of src/areapair.c
+
+   tests/density.R
+	Test standard error calculations in idw
+
+   tests/rmhBasic.R
+	Test more blocks of C code for interaction terms
+
+   rmhmodel.Rd
+   rmhmodel.default.Rd
+	Added cross-references
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.027
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 feb 2019
+
+   pcf.R
+   pcf.ppp.Rd
+	pcf.ppp now accepts correction="none"
+
+   tests/Kfuns.R
+	Added tests of pcf.ppp(correction='none')
+
+   DESCRIPTION
+   NEWS
+	Acknowledged Max Hesselbarth
+	Version 1.58-2.028
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   kppm.Rd
+	Rearranged examples to track down an obscure bug/problem in Appveyor test
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.029
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 february 2019
+
+   closepairs.R
+   spatstat-internal.Rd
+	New internal function 'tweak.closepairs'
+
+   densitylppVoronoi.R
+	Bug fix in looVoronoi
+
+   kppm.R
+   clusterfit.R
+	clusterfit has new argument 'verbose'.
+	
+   kppm.Rd
+   otherpackages.R
+	More tweaking to track down appveyor problem
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.030
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   kppm.Rd
+	Removed debugging flag
+
+   tests/nndist.R
+	Covered some more C code blocks
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.031
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+15 feb 2019
+
+   measures.R
+	Bug fix in augment.msr calculation of default 'sigma'.
+	Modified scalardilate.msr
+
+   leverage.R
+	Tweaked the definition of 'avenndist'
+	
+   integral.msr.Rd
+	More examples
+
+   tests/msr.R [New file]
+   	tests of code for measures
+
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.032
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   logistic.R
+	The result of logi.engine now has the same format as mpl.engine
+
+   tests/ippm.R
+	Tests for ippm objects fitted with logistic likelihood.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.58-2.033
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+18 feb 2018
+
+   quantess.R
+	Bug fix in quantess.owin
+
+   tess.R
+	Bug fix in tileindex when the tessellation is an image
+
+   blur.R
+	safelookup does not try to blur a factor-valued image.
+
+   quadrattest.R
+	Cressie-Read statistic now handles observed values of zero.
+	
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Lucia Cobo Sanchez
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.034
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+19 feb 2019
+
+   images.R
+	Ensure nearest.pixel, nearest.valid.pixel always return integer indices.
+
+   nearestpix.c [New file]
+   	C code for 'nearest.valid.pixel'
+	
+   images.R
+   spatstat-internal.Rd
+	Added option: method="C" in nearest.valid.pixel
+
+   tests/imageops.R
+	Added test of nearest.valid.pixel
+	
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.035
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   images.R
+	Set default method="C" in nearest.valid.pixel
+
+   tests/imageops.R
+	tweak
+
+   tess.R
+	Tweak to 'tileindex' to eliminate NA's
+	when the tessellation is defined by an image.
+	
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.036
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+20 feb 2019
+
+   discarea.R
+   eval.fv.R
+   formulae.R
+   hierpair.family.R
+   is.cadlag.R
+   mpl.R
+   pairwise.R
+   plot.im.R
+   predict.ppm.R
+   rmh.default.R
+   rmhmodel.R
+   rmhResolveTypes.R
+   round.R
+   saturated.R
+   units.R
+	Replaced identical(,TRUE) with isTRUE()
+
+   predictmppm.R
+	Extended to cover the case where 'locations' is a data frame
+	and the model is Poisson.
+
+   tests/mppm.R
+	More tests of predict.mppm
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.037
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   src/linalg.c
+	Bug fix in Csum2outer (affecting sumouter(x, , y))
+	
+   fgk3.R
+	Ancient bug fix 
+
+   tests/linalgeb.R
+   tests/nndist.R
+   tests/rmhmodelHybrids.R
+   tests/rmh.ppm.R
+	More tests
+
+   tests/threedee.R
+	Bug fix in test code.
+
+   LennardJones.Rd
+	Added an example of a valid fitted model.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.038
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+22 feb 2019
+
+   tess.R
+	Improved tile names in intersect.tess in trivial cases.
+
+   images.R
+   spatstat-internal.Rd
+	New function 'ZeroValue'
+
+   linfun.R
+	Bug fix in as.linim.linfun for factor-valued functions.
+	Spotted by Suman.
+
+   polartess.R [New file]
+   polartess.Rd [New file]
+   	Tessellations in polar coordinates.
+
+   tess.Rd
+   quadrats.Rd
+   quantess.Rd
+   venn.tess.Rd
+	Added cross-references.
+
+   kppm.R
+	Bug fix in update.kppm
+
+   tests/kppm.R
+	Test of bug in update.kppm
+	
+   affine.R
+   spatstat-internal.Rd
+	New function 'interpretAsOrigin'.
+
+   affine.R
+   images.R
+   psp.R
+   shift.Rd
+   shift.im.Rd
+   shift.owin.Rd
+   shift.ppp.Rd
+   shift.psp.Rd
+	New options for the argument 'origin' in shift methods.
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+        Acknowledged Luke Yates.
+        Version 1.58-2.039
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+23 feb 2019
+
+   Jinhom.R
+   Jinhom.Rd
+   Ginhom.Rd
+   Finhom.Rd
+	New arguments warn.bias and savelambda.
+	Issues a warning if bias is likely, due to undersmoothing.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.040
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+26 feb 2019
+
+   envelope.R
+	envelope.matrix now saves all simulated function values
+	rather than just the values used to compute the envelope.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.041
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+27 feb 2019
+
+   envelope.R
+   dclftest.R
+   envelope.Rd
+   envelope.lpp.Rd
+   envelope.pp3.Rd
+	Argument 'simulate' can now be a function such as 'rlabel'.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.042
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+28 feb 2019
+
+   linfun.Rd
+	Improved explanation of additional arguments.
+
+   updates.Rnw
+   bugfixes.Rnw
+	Documented all of the above.
+
+01 march 2019
+
+   envelope.R
+	Bug fix
+
+   is.subset.owin.R
+	Bug fix
+	
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Jan Sulavik
+        Version 1.58-2.043
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 march 2018
+
+   lineardisc.R
+   lineardisc.Rd
+	Function 'countends' has new argument 'internal'
+	allowing a short cut.
+
+   linearK.R
+   linearKmulti.R
+   spatstat-internal.Rd
+	New internal functions 'DoCountEnds', 'DoCountCrossEnds'
+	use the shortcut when the network is disconnected.
+	
+   linearK.R
+   linearpcf.R
+	Use DoCountEnds.
+
+   linearKmulti.R
+   linearpcfmulti.R
+	Use DoCountCrossEnds.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.045
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   bugfixes.Rnw
+	Typo.
+
+   bw.abram.R [New file]
+   bw.abram.Rd [New file]
+   	Abramson bandwidths.
+
+   densityAdaptiveKernel.R
+   densityAdaptiveKernel.Rd
+	These are now the adaptive density estimates
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.046
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 mar 2018
+
+   bw.abram.R
+   bw.abram.Rd
+	Changed defaults.
+
+   densityAdaptiveKernel.R
+   densityAdaptiveKernel.Rd
+	Rewritten to use only the simple 'observation-specific bandwidths'
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.047
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   bw.abram.Rd
+   densityAdaptiveKernel.Rd
+	Polished.
+
+   bugfixes.Rnw
+   updates.Rnw
+	updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.048
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 mar 2019
+
+   densityAdaptiveKernel.Rd
+	Polished.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.049
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   colourtables.R
+	plot.colourmap now handles a colour map for the range [a,a]
+
+   plot.im.R
+	Improved behaviour when the image values are almost constant.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.050
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   spatialcdf.R
+	Bug fix and acceleration.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.051
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 mar 2019
+
+   ewcdf.R
+	Encoded the case weights=NULL separately, for speed.
+
+   ewcdf.R
+   ewcdf.Rd
+	New arguments 'normalise' and 'adjust'
+	
+   tabnum.c [New file]
+   ewcdf.R
+	Now uses C routines
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.052
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   updates.Rnw
+   bugfixes.Rnw
+	updated to cover all the above.
+
+   ewcdf.R
+	Dummkopf bug
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.053
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   densityAdaptiveKernel.Rd
+	Corrected cross-reference to sparr.
+
+   ewcdf.R
+   ewcdf.Rd
+	Does not inherit 'ecdf' if normalise=FALSE.
+
+   DESCRIPTION
+   NEWS
+        Version 1.58-2.054
+
+------------- passed R-3.5.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 mar 2019
+
++++++++++++++   installed R 3.5.3      +++++++++++++++
+++++++++++++ installed polyclip 1.10-0 +++++++++++++++
+
+    polartess.R
+	Bug fix in handling 'origin'
+
+    quantess.R
+    quantess.Rd
+	The covariate Z can now be "rad" or "ang" for polar coordinates.
+	New argument 'origin'.
+
+    tests/tessera.R
+	More tests of quantess, polartess.
+	
+    DESCRIPTION
+        Version 1.58-2.055
+	Depends on polyclip >= 1.10-0
+	Added baddstats/polyclip to Remotes
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    polartess.Rd
+	Improved example.
+
+    effectfun.R
+    effectfun.Rd
+	New argument 'nvalues'.
+
+    parres.R
+    parres.Rd
+        'covariate' is allowed to be missing
+	if the model only depends on one covariate.
+
+    tess.Rd
+	More cross-references
+
+    demo/spatstat.R
+	Added a section on Tessellations including quantess, polartess etc
+	
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.056
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+15 mar 2019
+
+   updates.Rnw
+	Updated to cover all the above.
+
+16 mar 2019
+
+   circarcs.R [New file]
+   spatstat-internal.Rd
+	Internal support for arcs on a circle.
+
+   tests/circular.R
+	Added tests for code in circarcs.R
+
+   quantess.R
+   quantess.Rd
+   spatstat-internal.Rd
+	Improved behaviour in angular case.
+	New argument 'eps'.
+	
+   tess.R
+	Bug fix in plot.tess (arrangement of tile names)
+	
+   updates.Rnw
+   bugfixes.Rnw
+	Updated to cover all the above.
+
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.057
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+18 feb 2019
+
+   envelope.R
+   spatstat-internal.Rd
+	New arguments to envelopeEngine to control the action
+	when the simulated functions cause too many errors.
+
+   alltypes.R
+   alltypes.Rd
+	Doesn't fall over when the simulated functions cause too many errors,
+	when envelope=TRUE.
+
+   tests/envelopes.R
+	Added test of envelope() and alltypes() when the
+	simulated functions cause too many errors.
+	
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.058
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    envelope.R
+	Improved handling of errors when simtype="list"
+	
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.059
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    kppm.R
+    simulate.kppm.Rd
+	Additional arguments '...' are passed to the simulation function.
+
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.060
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+    randomNS.R
+	Bug fix (attribute 'Lambda' was not an image
+	unless the window was a rectangle)
+
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.061
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+21 mar 2019
+
++++++++++++++ passed 'make bookcheck'  +++++++++++++++
+
+    densitylppVoronoi.R
+	Bug fixes in handling empty point patterns
+
+    densitylppVoronoi.R
+    linearKmulti.R
+    linearpcfmulti.R
+    quantess.R
+	Removed unused variables.
+
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.062
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+22 mar 2019
+
+   updates.Rnw
+   bugfixes.Rnw
+	Updated to cover all the above.
+
+    DESCRIPTION
+    NEWS
+        Version 1.58-2.063
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+............. passed codetools check   ...............
+............. passed 'make bookcheck'  ...............
+............. passed 'make develcheck' ...............
+
+    linequad.Rd
+	More explanation
+
+    DESCRIPTION
+    NEWS
+        Version 1.59-0
+	
+------------- passed R-3.5.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+	
+

@@ -1,7 +1,7 @@
 ##
 ##    hierstrauss.R
 ##
-##    $Revision: 1.8 $	$Date: 2015/05/27 08:04:38 $
+##    $Revision: 1.10 $	$Date: 2018/03/15 07:37:41 $
 ##
 ##    The hierarchical Strauss process
 ##
@@ -91,6 +91,7 @@ HierStrauss <- local({
        parnames = c("possible types",
                     "interaction distances",
                     "hierarchical order"),
+       hasInf   = FALSE,
        selfstart = function(X, self) {
          if(!is.null(self$par$types) && !is.null(self$par$archy))
            return(self)
@@ -107,7 +108,7 @@ HierStrauss <- local({
            if(length(types) == 0)
              stop(paste("The", sQuote("types"),"argument should be",
                         "either NULL or a vector of all possible types"))
-           if(any(is.na(types)))
+           if(anyNA(types))
              stop("NA's not allowed in types")
            if(is.factor(types)) {
              types <- levels(types)

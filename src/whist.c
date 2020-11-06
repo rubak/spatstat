@@ -9,7 +9,10 @@
 
   indices point to bins (range: 0 to nbins-1)
   
-  $Revision: 1.4 $  $Date: 2014/08/07 12:52:54 $
+  $Revision: 1.6 $  $Date: 2018/12/18 02:43:11 $
+
+  Copyright (C) Adrian Baddeley, Ege Rubak and Rolf Turner 2001-2018
+  Licence: GNU Public Licence >= 2
 
 */
 
@@ -18,7 +21,7 @@
 #include <R_ext/Utils.h>
 
 SEXP Cwhist(SEXP indices, SEXP weights, SEXP nbins) {
-  int i, j, a, N, M; 
+  int i, j, N, M; 
   int *x;
   double *w, *y;
   SEXP result;

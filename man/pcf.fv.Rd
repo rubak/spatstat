@@ -133,20 +133,17 @@
 }
 \examples{
   # univariate point pattern
-  data(simdat)
+  X <- simdat
   \testonly{
-    simdat <- simdat[seq(1,simdat$n, by=4)]
+    X <- X[seq(1,npoints(X), by=4)]
   }
-  K <- Kest(simdat)
+  K <- Kest(X)
   p <- pcf.fv(K, spar=0.5, method="b")
   plot(p, main="pair correlation function for simdat")
   # indicates inhibition at distances r < 0.3
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{nonparametric}

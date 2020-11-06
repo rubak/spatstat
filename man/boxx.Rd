@@ -35,11 +35,8 @@ boxx(..., unitname = NULL)
 \value{
   An object of class \code{"boxx"}. There is a print method for this class.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{ppx}},

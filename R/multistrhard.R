@@ -2,7 +2,7 @@
 #
 #    multistrhard.S
 #
-#    $Revision: 2.37 $	$Date: 2015/05/27 06:42:34 $
+#    $Revision: 2.39 $	$Date: 2018/03/15 07:37:41 $
 #
 #    The multitype Strauss/hardcore process
 #
@@ -125,6 +125,7 @@ doMultiStraussHard <- local({
          pardesc  = c("vector of possible types",
                       "matrix of interaction distances",
                       "matrix of hardcore distances"),
+         hasInf   = TRUE,
          selfstart = function(X, self) {
            types <- self$par$types
            hradii <- self$par$hradii
@@ -154,7 +155,7 @@ doMultiStraussHard <- local({
              if(length(types) == 0)
                stop(paste("The", sQuote("types"),"argument should be",
                           "either NULL or a vector of all possible types"))
-             if(any(is.na(types)))
+             if(anyNA(types))
                stop("NA's not allowed in types")
              if(is.factor(types)) {
                types <- levels(types)

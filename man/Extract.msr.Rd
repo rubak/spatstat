@@ -36,15 +36,16 @@
   \code{\link{msr}}
 }
 \examples{
-   example(msr)
+   X <- rpoispp(function(x,y) { exp(3+3*x) })
+   fit <- ppm(X ~x+y)
+   rp <- residuals(fit, type="pearson")
+   rs <- residuals(fit, type="score")
+
    rp[square(0.5)]
    rs[ , 2:3]
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{manip}

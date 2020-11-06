@@ -35,6 +35,7 @@ Gest(X, r=NULL, breaks=NULL, \dots,
     A vector of character strings selected from
     \code{"none"}, \code{"rs"}, \code{"km"}, \code{"Hanisch"}
     and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{domain}{
     Optional. Calculations will be restricted to this subset
@@ -100,7 +101,7 @@ Gest(X, r=NULL, breaks=NULL, \dots,
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape. 
 
   The argument \code{X} is interpreted as a point pattern object 
@@ -229,11 +230,11 @@ Gest(X, r=NULL, breaks=NULL, \dots,
      plot(G, asin(sqrt(.)) ~ asin(sqrt(theo)))
   }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

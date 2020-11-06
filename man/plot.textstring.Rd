@@ -31,15 +31,11 @@
 \examples{
   W <- Window(humberside)
   te <- textstring(centroid.owin(W), txt="Humberside", cex=2.5)
+  te
   plot(layered(W, te), main="")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{onearrow}},

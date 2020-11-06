@@ -1,7 +1,7 @@
 #
 #    predict.ppm.S
 #
-#	$Revision: 1.90 $	$Date: 2015/04/21 13:14:28 $
+#	$Revision: 1.111 $	$Date: 2019/04/27 07:22:19 $
 #
 #    predict.ppm()
 #	   From fitted model obtained by ppm(),	
@@ -53,9 +53,9 @@ predict.ppm <- local({
     out
   }
 
-  typeaccept <- c("trend", "cif", "lambda", "intensity", "count", "se", "SE")
-  typeuse    <- c("trend", "cif", "cif",    "intensity", "count", "se", "se")
   typepublic <- c("trend", "cif", "intensity", "count")
+  typeaccept <- c(typepublic, "lambda", "se", "SE", "covariates")
+  typeuse    <- c(typepublic, "cif",    "se", "se", "covariates")
   
   predict.ppm <- function(object, window=NULL, ngrid=NULL, locations=NULL,
                           covariates=NULL,
@@ -65,7 +65,10 @@ predict.ppm <- local({
                           level = 0.95,
                           X=data.ppm(object),
                           correction,
-                          ..., new.coef=NULL, check=TRUE, repair=TRUE) {
+                          ignore.hardcore=FALSE,
+                          ...,
+                          dimyx=NULL, eps=NULL, 
+                          new.coef=NULL, check=TRUE, repair=TRUE) {
     interval <- match.arg(interval)
     ## extract undocumented arguments 
     xarg <- xtract(...)
@@ -191,14 +194,15 @@ predict.ppm <- local({
         ## quadrats
         tilz <- tiles(window)
         if(!seonly) {
-          est <- unlist(lapply(tilz, predconfPois,
-                               object=model, level=level, what=estimatename))
-          if(interval != "none") # reshape
-            est <- matrix(unlist(est), byrow=TRUE, ncol=2,
-                          dimnames=list(names(est), names(est[[1]])))
+          est <- lapply(tilz, predconfPois,
+                        object=model, level=level, what=estimatename)
+          est <- switch(interval,
+                        none = unlist(est),
+                        confidence =,
+                        prediction = t(simplify2array(est)))
         }
-        if(se) sem <- unlist(lapply(tilz, predconfPois,
-                                    object=model, level=level, what="se"))
+        if(se) sem <- sapply(tilz, predconfPois,
+                             object=model, level=level, what="se")
       } else {
         ## window
         if(!seonly) est <- predconfPois(window, model, level, estimatename)
@@ -238,18 +242,36 @@ predict.ppm <- local({
       window <- locations
       locations <- NULL
     }
-  
-    if(!is.null(ngrid) && !is.null(locations))
-      stop(paste("Only one of",
-                 sQuote("ngrid"), "and", sQuote("locations"),
-                 "should be specified"))
 
+    #' incompatible:
+    if(!is.null(locations)) {
+      #' other arguments are incompatible
+      offending <- c(!is.null(ngrid), !is.null(dimyx), !is.null(eps))
+      if(any(offending)) {
+        offenders <- c("grid", "dimyx", "eps")[offending]
+        nbad <- sum(offending)
+        stop(paste(ngettext(nbad, "The argument", "The arguments"),
+                   commasep(sQuote(offenders)), 
+                   ngettext(nbad, "is", "are"),
+                   "incompatible with", sQuote("locations")),
+             call.=FALSE)
+      }
+    }
+
+    #' equivalent:
+    if(!is.null(ngrid) && !is.null(dimyx))
+      warning(paste("The arguments", sQuote("ngrid"), "and", sQuote("dimyx"),
+                    "are equivalent: only one should be given"),
+              call.=FALSE)
+    
+    ngrid <- ngrid %orifnull% dimyx
+    
     if(is.null(ngrid) && is.null(locations)) 
       ## use regular grid
       ngrid <- rev(spatstat.options("npixel"))
     
     want.image <- is.null(locations) || is.mask(locations)
-    make.grid <- !is.null(ngrid)
+    make.grid <- !is.null(ngrid) 
 
     ## ##############   Determine prediction points  #####################
 
@@ -276,7 +298,7 @@ predict.ppm <- local({
                      "is a marked point process)"))
         if(is.factor(mpredict)) {
           ## verify mark levels match those in model
-          if(!identical(all.equal(levels(mpredict), types), TRUE)) {
+          if(!isTRUE(all.equal(levels(mpredict), types))) {
             if(all(levels(mpredict) %in% types))
               mpredict <- factor(mpredict, levels=types)
             else 
@@ -308,7 +330,7 @@ predict.ppm <- local({
         }
         if(is.null(window))
           window <- sumobj$entries$data$window
-        masque <- as.mask(window, dimyx=ngrid)
+        masque <- as.mask(window, dimyx=ngrid, eps=eps)
       }
       ## Hack -----------------------------------------------
       ## gam with lo() will not allow extrapolation beyond the range of x,y
@@ -399,12 +421,17 @@ predict.ppm <- local({
 
     if(!trivial) {
       Vnames <- model$internal$Vnames
+      vnameprefix <- model$internal$vnameprefix
       glmdata <- getglmdata(model)
       glmfit <- getglmfit(model)
       if(object$method=="logi")
         newdata$.logi.B <- rep(glmdata$.logi.B[1], nrow(newdata))
     }
-  
+
+    ## Undocumented secret exit
+    if(type == "covariates")
+      return(list(newdata=newdata, mask=if(want.image) masque else NULL))
+             
     ## ##########  COMPUTE PREDICTION ##############################
     ##
     ##   Compute the predicted value z[i] for each row of 'newdata'
@@ -414,6 +441,8 @@ predict.ppm <- local({
     ## #############################################################
 
     needSE <- se || (interval != "none")
+
+    attribeauts <- list()
     
     if(trivial) {
       ## ###########  UNIFORM POISSON PROCESS #####################
@@ -455,14 +484,14 @@ predict.ppm <- local({
                                 changecoef=changedcoef)
       ##
       if(type == "intensity") 
-        z <- PoisSaddleApp(z, fitin(model))
+        z <- PoisSaddle(z, fitin(model))
       
       ##
       if(needSE) {
         ## extract variance-covariance matrix of parameters
         vc <- vcov(model)
         ## compute model matrix
-        fmla <- formula(model)
+        fmla <- rhs.of.formula(formula(glmfit))
 #        mf <- model.frame(fmla, newdata, ..., na.action=na.pass)
 #        mm <- model.matrix(fmla, mf, ..., na.action=na.pass)
         mf <- model.frame(fmla, newdata, na.action=na.pass)
@@ -470,6 +499,8 @@ predict.ppm <- local({
         if(nrow(mm) != nrow(newdata))
           stop("Internal error: row mismatch in SE calculation")
         ## compute relative variance = diagonal of quadratic form
+        if(ncol(mm) != ncol(vc))
+          stop("Internal error: column mismatch in SE calculation")
         vv <- quadform(mm, vc)
         ## standard error
         SE <- lambda * sqrt(vv)
@@ -498,10 +529,17 @@ predict.ppm <- local({
     
       ## evaluate interaction
       Vnew <- evalInteraction(X, U, E, inter, correction=correction,
+                              splitInf=ignore.hardcore,
                               check=check)
 
-      ## Negative infinite values signify cif = zero
-      cif.equals.zero <- matrowany(Vnew == -Inf)
+      if(!ignore.hardcore) {
+        ## Negative infinite values of potential signify cif = zero
+        cif.equals.zero <- matrowany(Vnew == -Inf)
+      } else {
+        ## returned as attribute, unless vacuous
+        cif.equals.zero <- attr(Vnew, "-Inf") %orifnull% logical(nrow(Vnew))
+      }
+      attribeauts <- c(attribeauts, list(isZero=cif.equals.zero))
     
       ## Insert the potential into the relevant column(s) of `newdata'
       if(ncol(Vnew) == 1) {
@@ -509,7 +547,7 @@ predict.ppm <- local({
         ## Assign values to a column of the same name in newdata
         newdata[[Vnames]] <- as.vector(Vnew)
       ##
-      } else if(is.null(dimnames(Vnew)[[2]])) {
+      } else if(is.null(avail <- colnames(Vnew))) {
         ## Potential is vector-valued (Vnew is a matrix)
         ## with unnamed components.
         ## Assign the components, in order of their appearance,
@@ -521,16 +559,27 @@ predict.ppm <- local({
         ## Potential is vector-valued (Vnew is a matrix)
         ## with named components.
         ## Match variables by name
-        for(vn in Vnames)    
-          newdata[[vn]] <- Vnew[,vn]
-        ##
+        if(all(Vnames %in% avail)) {
+          for(vn in Vnames)
+            newdata[[ vn ]] <- Vnew[ , vn]
+        } else if(all(Vnames %in% (Pavail <- paste0(vnameprefix, avail)))) {
+          for(vn in Vnames)
+            newdata[[ vn ]] <- Vnew[ , match(vn, Pavail)]
+        } else
+          stop(paste(
+            "Internal error: unable to match names",
+            "of available interaction terms",
+            commasep(sQuote(avail)),
+            "to required interaction terms",
+            commasep(sQuote(Vnames))
+            ), call.=FALSE)
       }
       ## invoke predict.glm or compute prediction
       z <- GLMpredict(glmfit, newdata, coeffs, 
                       changecoef=changedcoef)
     
       ## reset to zero if potential was zero
-      if(any(cif.equals.zero))
+      if(!ignore.hardcore && any(cif.equals.zero))
         z[cif.equals.zero] <- 0
     
       ## ###############################################################    
@@ -543,11 +592,15 @@ predict.ppm <- local({
     ##
     if(!want.image) {
       if(!se) {
-        out <- as.vector(z)
+        z <- as.vector(z)
+	attributes(z) <- c(attributes(z), attribeauts)
+        out <- z
       } else if(seonly) {
         out <- as.vector(zse)
       } else {
-        out <- list(as.vector(z), as.vector(zse))
+        z <- as.vector(z)
+	attributes(z) <- c(attributes(z), attribeauts)
+        out <- list(z, as.vector(zse))
         names(out) <- c(estimatename, "se")
       }
     }
@@ -667,17 +720,25 @@ model.se.image <- function(fit, W=as.owin(fit), ..., what="sd") {
   return(U)
 }
 
-GLMpredict <- function(fit, data, coefs, changecoef=TRUE) {
+GLMpredict <- function(fit, data, coefs, changecoef=TRUE,
+                       type=c("response", "link")) {
   ok <- is.finite(coefs)
+  type <- match.arg(type)
   if(!changecoef && all(ok)) {
-    answer <- predict(fit, newdata=data, type="response")
+    answer <- predict(fit, newdata=data, type=type)
   } else {
+    if(inherits(fit, "gam"))
+      stop("This calculation is not supported for GAM fits", call.=FALSE)
     # do it by hand
     fmla <- formula(fit)
     data$.mpl.Y <- 1
-    fram <- model.frame(fmla, data=data)
+    fram <- model.frame(fmla, data=data, na.action=NULL)
     # linear predictor
     mm <- model.matrix(fmla, data=fram)
+    # ensure all required coefficients are present
+    coefs <- fill.coefs(coefs, colnames(mm))
+    ok <- is.finite(coefs)
+    #
     if(all(ok)) {
       eta <- as.vector(mm %*% coefs)
     } else {
@@ -697,12 +758,17 @@ GLMpredict <- function(fit, data, coefs, changecoef=TRUE) {
         mo <- apply(mo, 1, sum)
       eta <- mo + eta
     }
-    # response
-    linkinv <- family(fit)$linkinv
-    answer <- linkinv(eta)
+    switch(type,
+           link = {
+             answer <- eta
+           },
+           response = {
+             linkinv <- family(fit)$linkinv
+             answer <- linkinv(eta)
+           })
   }
   # Convert from fitted logistic prob. to lambda for logistic fit
-  if(family(fit)$family=="binomial")
+  if(type == "response" && family(fit)$family=="binomial")
     answer <- fit$data$.logi.B[1] * answer/(1-answer)
   return(answer)
 }
@@ -732,3 +798,35 @@ equalpairs <- function(U, X, marked=FALSE) {
 }
 
   
+fill.coefs <- function(coefs, required) {
+  # 'coefs' should contain all the 'required' values
+  coefsname <- deparse(substitute(coefs))
+  nama <- names(coefs)
+  if(is.null(nama)) {
+    #' names cannot be matched
+    if(length(coefs) != length(required))
+      stop(paste("The unnamed argument", sQuote(coefsname),
+                 "has", length(coefs), "entries, but",
+                 length(required), "are required"),
+           call.=FALSE)
+    # blithely assume they match 1-1
+    names(coefs) <- required
+    return(coefs)
+  }
+  stopifnot(is.character(required))
+  if(identical(nama, required)) return(coefs)
+  inject <- match(nama, required)
+  if(any(notneeded <- is.na(inject))) {
+    warning(paste("Internal glitch: some coefficients were not required:",
+                  commasep(sQuote(nama[notneeded]))),
+            call.=FALSE)
+    coefs <- coefs[!notneeded]
+    nama <- names(coefs)
+    inject <- match(nama, required)
+  }
+  y <- numeric(length(required))
+  names(y) <- required
+  y[inject] <- coefs
+  return(y)
+}
+ 

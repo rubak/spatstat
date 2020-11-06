@@ -22,7 +22,10 @@
   \item{r}{
     Disc radius, or vector of disc radii.
   }
-  \item{\dots}{Ignored.}
+  \item{\dots}{
+    Arguments passed to \code{\link{distmap}} to determine the pixel
+    resolution, when \code{exact=FALSE}.
+  }
   \item{W}{
     Window (object of class \code{"owin"})
     in which the area should be computed.
@@ -70,11 +73,11 @@
    u <- c(0.5,0.5)
    areaGain(u, cells, 0.1)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

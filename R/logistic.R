@@ -1,10 +1,10 @@
-#
-#  logistic.R
-#
-#   $Revision: 1.20 $  $Date: 2015/10/16 07:21:34 $
-#
-#  Logistic likelihood method - under development
-#
+##
+##  logistic.R
+##
+##   $Revision: 1.26 $  $Date: 2019/02/15 09:46:41 $
+##
+##  Logistic composite likelihood method
+##
 
 logi.engine <- function(Q,
                         trend = ~1,
@@ -12,6 +12,7 @@ logi.engine <- function(Q,
                         ...,
                         covariates=NULL,
                         subsetexpr=NULL,
+                        clipwin=NULL,
                         correction="border",
                         rbord=reach(interaction),
                         covfunargs=list(),
@@ -69,6 +70,16 @@ logi.engine <- function(Q,
     }
     Q <- quadscheme.logi(Xplus, D)
   } else stop("Format of object Q is not understood")
+  ## clip to subset?
+  if(!is.null(clipwin)) {
+    if(is.data.frame(covariates)) {
+      ok <- inside.owin(union.quad(Q), w=clipwin)
+      covariates <- covariates[ok, , drop=FALSE]
+    }
+    Q <- Q[clipwin]
+    Xplus <- Q$data
+    D     <- Q$dummy
+  }
   if (justQ) 
     return(Q)
   ### Dirty way of recording arguments so that the model can be refitted later (should probably be done using call, eval, envir, etc.):
@@ -100,11 +111,12 @@ logi.engine <- function(Q,
     tvars <- variablesinformula(trend)
     if(want.subset)
       tvars <- union(tvars, all.vars(subsetexpr))
-    ## resolve 'external' covariates
-    externalvars <- setdiff(tvars, c("x", "y", "marks"))
-    tenv <- environment(trend)
-    covariates <- getdataobjects(externalvars, tenv, covariates, fatal=TRUE)
-    ## 
+    if(!is.data.frame(covariates)) {
+      ## resolve 'external' covariates
+      externalvars <- setdiff(tvars, c("x", "y", "marks"))
+      tenv <- environment(trend)
+      covariates <- getdataobjects(externalvars, tenv, covariates, fatal=TRUE)
+    }
     wantxy <- c("x", "y") %in% tvars
     wantxy <- wantxy | rep.int(allcovar, 2)
     cvdf <- data.frame(x=U$x, y=U$y)[, wantxy, drop=FALSE]
@@ -130,7 +142,7 @@ logi.engine <- function(Q,
     Vnames <- colnames(V)
     if(is.null(Vnames)) {
       nc <- ncol(V)
-      Vnames <- if(nc == 1) vnamebase[1] else paste(vnamebase[2], 1:nc, sep="")
+      Vnames <- if(nc == 1) vnamebase[1L] else paste(vnamebase[2L], 1:nc, sep="")
       colnames(V) <- Vnames
     } else if(!is.null(vnameprefix)) {
       Vnames <- paste(vnameprefix, Vnames, sep="")
@@ -180,6 +192,8 @@ logi.engine <- function(Q,
   .logi.w <- wei
   .logi.ok  <- ok
   .logi.Y   <- resp
+  # suppress warnings from code checkers
+  dont.complain.about(.logi.B, .logi.w, .logi.ok, .logi.Y)
   # go
   ##fit <- glm(fmla, data=glmdata,
   ##           family=binomial(), subset = .logi.ok, weights = .logi.w)
@@ -204,7 +218,7 @@ logi.engine <- function(Q,
   the.version <- list(major=spv$major,
                       minor=spv$minor,
                       release=spv$patchlevel,
-                      date="$Date: 2015/10/16 07:21:34 $")
+                      date="$Date: 2019/02/15 09:46:41 $")
 
   ## Compile results
   fit <- list(method      = "logi",
@@ -213,25 +227,31 @@ logi.engine <- function(Q,
               coef        = co,
               trend       = trend,
               interaction = interaction,
-              Q           = Q,
-              correction  = correction,
-              rbord       = rbord,
-              terms       = terms(trend),
-              version     = the.version,
               fitin       = fitin,
+              Q           = Q,
               maxlogpl    = maxlogpl,
               satlogpl    = satlogpl,
-              covariates  = mpl.usable(covariates),
-#              varcov      = if(VB) fit$S else NULL,
               internal    = list(Vnames  = Vnames,
                                  IsOffset=IsOffset,
                                  glmdata = glmdata,
                                  glmfit = fit,
                                  logistic = Dinfo,
                                  computed = computed,
+                                 vnamebase=vnamebase,
+                                 vnameprefix=vnameprefix,
                                  VB = if(VB) TRUE else NULL,
                                  priors = if(VB) fit$priors else NULL
-                                 )
+                                 ),
+              covariates  = mpl.usable(covariates),
+              covfunargs= covfunargs,
+              subsetexpr = subsetexpr,
+              correction  = correction,
+              rbord       = rbord,
+              fisher      = NULL,
+              varcov      = NULL, # if(VB) fit$S else NULL,
+              terms       = terms(trend),
+              version     = the.version,
+              problems    = list()
               )
   class(fit) <- "ppm"
   return(fit)
@@ -264,32 +284,32 @@ logi.dummy <- function(X, dummytype = "stratrand", nd = NULL, mark.repeat = FALS
   W <- as.owin(X)
   type <- match.arg(dummytype, c("stratrand", "binomial", "poisson", "grid", "transgrid"))
   B <- boundingbox(W)
-  rho <- nd[1]*nd[2]/area(B)
+  rho <- nd[1L]*nd[2L]/area(B)
   Dinfo <- list(nd=nd, rho=rho, how=type)
   ## Repeating dummy process for each mark type 1:N (only once if unmarked or mark.repeat = FALSE)
   for(i in 1:N){
     switch(type,
            stratrand={
-             D <- as.ppp(stratrand(B, nd[1], nd[2]), W = B)
+             D <- as.ppp(stratrand(B, nd[1L], nd[2L]), W = B)
              inD <- which(inside.owin(D, w = W))
              D <- D[W]
              inD <- paste(i,inD,sep="_")
            },
            binomial={
-             D <- runifpoint(nd[1]*nd[2], win=B)
+             D <- runifpoint(nd[1L]*nd[2L], win=B)
              D <- D[W]
            },
            poisson={
              D <- rpoispp(rho, win = W)
            },
            grid={
-             D <- as.ppp(gridcenters(B, nd[1], nd[2]), W = B)
+             D <- as.ppp(gridcenters(B, nd[1L], nd[2L]), W = B)
              inD <- which(inside.owin(D, w = W))
              D <- D[W]
              inD <- paste(i,inD,sep="_")
            },
            transgrid={
-             D <- as.ppp(gridcenters(B, nd[1], nd[2]), W = B)
+             D <- as.ppp(gridcenters(B, nd[1L], nd[2L]), W = B)
              dxy <- c(diff(D$window$xrange),diff(D$window$yrange))/(2*nd)
              coords(D) <- coords(D)+matrix(runif(2,-dxy,dxy),npoints(D),2,byrow=TRUE)
              inD <- which(inside.owin(D, w = W))
@@ -346,7 +366,7 @@ summary.logiquad <- function(object, ..., checkdup=FALSE) {
 }
 
 print.summary.logiquad <- function(x, ..., dp=3) {
-  cat("Quadrature scheme = data + dummy\n")
+  cat("Quadrature scheme (logistic) = data + dummy\n")
   Dinfo <- x$param
   if(is.null(Dinfo))
     cat("created by an unknown function.\n")

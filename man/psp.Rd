@@ -76,19 +76,25 @@
   \code{\link{as.psp}},
   \code{\link{owin.object}},
   \code{\link{owin}},
-  \code{\link{as.owin}},
-  \code{\link{marks.psp}}
+  \code{\link{as.owin}}.
+
+  Function for extracting information from a segment pattern:
+  \code{\link{marks.psp}},
+  \code{\link{summary.psp}},
+  \code{\link{midpoints.psp}},
+  \code{\link{lengths_psp}}
+  \code{\link{angles.psp}},
+  \code{\link{endpoints.psp}}
+
+  Convert line segments to infinite lines: \code{\link{extrapolate.psp}}.
 }
 \examples{
   X <- psp(runif(10), runif(10), runif(10), runif(10), window=owin())
   m <- data.frame(A=1:10, B=letters[1:10])
   X <- psp(runif(10), runif(10), runif(10), runif(10), window=owin(), marks=m)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf.
 }
 \keyword{spatial}
 \keyword{datagen}

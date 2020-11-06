@@ -3,6 +3,7 @@
 \alias{model.matrix.kppm}
 \alias{model.matrix.dppm}
 \alias{model.matrix.lppm}
+\alias{model.matrix.ippm}
 \title{Extract Design Matrix from Point Process Model}
 \description{
   Given a point process model that has been
@@ -10,22 +11,38 @@
   this function extracts the design matrix of the model.
 }
 \usage{
-   \method{model.matrix}{ppm}(object, data=model.frame(object), \dots, 
+   \method{model.matrix}{ppm}(object,
+                              data=model.frame(object, na.action=NULL),
+                              \dots, 
                               Q=NULL, keepNA=TRUE)
 
-   \method{model.matrix}{kppm}(object, data=model.frame(object), \dots,
+   \method{model.matrix}{kppm}(object,
+                              data=model.frame(object, na.action=NULL),
+                              \dots, 
                               Q=NULL, keepNA=TRUE)
 
-   \method{model.matrix}{dppm}(object, data=model.frame(object), \dots,
+   \method{model.matrix}{dppm}(object,
+                              data=model.frame(object, na.action=NULL),
+                              \dots, 
                               Q=NULL, keepNA=TRUE)
 
-   \method{model.matrix}{lppm}(object, data=model.frame(object), \dots,
+   \method{model.matrix}{lppm}(object,
+                              data=model.frame(object, na.action=NULL),
+                              \dots, 
                               keepNA=TRUE)
+
+   \method{model.matrix}{ippm}(object,
+                              data=model.frame(object, na.action=NULL),
+                              \dots, 
+                              Q=NULL, keepNA=TRUE,
+			      irregular=FALSE)
 }
 \arguments{
   \item{object}{
     The fitted point process model. An object of class \code{"ppm"}
-    or \code{"kppm"} or \code{"dppm"} or \code{"lppm"}.
+    or \code{"kppm"} or \code{"dppm"} 
+    or \code{"lppm"}
+    or \code{"ippm"}.
   }
   \item{data}{
     A model frame, containing the data required for the Berman-Turner device.
@@ -43,25 +60,37 @@
     Other arguments (such as \code{na.action}) passed to
     \code{\link{model.matrix.lm}}.
   }
+  \item{irregular}{
+    Logical value indicating whether to include the irregular score
+    components.
+  }
 }
 \details{
   These commands are methods for the generic function
-  \code{\link{model.matrix}}. They extracts the design matrix of a
-  spatial point process model (class \code{"ppm"} or \code{"kppm"} or \code{"dppm"}
-  or \code{"lppm"}).
+  \code{\link{model.matrix}}.
+  They extract the design matrix of a spatial point process model
+  (class \code{"ppm"} or \code{"kppm"} 
+  or \code{"lppm"}
+  or \code{"dppm"}).
 
   More precisely, this command extracts
   the design matrix of the generalised linear model associated with
   a spatial point process model. 
   
   The \code{object} must be a fitted point process model
-  (object of class \code{"ppm"} or \code{"kppm"} or \code{"dppm"} or \code{"lppm"})
+  (object of class \code{"ppm"} or \code{"kppm"}
+  or \code{"lppm"}
+  or \code{"dppm"})
   fitted to spatial point pattern data.
   Such objects are produced by the model-fitting
-  functions \code{\link{ppm}}, \code{\link{kppm}}, \code{\link{dppm}} and \code{\link{lppm}}.
+  functions \code{\link{ppm}}, \code{\link{kppm}}, 
+  \code{\link{lppm}},
+  and \code{\link{dppm}}.
 
-  The methods \code{model.matrix.ppm}, \code{model.matrix.kppm}, \code{model.matrix.dppm}
-  and \code{model.matrix.lppm} 
+  The methods \code{model.matrix.ppm},
+  \code{model.matrix.kppm}, 
+  \code{model.matrix.lppm},
+  and \code{model.matrix.dppm}
   extract the model matrix for the GLM.
 
   The result is a matrix, with one row for every quadrature point
@@ -79,17 +108,12 @@
   \code{\link{quad.ppm}}.
 }
 \value{
-  A matrix. Columns of the matrix are covariates in the model.
+  A matrix. Columns of the matrix are canonical covariates in the model.
   Rows of the matrix correspond to quadrature points
   in the fitting procedure (provided \code{keepNA=TRUE}).
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{model.matrix}},
@@ -98,6 +122,7 @@
   \code{\link{kppm}},
   \code{\link{dppm}},
   \code{\link{lppm}},
+  \code{\link{ippm}},
   \code{\link{ppm.object}},
   \code{\link{quad.ppm}},
   \code{\link{residuals.ppm}}

@@ -1,0 +1,1051 @@
+Change log from 1.56-1 to 1.57-0
+================================
+
+30 july 2018
+
+   interp.im.R
+   interp.im.Rd
+	New argument 'bilinear'.
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Initialised as version 1.56-1.001
+	Nicknamed 'Damn You Autocorrect'
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 august 2018
+
+   bw.pcf.Rd
+	Added reference (thanks to Rasmus)
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.002
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   setcov.R
+	Improved handling of unitnames
+	(thanks to Kass Hingee)
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.003
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+11 aug 2018
+
+   kernel2d.R
+	Buglet fixes and improvements
+
+   Kmeasure.R
+	second.moment.engine has new argument 'scalekernel'
+	for consistency with usage of evaluate2Dkernel()
+	
+   density.ppp.R
+	Bug fix in evaluating non-gaussian kernel at distance zero
+	when leaveoneout=FALSE.
+
+   Kmeasure.R
+	second.moment.engine slightly accelerated.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.004
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+17 aug 2018
+
+   tests/density.R
+	Added tests for previous bug in evaluating non-Gaussian kernel
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.005
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+20 aug 2018
+
+   density.lpp.R
+	Buglet fix.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.006
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+23 aug 2018
+
+   bugfixes.Rnw
+	Tweak
+
+28 aug 2018
+
+   density.ppp.R
+	Buglet fix (spurious warning)
+	
+   density.ppp.Rd
+	Improved explanation of 'kernel' and 'scalekernel'
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.007
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+30 aug 2018
+
+   kernel2D.R
+   spatstat-internal.Rd
+	New internal function 'cutoff2Dkernel'
+
+31 aug 2018
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.008
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   relrisk.R
+	Removed spurious warning
+
+   random.R
+	Bug fix in thinjump
+	
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Maximilian Hesselbarth.
+
+   Nickname.txt
+   NEWS
+	Nickname: 'Somatogravic'
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.009
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   density.ppp
+	densitypointsEngine now uses 'cutoff2Dkernel'
+
+   smooth.ppp.R
+   densityfun.R
+   densityfun.Rd
+	Added note/warning that only the Gaussian kernel is supported.
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.010
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+01 sep 2018
+
+   shapefiles.Rnw
+	Emphasised the need to load 'maptools'.
+
+   kernel2d.R
+	cutoff2Dkernel gets argument 'fatal'
+
+   density.ppp.R
+	Use 'fatal' argument in densitypointsEngine
+	
+02 sep 2018
+
+   as.owin.Rd
+	Added an explanation about shapefiles.
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Hadrien Commenges
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.011
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   density.ppp.R
+   spatstat-internal.Rd
+	densitycrossEngine handles any kernel.
+
+   densityfun.R
+   densityfun.Rd
+	densityfun handles any kernel.
+
+   tests/density.R
+	Test densityfun() for non-Gaussian kernel
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.012
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 sep 2018
+
+   smooth.ppp.R
+   spatstat-internal.Rd
+	smoothpointsEngine handles any kernel.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.013
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+05 sep 2018
+
+   smooth.ppp.R
+   Smooth.ppp.Rd
+	new arguments 'kernel', 'scalekernel', 'varcov'
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.014
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 sep 2018
+
+   density.ppp.R
+	Bug fix
+	
+   smooth.ppp.R
+   spatstat-internal.Rd
+	smoothcrossEngine handles any kernel
+
+   smoothfun.R
+	Handles any kernel.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.015
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   split.ppx.R
+   split.ppx.Rd
+	'f' can be a logical vector.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.016
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 sep 2018
+
+   relrisk.R
+   relrisk.ppp.Rd   
+	Tweaks
+
+12 sep 2018
+
+   bugfixes.Rnw
+   updates.Rnw
+	Updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.017
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   rhohat.R
+   spatstat-internal.Rd
+	rhohatCalc has argument 'positiveCI'
+	Not yet documented.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.018
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   superimpose.R
+	Buglet fix
+
+   tests/ppp.R
+	Added tests of superimpose.ppp
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.019
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   smooth.ppp.R
+	Buglet fix
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.020
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+17 sep 2018
+
+   rhohat.R
+   spatstat-internal.Rd
+	rhohatCalc gets argument 'markovCI' designed to
+	deflate	huge confidence intervals.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.021
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   psp.R
+	In shift.psp, argument 'origin' can be numeric.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.022
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+19 sep 2018
+
+   ppm.Rd
+   tess.Rd
+	Added cross-references to as.function.tess
+
+   NEWS
+	Acknowledged Corey Anderson.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.023
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+20 sep 2018
+
+   as.im.R
+	Bug fix in as.im.function
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.024
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+23 sep 2018
+
+   edges2triangles.R
+	Harmonised format of result of edges2triangles.
+
+   tests/trigraph.R
+   tests/correctC.R
+   tests/density.R
+	Added tests of more cases.
+
+   src/massdisthack.c [Deleted file]
+   	This file is no longer used.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Raw prawn'
+	version 1.56-1.025
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   rhohat.R
+   rhohat.Rd
+	Argument 'positiveCI' is visible.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.026
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 sep 2018
+
+   nncross.R
+	Buglet fix
+
+28 sep 2018
+
+   daogenton.R
+   nndist.R
+	Replaced sort(x)[k] with orderstats(x, k) for efficiency
+
+   as.im.R
+   cdf.test.mppm.R
+   connected.R
+   deldir.R
+   derivfv.R
+   dummy.R
+   evalcovar.R
+   ewcdf.R
+   images.R
+   indices.R
+   Kcom.R
+   linnetsurgery.R
+   lintess.R
+   plot.ppp.R
+   primefactors.R
+   rescue.rectangle.R
+   window.R
+	replaced sort(unique(x)) by sortunique(x)
+	
+   DESCRIPTION
+	Require spatstat.utils 1.9-4
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.027
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+30 sept 2018
+
+   smooth.ppp.R
+	Bug fix in handling weights in non-Gaussian case.
+	Handle trivial case where X is empty.
+	Corrected format of results in some trivial cases.
+
+   tests/density.R
+	More test cases.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.028
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+01 oct 2018
+
+   colourtables.R
+   plot.colourmap.Rd
+	plot.colourmap has new argument 'increasing'
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.029
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+02 oct 2018
+
+   nnorient.R
+	Bug fix in degenerate case.
+
+   tests/nndist.R
+	Added test for nnorient
+	(with the argument domain, and the degenerate case).
+
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Tomas Lazauskas
+
+   Nickname.txt
+   NEWS
+	Nickname 'Psycho chicken'
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.030
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   subset.R
+   subset.psp.Rd [New file]
+       Method for 'subset' for class psp
+
+   psp.R
+	Improvements to as.psp.data.frame
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.031
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+
+   bw.CvL.R [New file]
+   bw.CvL.Rd [New file]
+      Cronie - Van Lieshout bandwidth selector
+
+   bw.diggle.Rd
+   bw.frac.Rd
+   bw.ppl.Rd
+   bw.scott.Rd
+   density.ppp.Rd
+   spatstat-package.Rd
+	Added cross-references.
+
+   DESCRIPTION
+	depends on spatstat.data version 1.4-0.
+
+   NEWS
+   Nickname.txt
+	Nickname 'Serving suggestion'.
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.032
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   bw.CvL.Rd
+	wee typo
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.033
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+
+   density.ppp.R
+   density.ppp.Rd
+   relrisk.ppp.Rd
+	Now supports infinite bandwidth, sigma=Inf or adjust=Inf.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.034
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 oct 2018
+
+   density.ppp.R
+   smooth.ppp.R
+	all the 'Engine' functions now support sigma=Inf.
+	This enables densityfun.ppp and Smoothfun.ppp also.
+
+   tests/density.R
+	added tests for sigma=Inf
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.035
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   bw.diggle.R
+	The result of bw.scott now has names.
+
+   relrisk.R
+   relrisk.ppp.Rd
+	Buglet fixes.
+   
+   updates.Rnw
+   bugfixes.Rnw
+	Updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.036
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   updates.Rnw
+	Polished.
+
+   Kmeasure.R
+   smooth.ppp.R
+	Removed unused variables detected by codetools
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.037
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+05 oct 2018
+
+   density.ppp.R
+   spatstat-internal.Rd
+	Internal tweaks
+	
+   smooth.ppp.R
+   relrisk.R
+   Smooth.ppp.Rd
+   relrisk.ppp.Rd
+	New explicit arguments 'adjust', 'edge', 'diggle'
+	Bug fixes in handling infinite bandwidth.
+	Bug fixes in handling standard error.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.038
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 oct 2018
+
+   tests/correctC.R
+	Relaxed the accuracy threshold in a cross-check
+	(it may have been too stringent - seems to have failed
+	on some systems.)
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname "Sitot dit, sitot fait, bonne affaire"
+	version 1.56-1.039
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   distances.R
+	Added checks for valid 2D data in pairdist.default
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.040
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 oct 2018
+
+   pairdist.default.Rd
+	Updated by Ege to explain that only 2D coordinates are handled.
+	
+09 oct 2018
+
+   idw.Rd
+	Added reference.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.041
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   eval.im.R
+   eval.im.Rd
+      New argument 'warn'.
+      
+   linim.R
+   eval.linim.Rd
+      New argument 'warn'.
+
+   leverage.R
+      Tweaked plot and contour methods to avoid warnings about image resolution
+
+   measures.R
+      Tweaked augment.msr to avoid warnings about image resolution
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.042
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+10 oct 2018
+
+   pixellate.R
+   pixellate.ppp.Rd
+	New argument 'savemap'.
+
+   tests/pixelgripes.R
+	Test of validity.
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.043
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+11 oct 2018
+
+   lohboot.Rd
+	More examples.
+
+   tests/duplicity.R [New file]
+   	More tests of multiplicity() methods.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.044
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 oct 2018
+
+   eval.fv
+	[From Ege] remove ratio information
+
+   Kmulti.R
+	For Kcross(X, i, i) the argument 'rmax' is ignored.
+
+   psp.R
+   simplepanel.R
+   transect.R
+	Replaced 'locator' by 'spatstatLocator'.
+
+   density.ppp.R
+	Buglet fixes.
+	
+   tests/density.R
+	More tests of density code.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Ballistic descent'
+	version 1.56-1.045
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+16 oct 2018
+
+   tests/simplepan.R  [New file]
+        tests of user interaction in simplepanel
+	(using new feature of spatstatLocator)
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.046
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+17 oct 2018
+
+   tests/rmhsnoopy.R  [New file]
+        tests of rmhsnoop() setup and user interaction
+	(using new feature of spatstatLocator)
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.047
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   rmhsnoop.R
+   spatstat-internal.Rd
+	rmhsnoop has new argument 'panel.only' for internal use
+
+   tests/rmhsnoopy.R
+	Now tests the full sequence of actions in rmh(snoop=TRUE)
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.048
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+>>>>>>>>>>>>> passed R-devel CMD check <<<<<<<<<<<<<<<
+>>>>>>>>>>>>>    (2018-10-16 r75448)   <<<<<<<<<<<<<<<
+
+18 oct 2018
+
+   rtemper.R
+   rtemper.Rd
+	New argument 'track'.
+	Slightly accelerated.
+
+   plot.im.R
+	Improved handling of tickmarks.
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.049
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   Kinhom.R
+   spatstat-internal.Rd
+	Kwtsum has new argument 'fatal'
+
+   Kcom.R
+   Gcom.R
+   psstG.R
+	calls Kwtsum with fatal=FALSE
+
+   linearK.R
+	Buglet fix in handling patterns with fewer than 2 points.
+
+   tests/lppstuff.R
+	Test for this bug
+	
+   DESCRIPTION
+   NEWS
+   spatstat-package.Rd
+	Acknowledged Ryan Arellano.   
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.050
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   parameters.Rd
+	More examples.
+
+   tests/undoc.R
+	More tests.
+
+   tests/cluck.R [New file]
+        tests of 'click*' functions
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.051
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+   
+21 oct 2018
+
+   mincontrast.R
+   spatstat-internal.Rd
+	Bug fixes in code for handling status messages
+
+   tests/kppm.R
+	More tests of minimum contrast code.
+
+   tests/ssf.R [New file]
+   	More tests of 'ssf' class
+
+   updates.Rnw
+	More information in the Introduction.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.052
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   envelopelpp.R
+	Bug fix.
+	
+   tests/envelopes.R
+	Added tests for envelope.lpp, envelope.lppm
+
+   tests/density.R
+	More tests of Smooth.ppp
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Daft as a brush'
+	version 1.56-1.053
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 oct 2018
+
+   tests/Kfuns.R
+	More tests of large-data code
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.054
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+26 oct 2018
+
+   density.ppp.R
+	Important bug fix in standard error calculations.
+
+   bugfixes.Rnw
+	Noted the bug in density.ppp(se=TRUE)
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.055
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   pppmatch.R
+	Tweaked layout
+
+   tests/dominic.R
+	More tests of pppmatch code
+
+   bugfixes.Rnw
+   updates.Rnw
+	up to date.
+	
+   DESCRIPTION
+   NEWS
+	version 1.56-1.056
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+28 oct 2018
+
+   wingeom.R
+	Bug fix in even.breaks.owin
+	Removed unused code in intersect.owin
+
+   tests/windows.R
+	More tests of window geometry code.
+
+   tests/imageops.R
+	Test more cases of "[.im"
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.057
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+!!!!!!!!!!!!! passed 'make bookcheck'  !!!!!!!!!!!!!!!
+
+29 oct 2018
+
+   density.ppp.R
+	Removed unused variable detected by codetools.
+
+   DESCRIPTION
+   NEWS
+	version 1.56-1.058
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+||||| passed R CMD check --as-cran --run-donttest ||||
+
+============  passed R-devel CMD check ===============
+============    (2018-10-27 r75507)    ===============
+
+30 oct 2018
+
+   Nickname.txt
+   NEWS
+	Nickname 'Zombie apocalypse'
+
+   DESCRIPTION
+   NEWS
+   bugfixes.Rnw
+	version renumbered 1.57-0 for release
+
+------------- passed R-3.5.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+   

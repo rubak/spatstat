@@ -7,11 +7,12 @@
 }
 \usage{
    mppm(formula, data, interaction=Poisson(), ...,
-            iformula=NULL,
-%#%^!ifdef RANDOMEFFECTS
-            random=NULL,
-%#%^!endif
-        use.gam = FALSE)
+        iformula=NULL, 
+        random=NULL,
+        weights=NULL,
+        use.gam = FALSE, 
+        reltol.pql=1e-3,
+        gcontrol=list())
 }
 \arguments{
   \item{formula}{
@@ -41,16 +42,37 @@
     in the hyperframe \code{interaction}, or the name of a column
     in the hyperframe \code{data} that is a vector or factor.
   }
-%#%^!ifdef RANDOMEFFECTS  
   \item{random}{
     Optional. A formula (with no left hand side)
     describing a random effect. Variable names in the formula
     may be any of the column names of \code{data} and \code{interaction}.
     The formula must be recognisable to \code{\link{lme}}. 
   }
-%#%^!endif  
+  \item{weights}{
+    Optional. Numeric vector of case weights for each row of \code{data}.
+  }
   \item{use.gam}{Logical flag indicating whether to fit the model
-    using \code{\link{gam}} or \code{\link{glm}}.
+    using \code{\link[mgcv]{gam}} or \code{\link[stats]{glm}}.
+  }
+  \item{reltol.pql}{
+    Relative tolerance for successive steps in
+    the penalised quasi-likelihood algorithm,
+    used when the model includes random effects.
+    The algorithm terminates when the root mean square of the
+    relative change in coefficients is less than \code{reltol.pql}.
+  }
+  \item{gcontrol}{
+    List of arguments to control the fitting algorithm.
+    Arguments are passed to \code{\link[stats]{glm.control}}
+    or \code{\link[mgcv]{gam.control}}
+    or \code{\link[nlme]{lmeControl}}
+    depending on the kind of model being fitted.
+    If the model has random effects, the arguments are passed to
+    \code{\link[nlme]{lmeControl}}. Otherwise,
+    if \code{use.gam=TRUE} the arguments are passed to
+    \code{\link[mgcv]{gam.control}}, and if
+    \code{use.gam=FALSE} (the default) they are passed to
+    \code{\link[stats]{glm.control}}.
   }
 }
 \details{
@@ -127,10 +149,8 @@
   interaction terms that belong to a specified list, including
   for example the Poisson process, Strauss process, Geyer's saturation
   model, and piecewise constant pairwise interaction models.
-%#%^!ifdef RANDOMEFFECTS  
   Additionally, it is possible to include random effects
   as explained in the section on Random Effects below.
-%#%^!endif
   
   The stochastic part of the model is determined by
   the arguments \code{interaction} and (optionally) \code{iformula}.
@@ -173,7 +193,6 @@
   model with interpoint interaction \code{B} to be fitted
   with different interaction parameters for each level of \code{group}.
 }
-%#%^!ifdef RANDOMEFFECTS
 \section{Random Effects}{
   It is also possible to include random effects in the
   trend term. The argument \code{random} is a formula,
@@ -189,13 +208,18 @@
   serial number (\eqn{1} to \eqn{n}) of the point pattern in the
   list \code{X}.
 }
-%#%^!endif
 \value{
   An object of class \code{"mppm"} representing the
   fitted model.
 
   There are methods for
-  \code{print}, \code{summary} and \code{coef} for this class.
+  \code{print}, \code{summary}, \code{coef},
+  \code{AIC}, \code{anova}, \code{fitted}, \code{fixef}, \code{logLik},
+  \code{plot}, \code{predict}, \code{ranef}, \code{residuals},
+  \code{summary}, \code{terms} and \code{vcov} for this class.
+
+  The default methods for \code{\link[stats]{update}}
+  and \code{\link[stats]{formula}} also work on this class.
 }
 \references{
   Baddeley, A. and Turner, R.
@@ -210,18 +234,16 @@
 
   Baddeley, A., Rubak, E. and Turner, R. (2015)
   \emph{Spatial Point Patterns: Methodology and Applications with R}.
-  London: Chapman and Hall/CRC Press. 
+  London: Chapman and Hall/CRC Press.
+
+  Bell, M. and Grunwald, G. (2004)
+  Mixed models for the analysis of replicated spatial point patterns.
+  \emph{Biostatistics} \bold{5}, 633--648.
 }
 \author{
   Adrian Baddeley, Ida-Maria Sintorn and Leanne Bischoff.
-  Implemented by 
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  Implemented in \pkg{spatstat} by 
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{ppm}},

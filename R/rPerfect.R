@@ -1,15 +1,17 @@
 #
 #  Perfect Simulation 
 #
-#  $Revision: 1.17 $ $Date: 2014/11/17 05:04:59 $
+#  $Revision: 1.21 $ $Date: 2017/06/05 10:31:58 $
 #
 #  rStrauss
 #  rHardcore
 #  rStraussHard
 #  rDiggleGratton
 #  rDGS
+#  rPenttinen
 
-rStrauss <- function(beta, gamma=1, R=0, W=owin(), expand=TRUE, nsim=1) {
+rStrauss <- function(beta, gamma=1, R=0, W=owin(), expand=TRUE,
+                     nsim=1, drop=TRUE) {
 
   if(!missing(W)) 
     verifyclass(W, "owin")
@@ -44,7 +46,8 @@ rStrauss <- function(beta, gamma=1, R=0, W=owin(), expand=TRUE, nsim=1) {
                gamma,
                R,
                xrange,
-               yrange)
+               yrange,
+               PACKAGE = "spatstat")
 
     X <- z[[1]]
     Y <- z[[2]]
@@ -60,7 +63,7 @@ rStrauss <- function(beta, gamma=1, R=0, W=owin(), expand=TRUE, nsim=1) {
       P <- P[W]
     attr(P, "times") <- times
 
-    if(nsim == 1) return(P)
+    if(nsim == 1 && drop) return(P)
     
     result[[i]] <- P
   }
@@ -71,7 +74,7 @@ rStrauss <- function(beta, gamma=1, R=0, W=owin(), expand=TRUE, nsim=1) {
 
 #  Perfect Simulation of Hardcore process
 
-rHardcore <- function(beta, R=0, W=owin(), expand=TRUE, nsim=1) {
+rHardcore <- function(beta, R=0, W=owin(), expand=TRUE, nsim=1, drop=TRUE) {
   if(!missing(W)) 
     verifyclass(W, "owin")
 
@@ -100,7 +103,8 @@ rHardcore <- function(beta, R=0, W=owin(), expand=TRUE, nsim=1) {
                beta,
                R,
                xrange,
-               yrange)
+               yrange,
+               PACKAGE = "spatstat")
 
     X <- z[[1]]
     Y <- z[[2]]
@@ -114,7 +118,7 @@ rHardcore <- function(beta, R=0, W=owin(), expand=TRUE, nsim=1) {
     if(attr(Wsim, "changed"))
       P <- P[W]
 
-    if(nsim == 1) return(P)
+    if(nsim == 1 && drop) return(P)
     result[[i]] <- P
   }
   result <- as.solist(result)
@@ -127,7 +131,8 @@ rHardcore <- function(beta, R=0, W=owin(), expand=TRUE, nsim=1) {
 #        provided gamma <= 1
 #
 
-rStraussHard <- function(beta, gamma=1, R=0, H=0, W=owin(), expand=TRUE, nsim=1) {
+rStraussHard <- function(beta, gamma=1, R=0, H=0, W=owin(),
+                         expand=TRUE, nsim=1, drop=TRUE) {
   if(!missing(W)) 
     verifyclass(W, "owin")
 
@@ -168,7 +173,8 @@ rStraussHard <- function(beta, gamma=1, R=0, H=0, W=owin(), expand=TRUE, nsim=1)
                R,
                H,
                xrange,
-               yrange)
+               yrange,
+               PACKAGE = "spatstat")
 
     X <- z[[1]]
     Y <- z[[2]]
@@ -182,7 +188,7 @@ rStraussHard <- function(beta, gamma=1, R=0, H=0, W=owin(), expand=TRUE, nsim=1)
     if(attr(Wsim, "changed"))
       P <- P[W]
 
-    if(nsim == 1) return(P)
+    if(nsim == 1 && drop) return(P)
     result[[i]] <- P
   }
   result <- as.solist(result)
@@ -195,7 +201,7 @@ rStraussHard <- function(beta, gamma=1, R=0, H=0, W=owin(), expand=TRUE, nsim=1)
 #
 
 rDiggleGratton <- function(beta, delta, rho, kappa=1, W=owin(),
-                           expand=TRUE, nsim=1) {
+                           expand=TRUE, nsim=1, drop=TRUE) {
   if(!missing(W)) 
     verifyclass(W, "owin")
 
@@ -234,7 +240,8 @@ rDiggleGratton <- function(beta, delta, rho, kappa=1, W=owin(),
                rho,
                kappa,
                xrange,
-               yrange)
+               yrange,
+               PACKAGE = "spatstat")
 
     X <- z[[1]]
     Y <- z[[2]]
@@ -248,7 +255,7 @@ rDiggleGratton <- function(beta, delta, rho, kappa=1, W=owin(),
     if(attr(Wsim, "changed"))
       P <- P[W]
 
-    if(nsim == 1) return(P)
+    if(nsim == 1 && drop) return(P)
     result[[i]] <- P
   }
   result <- as.solist(result)
@@ -261,7 +268,7 @@ rDiggleGratton <- function(beta, delta, rho, kappa=1, W=owin(),
 #  Perfect Simulation of Diggle-Gates-Stibbard process
 #
 
-rDGS <- function(beta, rho, W=owin(), expand=TRUE, nsim=1) {
+rDGS <- function(beta, rho, W=owin(), expand=TRUE, nsim=1, drop=TRUE) {
   if(!missing(W)) 
     verifyclass(W, "owin")
 
@@ -291,7 +298,8 @@ rDGS <- function(beta, rho, W=owin(), expand=TRUE, nsim=1) {
                beta,
                rho,
                xrange,
-               yrange)
+               yrange,
+               PACKAGE = "spatstat")
 
     X <- z[[1]]
     Y <- z[[2]]
@@ -305,7 +313,70 @@ rDGS <- function(beta, rho, W=owin(), expand=TRUE, nsim=1) {
     if(attr(Wsim, "changed"))
       P <- P[W]
 
-    if(nsim == 1) return(P)
+    if(nsim == 1 && drop) return(P)
+    result[[i]] <- P
+  }
+  result <- as.solist(result)
+  names(result) <- paste("Simulation", 1:nsim)
+  return(result)
+}
+
+
+#
+#  Perfect Simulation of Penttinen process
+#
+
+rPenttinen <- function(beta, gamma=1, R, W=owin(),
+                       expand=TRUE, nsim=1, drop=TRUE) {
+  if(!missing(W)) 
+    verifyclass(W, "owin")
+
+  check.1.real(beta)
+  check.1.real(gamma)
+  check.1.real(R)
+
+  check.finite(beta)
+  check.finite(gamma)
+  check.finite(R)
+
+  stopifnot(beta > 0)
+  stopifnot(gamma >= 0)
+  stopifnot(gamma <= 1)
+  stopifnot(R >= 0)
+
+  runif(1)
+
+  Wsim <- expandwinPerfect(W, expand, rmhexpand(distance=2*R))
+  xrange <- Wsim$xrange
+  yrange <- Wsim$yrange
+
+  result <- vector(mode="list", length=nsim)
+
+  for(i in 1:nsim) {
+    storage.mode(beta) <- storage.mode(gamma) <- storage.mode(R) <- "double"
+    storage.mode(xrange) <- storage.mode(yrange) <- "double"
+  
+    z <- .Call("PerfectPenttinen",
+               beta,
+               gamma,
+               R,
+               xrange,
+               yrange,
+               PACKAGE = "spatstat")
+
+    X <- z[[1]]
+    Y <- z[[2]]
+    nout <- z[[3]]
+    
+    if(nout<0)
+      stop("internal error: copying failed in PerfectPenttinen")
+    
+    seqn <- seq_len(nout)
+    P <- ppp(X[seqn], Y[seqn], window=Wsim, check=FALSE)
+    if(attr(Wsim, "changed"))
+      P <- P[W]
+
+    if(nsim == 1 && drop) return(P)
     result[[i]] <- P
   }
   result <- as.solist(result)

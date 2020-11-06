@@ -27,16 +27,12 @@
 \seealso{
   \code{\link[graphics]{locator}},
   \code{\link{clickppp}},
+  \code{\link{clicklpp}},
   \code{\link{clickpoly}},
   \code{\link{clickbox}}
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{iplot}

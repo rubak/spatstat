@@ -1,7 +1,7 @@
 #
 # marks.R
 #
-#   $Revision: 1.40 $   $Date: 2014/06/14 01:51:07 $
+#   $Revision: 1.47 $   $Date: 2020/03/23 07:18:53 $
 #
 # stuff for handling marks
 #
@@ -125,7 +125,7 @@ function(X, na.action="warn", ...) {
   marx <- marks(X, ...)
   if(is.null(marx))
     return(FALSE)
-  if((length(marx) > 0) && any(is.na(marx))) {
+  if((length(marx) > 0) && anyNA(marx)) {
     gripe <- paste("some mark values are NA in the point pattern",
                    short.deparse(substitute(X)))
     switch(na.action,
@@ -168,7 +168,7 @@ is.multitype.ppp <- function(X, na.action="warn", ...) {
     return(FALSE)
   if(!is.factor(marx))
     return(FALSE)
-  if((length(marx) > 0) && any(is.na(marx)))
+  if((length(marx) > 0) && anyNA(marx))
     switch(na.action,
            warn = {
              warning(paste("some mark values are NA in the point pattern",
@@ -228,7 +228,7 @@ marksubset <- function(x, index, format=NULL) {
          hyperframe={
            xcols <- as.list(x)
            repxcols <- lapply(xcols, rep, times=n)
-           return(do.call("hyperframe", repxcols))
+           return(do.call(hyperframe, repxcols))
          },
          stop("Internal error: unrecognised format of marks"))
 }
@@ -236,17 +236,27 @@ marksubset <- function(x, index, format=NULL) {
 "%mapp%" <- markappendop <- function(x,y) { 
   fx <- markformat(x)
   fy <- markformat(y)
-  agree <- (fx == fy)
-  if(all(c(fx,fy) %in% c("dataframe", "hyperframe")))
-    agree <- agree && identical(names(x),names(y)) 
-  if(!agree)
-    stop("Attempted to concatenate marks that are not compatible")
+  if(fx != fy) {
+    ## vectors can be appended to single-column arrays
+    xvec  <- (fx == "vector")
+    yvec  <- (fy == "vector")
+    xdf <- (fx %in% c("dataframe", "hyperframe")) && (ncol(x) == 1L)
+    ydf <- (fy %in% c("dataframe", "hyperframe")) && (ncol(y) == 1L)
+    if(xvec && ydf) {
+      x <- as.data.frame(x)
+      names(x) <- names(y)
+      fx <- "dataframe"
+    } else if(xdf && yvec) {
+      y <- as.data.frame(y)
+      names(y) <- names(x)
+      fy <- "dataframe"
+    } else stop("Attempted to concatenate marks that are not compatible")
+  }
   switch(fx,
          none   = { return(NULL) },
          vector = {
-           if(is.factor(x) || is.factor(y))
-             return(cat.factor(x,y))
-           else return(c(x,y))
+           if(is.factor(x) || is.factor(y)) return(cat.factor(x,y))
+           return(c(x,y))
          },
          hyperframe=,
          dataframe = { return(rbind(x,y)) },
@@ -263,9 +273,10 @@ markappend <- function(...) {
   marxlist <- list(...)
   # check on compatibility of marks
   mkfmt <- sapply(marxlist,markformat)
-  if(length(unique(mkfmt))>1)
-    stop(paste("Marks of some patterns are of different format",
-               "from those of other patterns."))
+  if(length(ufm <- unique(mkfmt))>1)
+    stop(paste("Cannot append marks of different formats:",
+               commasep(sQuote(ufm))),
+         call.=FALSE)
   mkfmt <- mkfmt[1]
   # combine the marks
   switch(mkfmt,
@@ -275,7 +286,7 @@ markappend <- function(...) {
          vector = {
            marxlist <- lapply(marxlist,
                               function(x){as.data.frame.vector(x,nm="v1")})
-           marx <- do.call("rbind", marxlist)[,1]
+           marx <- do.call(rbind, marxlist)[,1]
            return(marx)
          },
          hyperframe =,
@@ -283,7 +294,7 @@ markappend <- function(...) {
            # check compatibility of data frames
            # (this is redundant but gives more helpful message)
            nama <- lapply(marxlist, names)
-           dims <- unlist(lapply(nama, length))
+           dims <- lengths(nama)
            if(length(unique(dims)) != 1)
              stop("Data frames of marks have different column dimensions.")
            samenames <- unlist(lapply(nama,
@@ -291,7 +302,7 @@ markappend <- function(...) {
                                       y=nama[[1]]))
            if(!all(samenames))
              stop("Data frames of marks have different names.\n")
-           marx <- do.call("rbind", marxlist)
+           marx <- do.call(rbind, marxlist)
            return(marx)
          },
          list = {
@@ -331,12 +342,10 @@ markcbind <- function(...) {
   return(marx)
 }
 
-# extract only the columns of (passably) numeric data from a data frame
-numeric.columns <- function(M, logical=TRUE, others=c("discard", "na")) {
-  others <- match.arg(others)
-  M <- as.data.frame(M)
-  if(ncol(M) == 1)
-    colnames(M) <- NULL
+numeric.columns <- local({
+
+  ## extract only the columns of (passably) numeric data from a data frame
+
   process <- function(z, logi, other) {
     if(is.numeric(z)) return(z)
     if(logi && is.logical(z)) return(as.integer(z))
@@ -345,18 +354,28 @@ numeric.columns <- function(M, logical=TRUE, others=c("discard", "na")) {
            discard=NULL,
            NULL)
   }
-  Mprocessed <- lapply(M, process, logi=logical, other=others)
-  isnul <- unlist(lapply(Mprocessed, is.null))
-  if(all(isnul)) {
-    # all columns have been removed
-    # return a data frame with no columns
-    return(as.data.frame(matrix(, nrow=nrow(M), ncol=0)))
+
+  numeric.columns <- function(M, logical=TRUE, others=c("discard", "na")) {
+    others <- match.arg(others)
+    M <- as.data.frame(M)
+    if(ncol(M) == 1)
+      colnames(M) <- NULL
+    Mprocessed <- lapply(M, process, logi=logical, other=others)
+    isnul <- unlist(lapply(Mprocessed, is.null))
+    if(all(isnul)) {
+      #' all columns have been removed
+      #' return a data frame with no columns
+      return(as.data.frame(matrix(, nrow=nrow(M), ncol=0)))
+    }
+    Mout <- do.call(data.frame, Mprocessed[!isnul])
+    if(ncol(M) == 1 && ncol(Mout) == 1)
+      colnames(Mout) <- NULL
+    return(Mout)
   }
-  Mout <- do.call("data.frame", Mprocessed[!isnul])
-  if(ncol(M) == 1 && ncol(Mout) == 1)
-    colnames(Mout) <- NULL
-  return(Mout)
-}
+
+  numeric.columns
+})
+
 
 coerce.marks.numeric <- function(X, warn=TRUE) {
   marx <- marks(X)
@@ -384,4 +403,14 @@ coerce.marks.numeric <- function(X, warn=TRUE) {
     }
   }
   return(X)
+}
+
+#' for 'print' methods
+markvaluetype <- function(x) {
+  if(is.hyperframe(x)) return(unclass(x)$vclass)
+  if(!is.null(dim(x))) x <- as.data.frame(x)
+  if(is.data.frame(x)) return(sapply(x, markvaluetype))
+  if(inherits(x, c("POSIXt", "Date"))) return("date-time")
+  if(is.factor(x)) return("factor")
+  return(typeof(x))
 }

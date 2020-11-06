@@ -2,7 +2,7 @@
 #
 #    ord.S
 #
-#    $Revision: 1.6 $	$Date: 2014/12/07 10:43:43 $
+#    $Revision: 1.9 $	$Date: 2020/01/26 04:32:04 $
 #
 #    Ord process with user-supplied potential
 #
@@ -24,6 +24,7 @@ Ord <- local({
          pot      = NULL,
          par      = NULL,
          parnames = NULL,
+         hasInf   = NA,
          init     = NULL,
          update   = function(self, ...){
            do.call(Ord,
@@ -43,6 +44,7 @@ Ord <- local({
     out <- instantiate.interact(BlankOrd)
     out$pot <- pot
     if(!missing(name)) out$name <- name
+    return(out)
   }
 
   Ord <- intermaker(Ord, BlankOrd)

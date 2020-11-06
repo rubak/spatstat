@@ -1,7 +1,7 @@
 #
 #	Kest.R		Estimation of K function
 #
-#	$Revision: 5.113 $	$Date: 2015/03/18 03:16:03 $
+#	$Revision: 5.129 $	$Date: 2020/02/10 09:44:52 $
 #
 #
 # -------- functions ----------------------------------------
@@ -34,9 +34,10 @@
 #
 # ------------------------------------------------------------------------
 
-"Lest" <- function(X, ...) {
-  K <- Kest(X, ...)
-  L <- eval.fv(sqrt(K/pi))
+"Lest" <- function(X, ..., correction) {
+  if(missing(correction)) correction <- NULL
+  K <- Kest(X, ..., correction=correction)
+  L <- eval.fv(sqrt(K/pi), dotonly=FALSE)
   # handle variance estimates
   if(any(varcols <- colnames(K) %in% c("rip", "ls"))) {
     r <- with(L, .x)
@@ -156,8 +157,13 @@ function(X, ..., r=NULL, rmax=NULL, breaks=NULL,
       Kb <- Kborder.engine(X, max(r), length(r), correction, ratio=ratio)
     if(none)
       Kn <- Knone.engine(X, max(r), length(r), ratio=ratio)
-    if(bord && none) 
-      return(cbind.fv(Kb, Kn[, names(Kn) != "theo"]))
+    if(bord && none) {
+      Kn <- Kn[ , names(Kn) != "theo"]
+      yn <- fvnames(Kb, ".y")
+      Kbn <- if(!ratio) bind.fv(Kb, Kn, preferred=yn) else
+             bind.ratfv(Kb, Kn, preferred=yn)
+      return(Kbn)
+    }
     if(bord) return(Kb)
     if(none) return(Kn) 
   }
@@ -193,6 +199,11 @@ function(X, ..., r=NULL, rmax=NULL, breaks=NULL,
     close <- closepairs(X, rmax, what=what)
     DIJ <- close$d
 
+    ## precompute set covariance of window
+    gW <- NULL
+    if(any(correction %in% c("translate", "rigid", "isotropic")))
+      gW <- setcov(W)
+    
     if(any(correction == "none")) {
       ## uncorrected! For demonstration purposes only!
       wh <- whist(DIJ, breaks$val)  # no weights
@@ -243,11 +254,12 @@ function(X, ..., r=NULL, rmax=NULL, breaks=NULL,
 
     if(any(correction == "translate")) {
       ## Ohser-Stoyan translation correction
-      edgewt <- edge.Trans(dx=close$dx, dy=close$dy, W=W, paired=TRUE)
+      edgewt <- edge.Trans(dx=close$dx, dy=close$dy, W=W, paired=TRUE,
+                           gW = gW, give.rmax=TRUE)
       wh <- whist(DIJ, breaks$val, edgewt)
       numKtrans <- cumsum(wh)
       denKtrans <- lambda2 * areaW
-      h <- transradius(W)
+      h <- attr(edgewt, "rmax")
       numKtrans[r >= h] <- NA
       K <- bind.ratfv(K,
                       data.frame(trans=numKtrans),
@@ -259,12 +271,12 @@ function(X, ..., r=NULL, rmax=NULL, breaks=NULL,
     }
     if(any(correction == "rigid")) {
       ## Ohser-Stoyan rigid motion correction
-      CW <- rotmean(setcov(W))
+      CW <- rotmean(gW)
       edgewt <- areaW/as.function(CW)(DIJ)
       wh <- whist(DIJ, breaks$val, edgewt)
       numKrigid <- cumsum(wh)
       denKrigid <- lambda2 * areaW
-      h <- rigidradius(X) #sic
+      h <- rmax.Rigid(X, gW) #sic: X not W
       numKrigid[r >= h] <- NA
       K <- bind.ratfv(K,
                       data.frame(rigid=numKrigid),
@@ -281,7 +293,7 @@ function(X, ..., r=NULL, rmax=NULL, breaks=NULL,
       wh <- whist(DIJ, breaks$val, edgewt)
       numKiso <- cumsum(wh)
       denKiso <- lambda2 * areaW
-      h <- circumradius(W)
+      h <- boundingradius(W)
       numKiso[r >= h] <- NA
       K <- bind.ratfv(K,
                       data.frame(iso=numKiso),
@@ -353,8 +365,8 @@ function(X, ..., r=NULL, rmax=NULL, breaks=NULL,
   ## default plot will display all edge corrections
   formula(K) <- . ~ r
   nama <- rev(colnames(K))
-  nama <- nama[!(nama %in% c("r", "rip", "ls"))]
-  fvnames(K, ".") <- nama
+  fvnames(K, ".") <- setdiff(nama, c("r", "rip", "ls"))
+  ##
   unitname(K) <- unitname(X)
   # copy to other components
   if(ratio)
@@ -464,7 +476,8 @@ Kborder.engine <- function(X, rmax, nr=100,
                 nr=as.integer(nr),
                 rmax=as.double(rmax),
                 numer=as.integer(integer(nr)),
-                denom=as.integer(integer(nr)))
+                denom=as.integer(integer(nr)),
+                PACKAGE = "spatstat")
     } else {
       # no - need double precision storage
       res <- .C("KborderD",
@@ -475,7 +488,8 @@ Kborder.engine <- function(X, rmax, nr=100,
                 nr=as.integer(nr),
                 rmax=as.double(rmax),
                 numer=as.double(numeric(nr)),
-                denom=as.double(numeric(nr)))
+                denom=as.double(numeric(nr)),
+                PACKAGE = "spatstat")
     }
     if("bord.modif" %in% correction) {
       denom.area <- eroded.areas(W, r)
@@ -523,7 +537,7 @@ Kborder.engine <- function(X, rmax, nr=100,
     } else {
       wim <- as.im(weights, W)
       weights <- wim[X, drop=FALSE]
-      if(any(is.na(weights)))
+      if(anyNA(weights))
         stop("domain of weights image does not contain all points of X")
     }
     weights.Xsort <- weights[orderX]
@@ -536,7 +550,8 @@ Kborder.engine <- function(X, rmax, nr=100,
               nr=as.integer(nr),
               rmax=as.double(rmax),
               numer=as.double(numeric(nr)),
-              denom=as.double(numeric(nr)))
+              denom=as.double(numeric(nr)),
+              PACKAGE = "spatstat")
     if("border" %in% correction) {
       bord <- res$numer/res$denom
       Kfv <- bind.fv(Kfv, data.frame(border=bord), "hat(%s)[bord](r)",
@@ -639,7 +654,8 @@ Knone.engine <- function(X, rmax, nr=100,
                 y=as.double(y),
                 nr=as.integer(nr),
                 rmax=as.double(rmax),
-                numer=as.integer(integer(nr)))
+                numer=as.integer(integer(nr)),
+                PACKAGE = "spatstat")
     } else {
       # no - need double precision storage
       res <- .C("KnoneD",
@@ -648,7 +664,8 @@ Knone.engine <- function(X, rmax, nr=100,
                 y=as.double(y),
                 nr=as.integer(nr),
                 rmax=as.double(rmax),
-                numer=as.double(numeric(nr)))
+                numer=as.double(numeric(nr)),
+                PACKAGE = "spatstat")
     }
 
     numKun <- res$numer
@@ -662,7 +679,7 @@ Knone.engine <- function(X, rmax, nr=100,
     } else {
       wim <- as.im(weights, W)
       weights <- wim[X, drop=FALSE]
-      if(any(is.na(weights)))
+      if(anyNA(weights))
         stop("domain of weights image does not contain all points of X")
     }
     weights.Xsort <- weights[orderX]
@@ -673,7 +690,8 @@ Knone.engine <- function(X, rmax, nr=100,
               w=as.double(weights.Xsort),
               nr=as.integer(nr),
               rmax=as.double(rmax),
-              numer=as.double(numeric(nr)))
+              numer=as.double(numeric(nr)),
+              PACKAGE = "spatstat")
     numKun <- res$numer
     denKun <- sum(weights)
     Kun <- numKun/denKun
@@ -710,28 +728,29 @@ Knone.engine <- function(X, rmax, nr=100,
      
 
 rmax.rule <- function(fun="K", W, lambda) {
-  verifyclass(W, "owin")
+  if(gotW <- !missing(W)) verifyclass(W, "owin")
+  if(gotL <- !missing(lambda)) lambda <- as.numeric(lambda) # can be vector
+  gotall <- gotW && gotL
   switch(fun,
          K = {
-           # Ripley's Rule
-           ripley <- min(diff(W$xrange), diff(W$yrange))/4
-           # Count at most 1000 neighbours per point
-           rlarge <- if(!missing(lambda)) sqrt(1000 /(pi * lambda)) else Inf
+           ## Ripley's Rule
+           ripley <- if(gotW) shortside(Frame(W))/4 else Inf
+           ## Count at most 1000 neighbours per point
+           rlarge <- if(gotL) sqrt(1000 /(pi * lambda)) else Inf
            rmax <- min(rlarge, ripley)
          },
          Kscaled = {
            ## rule of thumb for Kscaled
-           rdiam  <- diameter(as.rectangle(W))/2 * sqrt(lambda)
+           rdiam  <- if(gotall) diameter(Frame(W))/2 * sqrt(lambda) else Inf
            rmax <- min(10, rdiam)
          },
          F = ,
          G = ,
          J = {
            # rule of thumb
-           rdiam  <- diameter(as.rectangle(W))/2
+           rdiam  <- if(gotW) diameter(Frame(W))/2 else Inf
            # Poisson process has F(rlarge) = 1 - 10^(-5)
-           rlarge <-
-             if(!missing(lambda)) sqrt(log(1e5)/(pi * lambda)) else Inf
+           rlarge <- if(gotL) sqrt(log(1e5)/(pi * lambda)) else Inf
            rmax <- min(rlarge, rdiam)
          },
          stop(paste("Unrecognised function type", sQuote(fun)))
@@ -744,7 +763,7 @@ implemented.for.K <- function(correction, windowtype, explicit) {
   pixels <- (windowtype == "mask")
   if(any(correction == "best")) {
     # select best available correction
-    correction <- if(!pixels) "isotropic" else "translate"
+    correction[correction == "best"] <- if(!pixels) "isotropic" else "translate"
   } else {
     # available selection of edge corrections depends on window
     if(pixels) {
@@ -752,7 +771,7 @@ implemented.for.K <- function(correction, windowtype, explicit) {
       if(any(iso)) {
         whinge <- "Isotropic correction not implemented for binary masks"
         if(explicit) {
-          if(all(iso)) stop(whinge) else warning(whinge)
+        if(all(iso)) stop(whinge, call.=FALSE) else warning(whinge, call.=FALSE)
         }
         correction <- correction[!iso]
       }
@@ -773,8 +792,9 @@ good.correction.K <- function(X) {
 }
 
 Krect.engine <- function(X, rmax, nr=100,
-                           correction,
-                           weights=NULL, ratio=FALSE, fname="K") {
+                         correction,
+                         weights=NULL, ratio=FALSE, fname="K",
+                         use.integers=TRUE) {
   verifyclass(X, "ppp")
   npts <- npoints(X)
   W <- as.owin(X)
@@ -796,7 +816,7 @@ Krect.engine <- function(X, rmax, nr=100,
     } else {
       wim <- as.im(weights, W)
       weights <- wim[X, drop=FALSE]
-      if(any(is.na(weights)))
+      if(anyNA(weights))
         stop("domain of weights image does not contain all points of X")
     }
   }
@@ -864,8 +884,9 @@ Krect.engine <- function(X, rmax, nr=100,
               trans=as.double(ztrans),
               bnumer=as.double(zbnumer),
               bdenom=as.double(zbdenom),
-              unco=as.double(zunco))
-  } else if(npts < sqrt(.Machine$integer.max)) {
+              unco=as.double(zunco),
+              PACKAGE = "spatstat")
+  } else if(use.integers && npts < sqrt(.Machine$integer.max)) {
     ## unweighted
     ## numerator of border correction can be stored as an integer
     ## use faster integer arithmetic
@@ -889,7 +910,8 @@ Krect.engine <- function(X, rmax, nr=100,
               trans=as.double(ztrans),
               bnumer=as.integer(zbnumer),
               bdenom=as.integer(zbdenom),
-              unco=as.integer(zunco))
+              unco=as.integer(zunco),
+              PACKAGE = "spatstat")
   } else {
     ## unweighted
     ## need double precision storage
@@ -913,7 +935,8 @@ Krect.engine <- function(X, rmax, nr=100,
               trans=as.double(ztrans),
               bnumer=as.double(zbnumer),
               bdenom=as.double(zbdenom),
-              unco=as.double(zunco))
+              unco=as.double(zunco),
+              PACKAGE = "spatstat")
   }
 
   ## Process corrections in reverse order of priority
@@ -995,30 +1018,4 @@ Krect.engine <- function(X, rmax, nr=100,
 }
 
 
-## maximum radius for translation correction
-## = inradius of W + ^W
-
-transradius <- function(W) {
-  stopifnot(is.owin(W))
-  if(W$type == "rectangle") return(shortside(W))
-  Z <- setcov(W)
-  a <- with(Z, xstep * ystep)
-  D <- solutionset(Z > a)
-  return(inradius(D))
-}
-
-## maximum radius for rigid motion correction
-## = circumradius of W + ^W
-
-rigidradius <- function(X) {
-  stopifnot(is.ppp(X) || is.owin(X))
-  if(is.ppp(X))
-    return(max(pairdist(X[chull(X)])))
-  W <- X
-  if(W$type == "rectangle") return(diameter(W))
-  Z <- setcov(W)
-  a <- with(Z, xstep * ystep)
-  D <- solutionset(Z > a)
-  return(circumradius(D))
-}
   

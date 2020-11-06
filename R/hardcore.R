@@ -2,7 +2,7 @@
 #
 #    hardcore.S
 #
-#    $Revision: 1.10 $	$Date: 2014/10/24 00:22:30 $
+#    $Revision: 1.15 $	$Date: 2018/03/19 14:44:53 $
 #
 #    The Hard core process
 #
@@ -27,7 +27,8 @@ Hardcore <- local({
            v
          },
          par    = list(hc = NULL),  # filled in later
-         parnames = "hard core distance", 
+         parnames = "hard core distance",
+         hasInf = TRUE, 
          selfstart = function(X, self) {
            # self starter for Hardcore
            nX <- npoints(X)
@@ -80,7 +81,8 @@ Hardcore <- local({
        can.do.fast=function(X,correction,par) {
          return(all(correction %in% c("border", "none")))
        },
-       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction, ...) {
+       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction,
+                         splitInf=FALSE, ...) {
          # fast evaluator for Hardcore interaction
          if(!all(correction %in% c("border", "none")))
            return(NULL)
@@ -89,8 +91,15 @@ Hardcore <- local({
          hc <- potpars$hc
          # call evaluator for Strauss process
          counts <- strausscounts(U, X, hc, EqualPairs)
-         # all counts should be zero
-         v <- matrix(ifelseAB(counts > 0, -Inf, 0), ncol=1)
+         forbid <- (counts != 0)
+         if(!splitInf) {
+           ## usual case
+           v <- matrix(ifelseAB(forbid, -Inf, 0), ncol=1L)
+         } else {
+           ## separate hard core 
+           v <- matrix(0, nrow=npoints(U), ncol=1L)
+           attr(v, "-Inf") <- forbid
+         }
          attr(v, "IsOffset") <- TRUE
          return(v)
        },

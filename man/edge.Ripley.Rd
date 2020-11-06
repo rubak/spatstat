@@ -9,7 +9,8 @@
   for a point pattern.
 }
 \usage{
-edge.Ripley(X, r, W = X$window, method = "C", maxweight = 100)
+edge.Ripley(X, r, W = Window(X), method = c("C", "interpreted"),
+            maxweight = 100, internal=list())
 
 rmax.Ripley(W)
 }
@@ -31,6 +32,7 @@ rmax.Ripley(W)
   \item{maxweight}{
     Maximum permitted value of the edge correction weight.
   }
+  \item{internal}{For developer use only.}
 }
 \details{
   The function \code{edge.Ripley}
@@ -48,7 +50,7 @@ rmax.Ripley(W)
   \deqn{
     e(u, r) = \frac{2\pi r}{\mbox{length}(c(u,r) \cap W)}
   }{
-    e(u, r) = 2 * pi * r/length(intersection(c(u,r), W))
+    e(u, r) = 2 * \pi * r/length(intersection(c(u,r), W))
   }
   where \eqn{c(u,r)} is the circle of radius \eqn{r} centred at the
   point \eqn{u}. The denominator is the length of the overlap between
@@ -95,11 +97,11 @@ rmax.Ripley(W)
 
   rmax.Ripley(Window(cells))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

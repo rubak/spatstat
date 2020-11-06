@@ -3,7 +3,7 @@
 #
 # Works out which interaction is in force for a given point pattern
 #
-#  $Revision: 1.15 $  $Date: 2015/08/12 07:35:43 $
+#  $Revision: 1.25 $  $Date: 2016/04/25 02:34:40 $
 #
 #
 impliedpresence <- function(tags, formula, df, extranames=character(0)) {
@@ -75,6 +75,7 @@ active.interactions <- function(object) {
   datanames <- names(dat)
   dfnames <- summary(dat)$dfnames
   nondfnames <- datanames[!(datanames %in% dfnames)]
+  nondfnames <- union(nondfnames, c("x", "y"))
   
   # extract data-frame values
   dfdata <- as.data.frame(dat[, dfnames, drop=FALSE], warn=FALSE)
@@ -83,7 +84,7 @@ active.interactions <- function(object) {
   answer <- impliedpresence(itags, iformula, dfdata, nondfnames)
 #%^!ifdef RANDOMEFFECTS  
   if(!is.null(random)) {
-    if("/" %in% all.names(random)) {
+    if("|" %in% all.names(random)) {
       ## hack since model.matrix doesn't handle "|" as desired
       rnd <- gsub("|", "/", pasteFormula(random), fixed=TRUE)
       random <- as.formula(rnd, env=environment(random))
@@ -101,6 +102,7 @@ impliedcoefficients <- function(object, tag) {
   stopifnot(is.character(tag) && length(tag) == 1)
   fitobj      <- object$Fit$FIT
   Vnamelist   <- object$Fit$Vnamelist
+  has.random  <- object$Info$has.random
 # Not currently used:  
 #  fitter      <- object$Fit$fitter
 #  interaction <- object$Inter$interaction
@@ -117,99 +119,128 @@ impliedcoefficients <- function(object, tag) {
   vnames <- Vnamelist[[tag]]
   if(!is.character(vnames))
     stop("Internal error - wrong format for vnames")
+  # Check atomic type of each covariate
+  Moadf <- as.list(object$Fit$moadf)
+  islog <- sapply(Moadf, is.logical)
+  isnum <- sapply(Moadf, is.numeric)
+  isfac <- sapply(Moadf, is.factor)
+  # Interaction variables must be numeric or logical
+  if(any(bad <- !(isnum | islog)[vnames]))
+    stop(paste("Internal error: the",
+               ngettext(sum(bad), "variable", "variables"),
+               commasep(sQuote(vnames[bad])),
+               "should be numeric or logical"),
+         call.=FALSE)
   # The answer is a matrix of coefficients,
   # with one row for each point pattern,
   # and one column for each vname
   answer <- matrix(, nrow=object$npat, ncol=length(vnames))
   colnames(answer) <- vnames
-
+  
   # (1) make a data frame of covariates
   # Names of all columns in glm data frame
-  allnames <- names(object$Fit$moadf)
+  allnames <- names(Moadf)
   # Extract the design covariates
   df <- as.data.frame(object$data, warn=FALSE)
   # Names of all covariates other than design covariates
   othernames <- allnames[!(allnames %in% names(df))]
-  # Add columns in which all other covariates are set to 0
-  for(v in othernames) df[, v] <- 0
-  
+  # Add columns in which all other covariates are set to 0, FALSE, etc
+  for(v in othernames) {
+    df[, v] <- if(isnum[[v]]) 0 else
+               if(islog[[v]]) FALSE else
+               if(isfac[[v]]) {
+                 lev <- levels(Moadf[[v]])
+                 factor(lev[1], levels=lev)
+               } else sort(unique(Moadf[[v]]))[1]
+  }
   # (2) evaluate linear predictor
+  Coefs <- if(!has.random) coef(fitobj) else fixef(fitobj)
   opt <- options(warn= -1)
-  eta0 <- predict(fitobj, newdata=df, type="link")
+#  eta0 <- predict(fitobj, newdata=df, type="link")
+  eta0 <- GLMpredict(fitobj, data=df, coefs=Coefs, changecoef=TRUE, type="link")
   options(opt)
   
   # (3) for each vname in turn,
   # set the value of the vname to 1 and predict again
-  for(j in seq(vnames)) {
-    df[[vnames[j] ]] <- 1
+  for(j in seq_along(vnames)) {
+    vnj <- vnames[j]
+    df[[vnj]] <- 1
     opt <- options(warn= -1)
-    etaj <- predict(fitobj, newdata=df, type="link")
+#    etaj <- predict(fitobj, newdata=df, type="link")
+    etaj <- GLMpredict(fitobj, data=df, coefs=Coefs, changecoef=TRUE, type="link")
     options(opt)
     answer[ ,j] <- etaj - eta0
+    # set the value of this vname back to 0
+    df[[vnj]] <- 0
   }
   return(answer)
 }
 
 
 
-illegal.iformula <- function(ifmla, itags, dfvarnames) {
-  # THIS IS TOO STRINGENT!
-  # Check validity of the interaction formula.
-  #  ifmla is the formula.
-  #  itags is the character vector of interaction names.
-  # Check whether the occurrences of `itags' in `iformula' are valid:
-  # e.g. no functions applied to `itags[i]'.
-  # Returns NULL if legal, otherwise a character string 
-  stopifnot(inherits(ifmla, "formula"))
-  stopifnot(is.character(itags))
-  # formula must not have a LHS
-  if(length(ifmla) > 2)
-    return("iformula must not have a left-hand side")
-  # variables in formula must be interaction tags or data frame variables
-  varsinf <- variablesinformula(ifmla)
-  if(!all(ok <- varsinf %in% c(itags, dfvarnames))) 
-    return(paste(
-                 ngettext(sum(!ok), "variable", "variables"),
-                 paste(dQuote(varsinf[!ok]), collapse=", "),
-                 "not allowed in iformula"))
-  # if formula uses no interaction tags, it's trivial
-  if(!any(itags %in% variablesinformula(ifmla)))
+illegal.iformula <- local({
+
+  illegal.iformula <- function(ifmla, itags, dfvarnames) {
+    ## THIS IS TOO STRINGENT!
+    ## Check validity of the interaction formula.
+    ##  ifmla is the formula.
+    ##  itags is the character vector of interaction names.
+    ## Check whether the occurrences of `itags' in `iformula' are valid:
+    ## e.g. no functions applied to `itags[i]'.
+    ## Returns NULL if legal, otherwise a character string 
+    stopifnot(inherits(ifmla, "formula"))
+    stopifnot(is.character(itags))
+    ## formula must not have a LHS
+    if(length(ifmla) > 2)
+      return("iformula must not have a left-hand side")
+    ## variables in formula must be interaction tags or data frame variables
+    varsinf <- variablesinformula(ifmla)
+    if(!all(ok <- varsinf %in% c(itags, dfvarnames))) 
+      return(paste(
+                   ngettext(sum(!ok), "variable", "variables"),
+                   paste(dQuote(varsinf[!ok]), collapse=", "),
+                   "not allowed in iformula"))
+    ## if formula uses no interaction tags, it's trivial
+    if(!any(itags %in% variablesinformula(ifmla)))
+      return(NULL)
+    ## create terms object
+    tt <- attributes(terms(ifmla))
+    ## extract all variables appearing in the formula
+    vars <- as.list(tt$variables)[-1]
+    ##  nvars <- length(vars)
+    varexprs <- lapply(vars, as.expression)
+    varstrings <- sapply(varexprs, paste)
+    ## Each variable may be a name or an expression
+    v.is.name <- sapply(vars, is.name)
+    ## a term may be an expression like sin(x), poly(x,y,degree=2)
+    v.args <- lapply(varexprs, all.vars)
+    ##  v.n.args <- sapply(v.args, length)
+    v.has.itag <- sapply(lapply(v.args, "%in%", x=itags), any)
+    ## interaction tags may only appear as names, not in functions
+    if(any(nbg <- v.has.itag & !v.is.name))
+      return(paste("interaction tags may not appear inside a function:",
+                   paste(dQuote(varstrings[nbg]), collapse=", ")))
+    ## Interaction between two itags is not defined
+    ## Inspect the higher-order terms
+    fax <- tt$factors
+    if(prod(dim(fax)) == 0)
+      return(NULL)
+    ## rows are first order terms, columns are terms of order >= 1
+    fvars <- rownames(fax)
+    fterms <- colnames(fax)
+    fv.args <- lapply(fvars, variablesintext)
+    ft.args <- lapply(fterms, variables.in.term, 
+                      factors=fax, varnamelist=fv.args)
+    ft.itags <- lapply(ft.args, intersect, y=itags)
+    if(any(lengths(ft.itags) > 1))
+      return("Interaction between itags is not defined")
     return(NULL)
-  # create terms object
-  tt <- attributes(terms(ifmla))
-  # extract all variables appearing in the formula
-  vars <- as.list(tt$variables)[-1]
-#  nvars <- length(vars)
-  varstrings <- sapply(vars, function(x) paste(as.expression(x)))
-  # Each variable may be a name or an expression
-  v.is.name <- sapply(vars, is.name)
-  # a term may be an expression like sin(x), poly(x,y,degree=2)
-  v.args <- lapply(vars, function(x) all.vars(as.expression(x)))
-#  v.n.args <- sapply(v.args, length)
-  v.has.itag <- sapply(v.args,
-                      function(x,y) { any(y %in% x) },
-                         y=itags)
-  # interaction tags may only appear as names, not in functions
-  if(any(nbg <- v.has.itag & !v.is.name))
-    return(paste("interaction tags may not appear inside a function:",
-                 paste(dQuote(varstrings[nbg]), collapse=", ")))
-  # Interaction between two itags is not defined
-  # Inspect the higher-order terms
-  fax <- tt$factors
-  if(prod(dim(fax)) == 0)
-    return(NULL)
-  # rows are first order terms, columns are terms of order >= 1
-  fvars <- rownames(fax)
-  fterms <- colnames(fax)
-  fv.args <- lapply(fvars, function(x) all.vars(as.expression(parse(text=x))))
-  ft.args <- lapply(fterms,
-                    function(tum, fax, fv.args) {
-                      basis <- (fax[, tum] != 0)
-                      unlist(fv.args[basis])
-                    },
-                    fax=fax, fv.args=fv.args)
-  ft.itags <- lapply(ft.args, intersect, y=itags)
-  if(any(sapply(ft.itags, length) > 1))
-    return("Interaction between itags is not defined")
-  return(NULL)
-}
+  }
+
+  variables.in.term <- function(term, factors, varnamelist) {
+    basis <- (factors[, term] != 0)
+    unlist(varnamelist[basis])
+  }
+  
+  illegal.iformula
+})

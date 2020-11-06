@@ -1,7 +1,7 @@
 #'
 #'     dppm.R
 #'
-#'     $Revision: 1.2 $   $Date: 2015/10/06 03:25:38 $
+#'     $Revision: 1.9 $   $Date: 2018/12/08 11:14:52 $
 
 dppm <-
   function(formula, family, data=NULL,
@@ -38,11 +38,32 @@ dppm <-
   if(!inherits(formula, "formula"))
     stop(paste("Argument 'formula' should be a formula"))
 
-  kppm(formula, DPP = family, data = data, covariates = data,
-       startpar = startpar, method = method, weightfun = weightfun,
-       control = control, algorithm = algorithm, statistic = statistic,
-       statargs = statargs, rmax = rmax, covfunargs = covfunargs,
-       use.gam = use.gam, nd = nd, eps = eps, ...)
+#  kppm(formula, DPP = family, data = data, covariates = data,
+#       startpar = startpar, method = method, weightfun = weightfun,
+#       control = control, algorithm = algorithm, statistic = statistic,
+#       statargs = statargs, rmax = rmax, covfunargs = covfunargs,
+#       use.gam = use.gam, nd = nd, eps = eps, ...)
+
+  thecall <- call("kppm",
+                  X=formula,
+                  DPP=family,
+                  data = data, covariates = data,
+                  startpar = startpar, method = method,
+                  weightfun = weightfun, control = control,
+                  algorithm = algorithm, statistic = statistic,
+                  statargs = statargs, rmax = rmax, covfunargs = covfunargs,
+                  use.gam = use.gam, nd = nd, eps = eps)
+  ncall <- length(thecall)
+  argh <- list(...)
+  nargh <- length(argh)
+  if(nargh > 0) {
+    thecall[ncall + 1:nargh] <- argh
+    names(thecall)[ncall + 1:nargh] <- names(argh)
+  }
+  callenv <- parent.frame()
+  if(!is.null(data)) callenv <- list2env(data, parent=callenv)
+  result <- eval(thecall, envir=callenv, enclos=baseenv())
+  return(result)
 }
 
 ## Auxiliary function to mimic cluster models for DPPs in kppm code
@@ -58,9 +79,7 @@ spatstatDPPModelInfo <- function(model){
     },
     checkclustargs = function(margs, old = TRUE) list(),
     resolvedots = function(...){
-      ## returning the input arguments p, q, rmin, rmax in list with one element 'ctrl'
-      dots <- list(...)
-      return(list(ctrl = dots[c("p", "q", "rmin", "rmax")]))
+      return(list(...))
     },
     ## K-function
     K = function(par, rvals, ...){
@@ -107,19 +126,18 @@ dppmFixIntensity <- function(DPP, lambda, po){
     lambda <- intensity(clusters)
     ## Overwrite po object with fake version
     X <- po$Q$data
-    po <- ppm(X~log(lambda)-1)
-    po$coef.orig <- po$coef
-    po$coef <- 1
+    dont.complain.about(X)
+    po <- ppm(X~offset(log(lambda))-1)
     po$fitter <- "dppm"
     ## update pseudolikelihood value using code in logLik.ppm
     po$maxlogpl.orig <- po$maxlogpl
-    po$maxlogpl <- logLik(po, new.coef=1, warn=FALSE)
+    po$maxlogpl <- logLik(po, warn=FALSE)
     #########################################
   }
   return(list(clusters=clusters, lambda=lambda, po=po))
 }
 
-## Auxilliary function used for DPP stuff in kppm.R
+## Auxiliary function used for DPP stuff in kppm.R
 dppmFixAlgorithm <- function(algorithm, changealgorithm, clusters, startpar){
   if(!setequal(clusters$freepar, names(startpar)))
     stop("Names of startpar vector does not match the free parameters of the model.")
@@ -128,8 +146,8 @@ dppmFixAlgorithm <- function(algorithm, changealgorithm, clusters, startpar){
     bb <- dppparbounds(clusters, names(startpar))
     if(all(is.finite(bb))){
       algorithm <- "Brent"
-      lower <- bb[1]
-      upper <- bb[2]
+      lower <- bb[1L]
+      upper <- bb[2L]
     } else{
       algorithm <- "BFGS"
     }

@@ -6,13 +6,13 @@
 #
 #        compatible.fv()       Check whether two fv objects are compatible
 #
-#     $Revision: 1.31 $     $Date: 2015/05/16 07:37:40 $
+#     $Revision: 1.40 $     $Date: 2019/12/10 00:20:22 $
 #
 
 eval.fv <- local({
 
   # main function
-  eval.fv <- function(expr, envir, dotonly=TRUE, equiv=NULL) {
+  eval.fv <- function(expr, envir, dotonly=TRUE, equiv=NULL, relabel=TRUE) {
     # convert syntactic expression to 'expression' object
     e <- as.expression(substitute(expr))
     # convert syntactic expression to call
@@ -43,7 +43,7 @@ eval.fv <- local({
     if(!is.null(equiv))
       funs <- lapply(funs, mapnames, map=equiv)
     # test whether the fv objects are compatible
-    if(nfuns > 1 && !(do.call("compatible", unname(funs)))) {
+    if(nfuns > 1L && !(do.call(compatible, unname(funs)))) {
       warning(paste(if(nfuns > 2) "some of" else NULL,
                     "the functions",
                     commasep(sQuote(names(funs))),
@@ -51,7 +51,16 @@ eval.fv <- local({
       funs <- do.call(harmonise, append(funs, list(strict=TRUE)))
     }
     # copy first object as template
-    result <- funs[[1]]
+    result <- funs[[1L]]
+    ## ensure 'conservation' info is retained
+    conserve <- unname(lapply(funs, attr, which="conserve"))
+    if(any(present <- !sapply(conserve, is.null))) {
+      conserve <- do.call(resolve.defaults, conserve[present])
+      attr(result, "conserve") <- conserve
+    }
+    ## remove potential ratio info
+    class(result) <- setdiff(class(result), "rat")
+    attr(result, "numerator") <- attr(result, "denominator") <- NULL
     labl <- attr(result, "labl")
     origdotnames   <- fvnames(result, ".")
     origshadenames <- fvnames(result, ".s")
@@ -68,6 +77,8 @@ eval.fv <- local({
       # evaluate
       result[[yn]] <- eval(e, vars, enclos=envir)
     }
+    if(!relabel)
+      return(result)
     # determine mathematical labels.
     # 'yexp' determines y axis label
     # 'ylab' determines y label in printing and description
@@ -76,7 +87,7 @@ eval.fv <- local({
     ylabs <- lapply(funs, attr, which="ylab")
     fnames <- lapply(funs, getfname)
     # Repair 'fname' attributes if blank
-    blank <- unlist(lapply(fnames, function(z) { !any(nzchar(z)) }))
+    blank <- unlist(lapply(fnames, isblank))
     if(any(blank)) {
       # Set function names to be object names as used in the expression
       for(i in which(blank))
@@ -114,16 +125,16 @@ eval.fv <- local({
     attr(result, "ylab") <- eval(substitute(substitute(e, ylabs),
                                             list(e=elang)))
     # compute fname equivalent to expression
-    if(nfuns > 1) {
+    if(nfuns > 1L) {
       # take original expression
       the.fname <- paren(flatten(deparse(elang)))
-    } else if(nzchar(oldname <- flatfname(funs[[1]]))) {
+    } else if(nzchar(oldname <- flatfname(funs[[1L]]))) {
       # replace object name in expression by its function name
       namemap <- list(as.name(oldname)) 
-      names(namemap) <- names(funs)[1]
+      names(namemap) <- names(funs)[1L]
       the.fname <- deparse(eval(substitute(substitute(e, namemap),
                                            list(e=elang))))
-    } else the.fname <- names(funs)[1]
+    } else the.fname <- names(funs)[1L]
     attr(result, "fname") <- the.fname
     # now compute the [modified] y labels
     labelmaps <- lapply(funs, fvlabelmap, dot=FALSE)
@@ -158,7 +169,8 @@ eval.fv <- local({
     fvnames(x, ".y") <- mapstrings(fvnames(x, ".y"), map=map)
     return(x)
   }
-
+  isblank <-  function(z) { !any(nzchar(z)) }
+  
   eval.fv
 })
     
@@ -170,20 +182,25 @@ compatible.fv <- local({
 
   approx.equal <- function(x, y) { max(abs(x-y)) <= .Machine$double.eps }
 
-  compatible.fv <- function(A, B, ...) {
+  compatible.fv <- function(A, B, ..., samenames=TRUE) {
     verifyclass(A, "fv")
     if(missing(B)) {
       answer <- if(length(...) == 0) TRUE else compatible(A, ...)
       return(answer)
     }
     verifyclass(B, "fv")
-    ## are columns the same?
-    namesmatch <-
-      identical(all.equal(names(A),names(B)), TRUE) &&
-        (fvnames(A, ".x") == fvnames(B, ".x")) &&
-          (fvnames(A, ".y") == fvnames(B, ".y"))
-    if(!namesmatch)
+    ## is the function argument the same?
+    samearg <- (fvnames(A, ".x") == fvnames(B, ".x"))
+    if(!samearg)
       return(FALSE)
+    if(samenames) {
+      ## are all columns the same, and in the same order?
+      namesmatch <- isTRUE(all.equal(names(A),names(B))) &&
+                    samearg &&
+                    (fvnames(A, ".y") == fvnames(B, ".y"))
+      if(!namesmatch)
+        return(FALSE)
+    }
     ## are 'r' values the same ?
     rA <- with(A, .x)
     rB <- with(B, .x)
@@ -207,59 +224,73 @@ harmonize <- harmonise <- function(...) {
   UseMethod("harmonise")
 }
 
-harmonize.fv <- harmonise.fv <- function(..., strict=FALSE) {
-  argh <- list(...)
-  n <- length(argh)
-  if(n == 0) return(argh)
-  if(n == 1) {
-    a1 <- argh[[1]]
-    if(is.fv(a1)) return(argh)
-    if(is.list(a1) && all(sapply(a1, is.fv))) argh <- a1
+harmonize.fv <- harmonise.fv <- local({
+
+  harmonise.fv <- function(..., strict=FALSE) {
+    argh <- list(...)
+    n <- length(argh)
+    if(n == 0) return(argh)
+    if(n == 1) {
+      a1 <- argh[[1L]]
+      if(is.fv(a1)) return(argh)
+      if(is.list(a1) && all(sapply(a1, is.fv))) {
+        argh <- a1
+        n <- length(argh)
+      }
+    }
+    isfv <- sapply(argh, is.fv)
+    if(!all(isfv))
+      stop("All arguments must be fv objects")
+    if(n == 1) return(argh[[1L]])
+    ## determine range of argument
+    ranges <- lapply(argh, argumentrange)
+    xrange <- c(max(unlist(lapply(ranges, min))),
+                min(unlist(lapply(ranges, max))))
+    if(diff(xrange) < 0)
+      stop("No overlap in ranges of argument")
+    if(strict) {
+      ## find common column names and keep these
+      keepnames <- Reduce(intersect, lapply(argh, colnames))
+      argh <- lapply(argh, "[", j=keepnames)
+    }
+    ## determine finest resolution
+    xsteps <- sapply(argh, argumentstep)
+    finest <- which.min(xsteps)
+    ## extract argument values
+    xx <- with(argh[[finest]], .x)
+    xx <- xx[xrange[1L] <= xx & xx <= xrange[2L]]
+    xrange <- range(xx)
+    ## convert each fv object to a function
+    funs <- lapply(argh, as.function, value="*")
+    ## evaluate at common argument
+    result <- vector(mode="list", length=n)
+    for(i in 1:n) {
+      ai <- argh[[i]]
+      fi <- funs[[i]]
+      xxval <- list(xx=xx)
+      names(xxval) <- fvnames(ai, ".x")
+      starnames <- fvnames(ai, "*")
+      ## ensure they are given in same order as current columns
+      starnames <- colnames(ai)[colnames(ai) %in% starnames]
+      yyval <- lapply(starnames,
+                      function(v,xx,fi) fi(xx, v),
+                      xx=xx, fi=fi)
+      names(yyval) <- starnames
+      ri <- do.call(data.frame, append(xxval, yyval))
+      fva <- .Spatstat.FvAttrib
+      attributes(ri)[fva] <- attributes(ai)[fva]
+      class(ri) <- c("fv", class(ri))
+      attr(ri, "alim") <- intersect.ranges(attr(ai, "alim"), xrange)
+      result[[i]] <- ri
+    }
+    names(result) <- names(argh)
+    return(result)
   }
-  isfv <- sapply(argh, is.fv)
-  if(!all(isfv))
-    stop("All arguments must be fv objects")
-  ## determine range of argument
-  ranges <- lapply(argh, function(f) { range(with(f, .x)) })
-  xrange <- c(max(unlist(lapply(ranges, min))),
-              min(unlist(lapply(ranges, max))))
-  if(diff(xrange) < 0)
-    stop("No overlap in ranges of argument")
-  if(strict) {
-    ## find common column names and keep these
-    keepnames <- Reduce(intersect, lapply(argh, colnames))
-    argh <- lapply(argh, "[", j=keepnames)
-  }
-  ## determine finest resolution
-  xsteps <- unlist(lapply(argh, function(f) { mean(diff(with(f, .x))) }))
-  finest <- which.min(xsteps)
-  ## extract argument values
-  xx <- with(argh[[finest]], .x)
-  xx <- xx[xrange[1] <= xx & xx <= xrange[2]]
-  xrange <- range(xx)
-  ## convert each fv object to a function
-  funs <- lapply(argh, as.function, value="*")
-  ## evaluate at common argument
-  result <- vector(mode="list", length=n)
-  for(i in 1:n) {
-    ai <- argh[[i]]
-    fi <- funs[[i]]
-    xxval <- list(xx=xx)
-    names(xxval) <- fvnames(ai, ".x")
-    starnames <- fvnames(ai, "*")
-    ## ensure they are given in same order as current columns
-    starnames <- colnames(ai)[colnames(ai) %in% starnames]
-    yyval <- lapply(starnames,
-                    function(v,xx,fi) fi(xx, v),
-                    xx=xx, fi=fi)
-    names(yyval) <- starnames
-    ri <- do.call("data.frame", append(xxval, yyval))
-    fva <- .Spatstat.FvAttrib
-    attributes(ri)[fva] <- attributes(ai)[fva]
-    class(ri) <- c("fv", class(ri))
-    attr(ri, "alim") <- intersect.ranges(attr(ai, "alim"), xrange)
-    result[[i]] <- ri
-  }
-  names(result) <- names(argh)
-  return(result)
-}
+
+  argumentrange <- function(f) { range(with(f, .x)) }
+  
+  argumentstep <- function(f) { mean(diff(with(f, .x))) }
+  
+  harmonise.fv
+})
+

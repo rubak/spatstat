@@ -44,6 +44,7 @@ Gcom(object, r = NULL, breaks = NULL, ...,
   \item{correction}{
     Edge correction(s) to be employed in calculating the compensator.
     Options are \code{"border"}, \code{"Hanisch"} and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{conditional}{
     Optional. Logical value indicating whether to 
@@ -198,8 +199,7 @@ Gcom(object, r = NULL, breaks = NULL, ...,
   If \code{conditional=TRUE}, then the algorithm calculates
   the \emph{restriction estimator} if \code{restrict=TRUE},
   and calculates the \emph{reweighting estimator} if \code{restrict=FALSE}.
-  See Appendix E of Baddeley, Rubak
-  and \ifelse{latex}{\out{M\o ller}}{Moller} (2011).
+  See Appendix E of Baddeley, Rubak and \Moller (2011).
   See also \code{\link{spatstat.options}('eroded.intensity')}.
   Thus, by default, the reweighting estimator is computed
   for non-Poisson models.
@@ -222,16 +222,14 @@ Gcom(object, r = NULL, breaks = NULL, ...,
   There is a plot method for this class. See \code{\link{fv.object}}.
 }
 \references{
-  Baddeley, A., Rubak, E. and \ifelse{latex}{\out{M\o ller}}{Moller}, J. (2011)
+  Baddeley, A., Rubak, E. and \Moller, J. (2011)
   Score, pseudo-score and residual
   diagnostics for spatial point process models.
   \emph{Statistical Science} \bold{26}, 613--646.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Ege Rubak and Jesper \ifelse{latex}{\out{M\o ller}}{Moller}.
+  \adrian,
+  \ege and Jesper \Moller.
 }
 \seealso{
   Related functions:

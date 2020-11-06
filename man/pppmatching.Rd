@@ -12,7 +12,7 @@
 \arguments{
   \item{X,Y}{Two point patterns (objects of class \code{"ppp"}).}
   \item{am}{
-    An \code{X$n} by \code{Y$n} matrix with entries \eqn{\geq 0}{>= 0} 
+    An \code{npoints(X)} by \code{npoints(Y)} matrix with entries \eqn{\geq 0}{>= 0} 
     that specifies which points are matched and with what weight;
     alternatively, an object that can be coerced to this form
     by \code{as.matrix}.
@@ -61,9 +61,7 @@
   m <- pppmatching(X, Y, am)
   summary(m)
   m$matrix
-  \dontrun{
-    plot(m)
-  }
+  plot(m)
 
   # a random weighted complete matching
   X <- runifpoint(7)
@@ -73,11 +71,9 @@
   m2 <- pppmatching(X, Y, am)
   summary(m2)
   m2$matrix
-  \dontrun{
-    # Note: plotting does currently not distinguish
-    # between different weights
-    plot(m2)
-  }
+  plot(m2)
+  m3 <- pppmatching(X, Y, am, "ace")
+  m4 <- pppmatching(X, Y, am, "mat")
 }
 \keyword{spatial}
 \keyword{datagen}

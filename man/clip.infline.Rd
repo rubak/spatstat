@@ -22,16 +22,16 @@ clip.infline(L, win)
   a set of infinite straight lines in the plane
   (stored in an object \code{L} of class \code{"infline"} created by the
   function \code{\link{infline}}) and a window \code{win}.
-  The result is a pattern of line segments. 
+  The result is a pattern of line segments. Each line segment carries a
+  mark indicating which line it belongs to.
 }
 \value{
-  A line segment pattern (object of class \code{"psp"}).
+  A line segment pattern (object of class \code{"psp"})
+  with a single column of marks.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf.
 }
 \seealso{
   \code{\link{infline}},\code{\link{psp}}.

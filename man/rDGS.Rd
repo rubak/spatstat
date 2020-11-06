@@ -6,7 +6,7 @@
   of the Diggle-Gates-Stibbard process, using a perfect simulation algorithm.
 }
 \usage{
-  rDGS(beta, rho, W = owin(), expand=TRUE, nsim=1)
+  rDGS(beta, rho, W = owin(), expand=TRUE, nsim=1, drop=TRUE)
 }
 \arguments{
   \item{beta}{
@@ -30,6 +30,11 @@
     determining the expansion method.
   }
   \item{nsim}{Number of simulated realisations to be generated.}  
+  \item{drop}{
+    Logical. If \code{nsim=1} and \code{drop=TRUE} (the default), the
+    result will be a point pattern, rather than a list 
+    containing a point pattern.
+  }
 }
 \details{
   This function generates a realisation of the 
@@ -50,7 +55,7 @@
 
   The simulation algorithm used to generate the point pattern
   is \sQuote{dominated coupling from the past}
-  as implemented by Berthelsen and \ifelse{latex}{\out{M\o ller}}{Moller} (2002, 2003).
+  as implemented by Berthelsen and \Moller (2002, 2003).
   This is a \sQuote{perfect simulation} or \sQuote{exact simulation}
   algorithm, so called because the output of the algorithm is guaranteed
   to have the correct probability distribution exactly (unlike the
@@ -66,11 +71,11 @@
   If \code{nsim > 1}, a list of point patterns.
 }
 \references{
-  Berthelsen, K.K. and \ifelse{latex}{\out{M\o ller}}{Moller}, J. (2002)
+  Berthelsen, K.K. and \Moller, J. (2002)
   A primer on perfect simulation for spatial point processes.
   \emph{Bulletin of the Brazilian Mathematical Society} 33, 351-367.
 
-  Berthelsen, K.K. and \ifelse{latex}{\out{M\o ller}}{Moller}, J. (2003)
+  Berthelsen, K.K. and \Moller, J. (2003)
   Likelihood and non-parametric Bayesian MCMC inference 
   for spatial point processes based on perfect simulation and
   path sampling. 
@@ -81,26 +86,28 @@
    Biometrika \bold{74}, 763 -- 770.
    \emph{Scandinavian Journal of Statistics} \bold{21}, 359--373.
 
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2003).
+  \Moller, J. and Waagepetersen, R. (2003).
   \emph{Statistical Inference and Simulation for Spatial Point Processes.}
   Chapman and Hall/CRC.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian,
   based on original code for the Strauss process by 
   Kasper Klitgaard Berthelsen.
 }
 \examples{
    X <- rDGS(50, 0.05)
+   Z <- rDGS(50, 0.03, nsim=2)
 }
 \seealso{
   \code{\link{rmh}},
-  \code{\link{DiggleGatesStibbard}},
+  \code{\link{DiggleGatesStibbard}}.
+
   \code{\link{rStrauss}},
   \code{\link{rHardcore}},
-  \code{\link{rDiggleGratton}}.
+  \code{\link{rStraussHard}},
+  \code{\link{rDiggleGratton}},
+  \code{\link{rPenttinen}}.
 }
 \keyword{spatial}
 \keyword{datagen}

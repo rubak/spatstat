@@ -1,7 +1,7 @@
 ##
 ##  relrisk.ppm.R
 ##
-##  $Revision: 1.4 $ $Date: 2015/03/11 10:05:39 $
+##  $Revision: 1.9 $ $Date: 2019/01/08 07:44:07 $
 ##
 
 relrisk.ppm <- local({
@@ -63,7 +63,8 @@ relrisk.ppm <- local({
                if(!relative) {
                  ## compute probabilities..
                  ## total intensity (image)
-                 lambda.all <- Reduce("+", lambda.each)
+                 lambda.all <- im.apply(lambda.each, sum, check=FALSE)
+                 ## WAS: lambda.all <- Reduce("+", lambda.each)
                  if(!se) {
                    result <- lambda.each[[icase]]/lambda.all
                    result <- killglitches(result)
@@ -147,7 +148,8 @@ relrisk.ppm <- local({
                if(!relative) {
                  ## compute probabilities...
                  ## image of total intensity
-                 lambda.all <- Reduce("+", lambda.each)
+                 lambda.all <- im.apply(lambda.each, sum, check=FALSE)
+                 ## WAS:    lambda.all <- Reduce("+", lambda.each)
                  probs <- lapply(lambda.each, "/", e2=lambda.all)
                  probs <- as.solist(lapply(probs, killglitches))
                  if(!se) {
@@ -206,7 +208,9 @@ relrisk.ppm <- local({
     # model matrices for data locations for each possible mark
     QM <- quad.ppm(model)
     Y <- QM$data
-    QR <- quadscheme.replicated(Y, unmark(Y[FALSE]))
+    suppressWarnings({
+      QR <- quadscheme.replicated(Y, unmark(Y[FALSE]))
+    })
     sourceid <- QR$param$sourceid
     ## canonical covariates 
     mm <- model.matrix(model, Q=QR)
@@ -251,6 +255,10 @@ relrisk.ppm <- local({
     return(SE)
   }
 
+  msubtract <- function(z1, z2) mapply("-", e1=z1, e2=z2, SIMPLIFY=FALSE)
+
+  mmultiply <- function(z1, z2) solapply(z1, "*", e2=z2)
+  
   SErelriskPixels <- function(model, riskvalues, icontrol) {
     ## riskvalues is an imlist
     types <- names(riskvalues)
@@ -259,12 +267,11 @@ relrisk.ppm <- local({
     S.um <- model.images(model)
     ## S.um is a hyperframe with one column for each mark value
     ## and one row for each canonical covariate
-    dS.um <- lapply(S.um, 
-                    function(z, z0) mapply("-", e1=z, e2=z0, SIMPLIFY=FALSE),
-                    z0=S.um[,icontrol,drop=TRUE])
-    R.um <- mapply(function(a, b) as.solist(lapply(a, "*", e2=b)),
-                   a=dS.um,
-                   b=riskvalues,
+    dS.um <- lapply(S.um, msubtract, 
+                    z2=S.um[,icontrol,drop=TRUE])
+    R.um <- mapply(mmultiply,
+                   z1=dS.um,
+                   z2=riskvalues,
                    SIMPLIFY=FALSE)
     VAR <- vector(mode="list", length=ntypes)
     ntypes <- length(types)
@@ -286,6 +293,7 @@ relrisk.ppm <- local({
     return(SE)
   }
 
+
   SEprobPixels <- function(model, probvalues) {
     ## probvalues is an imlist
     types <- names(probvalues)
@@ -296,18 +304,18 @@ relrisk.ppm <- local({
     ## and one row for each canonical covariate
     ncoef <- length(coef(model))
     Sbar.u <- vector(mode="list", length=ncoef)
-    for(k in 1:ncoef)
-      Sbar.u[[k]] <- Reduce("+",
-                            mapply("*", e1=S.um[k,,drop=TRUE], e2=probvalues,
-                                   SIMPLIFY=FALSE))
+    for(k in 1:ncoef) {
+      A <- mapply("*", e1=S.um[k,,drop=TRUE], e2=probvalues, SIMPLIFY=FALSE)
+      Sbar.u[[k]] <- im.apply(A, sum)
+    }
     ## Sbar.u is a list of images, one for each canonical covariate
     Sdif.um <- lapply(as.list(S.um), 
-                      function(z, zbar) mapply("-", e1=z, e2=zbar, SIMPLIFY=FALSE),
-                      zbar=Sbar.u)
+                      msubtract,
+                      z2=Sbar.u)
     ## Sdif.um is a list of lists of images.
     ##   List of length ntypes,
     ##   each entry being an imlist of length ncoef
-    P.um <- mapply(function(a, b) as.solist(lapply(a, "*", e2=b)),
+    P.um <- mapply(mmultiply,
                    Sdif.um, 
                    probvalues, 
                    SIMPLIFY=FALSE)

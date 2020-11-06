@@ -10,7 +10,7 @@
                       hatch=FALSE,
                       hatchargs=list(), 
                       invert=FALSE, do.plot=TRUE,
-                      claim.title.space=FALSE)
+                      claim.title.space=FALSE, use.polypath=TRUE)
 }
 \arguments{
   \item{x}{
@@ -27,7 +27,14 @@
     the current plot; if \code{FALSE}, generate a new plot.
   }
   \item{\dots}{
-    extra arguments passed to the generic \code{\link{plot}} function.
+    extra arguments controlling the appearance of the plot.
+    These arguments are passed to \code{\link[graphics]{polygon}}
+    if \code{x} is a
+    polygonal or rectangular window, or passed to
+    \code{\link[graphics]{image.default}}
+    if \code{x} is a binary mask.
+    Some arguments are passed to \code{\link[graphics]{plot.default}}.
+    See Details.
   }
   \item{box}{
     logical flag; if \code{TRUE}, plot the enclosing rectangular box
@@ -68,6 +75,15 @@
     should be allocated when declaring the plot dimensions.
     Should be set to \code{FALSE} under normal conditions.
   }
+  \item{use.polypath}{
+    Logical value indicating what graphics capabilities should be used
+    to draw a polygon filled with colour when the polygon has holes.
+    If \code{TRUE} (the default), then the polygon will be filled using
+    \code{\link[graphics]{polypath}}, provided the graphics device
+    supports this function. If \code{FALSE}, the polygon will be
+    decomposed into simple closed polygons, which will be colour filled
+    using \code{\link[graphics]{polygon}}.
+  }
 }
 \value{
   none.
@@ -88,18 +104,32 @@
   or indirectly reset using 
   \code{\link{spatstat.options}}.
 
+  If \code{add=FALSE} (the default), the plot is initialised
+  by calling the base graphics function
+  \code{\link[graphics]{plot.default}}
+  to create the plot area. By default, coordinate axes
+  and axis labels are not plotted. To plot coordinate axes,
+  use the argument \code{axes=TRUE}; 
+  to plot axis labels, use the argument \code{ann=TRUE}
+  and then specify the labels with \code{xlab} and \code{ylab};
+  see the help file for \code{\link[graphics]{plot.default}} for
+  information on these arguments, and for additional
+  arguments controlling the appearance of the axes.
+  See the Examples also.
+
   When \code{x} is of type \code{"rectangle"} or \code{"polygonal"}, it
-  is plotted by the \R function \code{\link{polygon}}. To control the
+  is plotted by the \R function \code{\link[graphics]{polygon}}. To control the
   appearance (colour, fill density, line density etc) of the polygon
-  plot, determine the required argument of \code{\link{polygon}} and
+  plot, determine the required argument of \code{\link[graphics]{polygon}} and
   pass it through \code{...} For example, to paint the interior of the
   polygon in red, use the argument \code{col="red"}. To draw the polygon
   edges in green, use \code{border="green"}. To suppress the drawing of
   polygon edges, use \code{border=NA}.
 
   When \code{x} is of type \code{"mask"}, it is plotted by
-  \code{\link{image.default}}. The appearance of the image plot
-  can be controlled by passing arguments to \code{\link{image.default}}
+  \code{\link[graphics]{image.default}}. The appearance of the image plot
+  can be controlled by passing arguments to
+  \code{\link[graphics]{image.default}}
   through \code{...}. The default appearance can also be changed
   by setting the parameter \code{par.binary} of
   \code{\link{spatstat.options}}. 
@@ -111,18 +141,19 @@
   graphics device).
 }
 \section{Notes on Filled Polygons with Holes}{
-  The function \code{\link{polygon}} can only handle
+  The function \code{\link[graphics]{polygon}} can only handle
   polygons without holes. To plot polygons with holes in a solid colour,
   we have implemented two workarounds.
   
   \describe{
     \item{polypath function:}{
       The first workaround uses
-      the relatively new function \code{\link{polypath}} which
+      the relatively new function \code{\link[graphics]{polypath}} which
       \emph{does} have the capability to handle polygons with holes.
-      However, not all graphics devices support \code{\link{polypath}}.
+      However, not all graphics devices support
+      \code{\link[graphics]{polypath}}.
       The older devices \code{\link{xfig}} and \code{\link{pictex}}
-      do not support \code{\link{polypath}}.
+      do not support \code{\link[graphics]{polypath}}.
       On a Windows system, the default graphics device
 #ifdef windows      
       \code{\link{windows}} 
@@ -130,10 +161,11 @@
 #ifndef windows      
       \code{windows}
 #endif
-      supports \code{\link{polypath}}.
+      supports \code{\link[graphics]{polypath}}.
 #ifdef unix
       On a Linux system, the default graphics device
-      \code{X11(type="Xlib")} does \emph{not} support \code{\link{polypath}}
+      \code{X11(type="Xlib")} does \emph{not} support
+      \code{\link[graphics]{polypath}}
       but \code{X11(type="cairo")} does support it.
       See \code{\link{X11}} and the section on Cairo below.
 #endif
@@ -151,7 +183,7 @@
   Linux systems support
   the graphics device \code{X11(type="cairo")} (see \code{\link{X11}})
   provided the external library \pkg{cairo} is installed
-  on the computer. See \url{http://www.cairographics.org/download}
+  on the computer. See \code{www.cairographics.org}
   for instructions on obtaining and installing \pkg{cairo}.  After having
   installed \pkg{cairo} one needs to re-install \R from source so
   that it has \pkg{cairo} capabilites.  To check whether your
@@ -171,8 +203,8 @@
 \seealso{
   \code{\link{owin.object}},
   \code{\link{plot.ppp}},
-  \code{\link{polygon}},
-  \code{\link{image.default}},
+  \code{\link[graphics]{polygon}},
+  \code{\link[graphics]{image.default}},
   \code{\link{spatstat.options}}
 }
 \examples{
@@ -192,12 +224,13 @@
   op <- spatstat.options(par.binary=list(col=grey(c(0.5,1))))
   plot(we)
   spatstat.options(op)
+
+  ## axis annotation
+  plot(letterR, axes=TRUE, ann=TRUE, xlab="Easting", ylab="Northing")
+  plot(letterR,            ann=TRUE, xlab="Declination", ylab="Right Ascension")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{hplot}

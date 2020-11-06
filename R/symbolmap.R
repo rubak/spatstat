@@ -1,17 +1,22 @@
 ##
 ## symbolmap.R
 ##
-##   $Revision: 1.22 $  $Date: 2015/04/28 12:20:31 $
+##   $Revision: 1.37 $  $Date: 2020/01/11 04:45:05 $
 ##
 
 symbolmap <- local({
 
   known.unknowns <- c("shape", "pch", "chars",
                       "size", "cex",
+                      "direction", "arrowtype", "headlength", "headangle", 
                       "col", "cols", "fg", "bg",
                       "lty", "lwd", "border", "fill",
                       "etch")
-  
+
+  trycolourmap <- function(...) {
+    try(colourmap(...), silent=TRUE)
+  }
+
   symbolmap <- function(..., range=NULL, inputs=NULL) {
     if(!is.null(range) && !is.null(inputs))
       stop("Arguments range and inputs are incompatible")
@@ -33,15 +38,31 @@ symbolmap <- local({
         stop("All graphics parameters must have names")
           atomic <- unlist(lapply(parlist, is.atomic))
       functions <- unlist(lapply(parlist, is.function))
-      lengths <- unlist(lapply(parlist, length))
-      constants <- atomic & (lengths == 1)
+      lenfs <- lengths(parlist)
+      constants <- atomic & (lenfs == 1)
       if(any(bad <- !(constants | functions))) {
         if(type == "discrete" && any(repairable <- atomic[bad])) {
           ## recycle data to desired length
           parlist[repairable] <- lapply(parlist[repairable],
-                                        function(z, n) rep.int(z, n)[1:n],
+                                        reptolength,
                                         n=length(inputs))
           bad[repairable] <- FALSE
+        }
+        if(type == "continuous") {
+          ## look for vectors of colour values
+          iscol <- bad & sapply(parlist, is.colour) &
+            (names(parlist) %in% c("cols", "col", "fg", "bg"))
+          ## convert colour values to colour map
+          if(any(iscol)) {
+            cmap <- lapply(parlist[iscol], trycolourmap, range=range)
+            success <- sapply(cmap, inherits, what="colourmap")
+            iscol[iscol] <- success
+            if(any(iscol)) {
+              parlist[iscol] <- cmap[success]
+              bad[iscol] <- FALSE
+              functions[iscol] <- TRUE
+            }
+          }
         }
         nbad <- sum(bad)
         if(nbad > 0) 
@@ -90,8 +111,10 @@ symbolmap <- local({
     f
   }
 
+  reptolength <- function(z, n) { rep.int(z, n)[1:n] }
+  
   MapDiscrete <- function(f, x, i) {
-    if(is.function(f)) f(x) else f[i]
+    if(is.function(f)) f(x) else if(length(f) == 1) rep.int(f, length(x)) else f[i]
   }
   
   MapContinuous <- function(f, x) {
@@ -109,7 +132,7 @@ symbolmap <- local({
   ApplyDiscreteSymbolMap <- function(x, stuff) {
     with(stuff, {
       ii <- match(x, inputs)
-      if(any(is.na(ii)))
+      if(anyNA(ii))
         stop("Some values do not belong to the domain of the symbol map")
       y <- as.data.frame(lapply(parlist, MapDiscrete, x=x, i=ii),
                          stringsAsFactors=FALSE)
@@ -121,10 +144,19 @@ symbolmap <- local({
 
 symbolmaptype <- function(x) { attr(x, "stuff")$type }
 
+symbolmapdomain <- function(x) {
+  stuff <- attr(x, "stuff")
+  d <- switch(stuff$type,
+              constant = { integer(0) },
+              discrete = { stuff$inputs },
+              continuous = { stuff$range })
+  return(d)
+}
+
 update.symbolmap <- function(object, ...) {
   y <- attr(object, "stuff")
   oldargs <- append(y[["parlist"]], y[c("inputs", "range")])
-  do.call("symbolmap", resolve.defaults(list(...), oldargs))
+  do.call(symbolmap, resolve.defaults(list(...), oldargs))
 }
 
 print.symbolmap <- function(x, ...) {
@@ -188,14 +220,14 @@ invoke.symbolmap <- local({
       if(length(etch) == 1) etch <- rep(etch, n)
       ## infer which arguments are parallelised
       other <- append(list(...), list(cex=cex, pch=pch))
-      isvec <- (unlist(lapply(other, length)) == n)
+      isvec <- (lengths(other) == n)
       other.fixed <- other[!isvec]
       other.vec   <- other[isvec]
       ##
       if(any(i <- as.logical(etch))) {
         anti.col <- complementarycolour(col)
         anti.lwd <- if(is.numeric(etch)) etch else 2 * lwd
-        do.call.matched("points.default",
+        do.call.matched(points.default,
                         resolve.defaults(list(x=x[i], y=y[i]),
                                          other.fixed,
                                          lapply(other.vec, "[", i=i),
@@ -204,7 +236,7 @@ invoke.symbolmap <- local({
                         extrargs=c("col", "pch", "type", "bg",
                                    "cex", "lwd", "lty"))
       }
-      do.call.matched("points.default",
+      do.call.matched(points.default,
                     resolve.defaults(list(x=x, y=y),
                                      other,
                                      list(col=col, lwd=lwd)),
@@ -231,7 +263,7 @@ invoke.symbolmap <- local({
       other <- resolve.defaults(list(...),
                                 list(add=TRUE, inches=FALSE))
       ## infer which arguments are parallelised
-      isvec <- (unlist(lapply(other, length)) == n)
+      isvec <- (lengths(other) == n)
       other.fixed <- other[!isvec]
       other.vec   <- other[isvec]
       ##
@@ -241,51 +273,108 @@ invoke.symbolmap <- local({
       }
       ## plot
       if(any(i <- (shape == "circles") & as.logical(etch))) 
-        do.call.matched("symbols",
-                        c(list(x=x[i], y=y[i], circles=size[i]),
+        do.call.matched(symbols,
+                        c(list(x=x[i], y=y[i], circles=size[i]/2),
                           other.fixed,
                           lapply(other.vec, "[", i=i),
                           list(lwd=anti.lwd[i], fg=anti.fg[i])),
                         extrargs=c("lwd", "lty"))
       if(any(i <- (shape == "circles")))
-        do.call.matched("symbols",
-                        c(list(x=x[i], y=y[i], circles=size[i]),
+        do.call.matched(symbols,
+                        c(list(x=x[i], y=y[i], circles=size[i]/2),
                           other.fixed,
                           lapply(other.vec, "[", i=i),
                           list(lwd=lwd[i], fg=fg[i])),
                         extrargs=c("lwd", "lty"))
       if(any(i <- (shape == "squares") & as.logical(etch)))
-        do.call.matched("symbols",
+        do.call.matched(symbols,
                         c(list(x=x[i], y=y[i], squares=size[i]),
                           other.fixed,
                           lapply(other.vec, "[", i=i),
                           list(lwd=anti.lwd[i], fg=anti.fg[i])),
                         extrargs=c("lwd", "lty"))
       if(any(i <- (shape == "squares"))) 
-        do.call.matched("symbols",
+        do.call.matched(symbols,
                         c(list(x=x[i], y=y[i], squares=size[i]),
                           other.fixed,
                           lapply(other.vec, "[", i=i),
                           list(lwd=lwd[i], fg=fg[i])),
                         extrargs=c("lwd", "lty"))
+      if(any(i <- (shape == "arrows") & as.logical(etch)))
+        do.call.matched(do.arrows,
+                        c(list(x=x[i], y=y[i], len=size[i]),
+                          other.fixed,
+                          lapply(other.vec, "[", i=i),
+                          list(lwd=anti.lwd[i], cols=anti.fg[i])),
+                        extrargs=c("cols", "col", "lwd", "lty"))
+      if(any(i <- (shape == "arrows"))) 
+        do.call.matched(do.arrows,
+                        c(list(x=x[i], y=y[i], len=size[i]),
+                          other.fixed,
+                          lapply(other.vec, "[", i=i),
+                          list(lwd=lwd[i], cols=fg[i])),
+                        extrargs=c("cols", "col", "lwd", "lty"))
     }
-    return(max(size * ifelse(shape == "circles", 2, 1)))
+    return(max(size))
   }
 
+  do.arrows <- function(x, y, len, direction=0, arrowtype=2, ...,
+                        headlength=len * 0.4, 
+                        headangle=40,
+                        cols=col, col=par('fg'),
+                        lwd=1, lty=1) {
+    #' vectorise all arguments
+    df <- data.frame(x=x, y=y, len=len, direction=direction,
+                     arrowtype=arrowtype, headangle=headangle,
+                     cols=cols, lwd=lwd, lty=lty)
+    with(df, {
+      alpha <- direction * pi/180
+      dx <- len * cos(alpha)/2
+      dy <- len * sin(alpha)/2
+      x0 <- x - dx
+      x1 <- x + dx
+      y0 <- y - dy
+      y1 <- y + dy
+      segments(x0, y0, x1, y1, ..., col=cols, lty=lty, lwd=lwd)
+      if(any(arrowtype != 0)) {
+        halfangle <- (headangle/2) * pi/180
+        beta1 <- alpha + halfangle
+        beta2 <- alpha - halfangle
+        hx1 <- headlength * cos(beta1)
+        hy1 <- headlength * sin(beta1)
+        hx2 <- headlength * cos(beta2)
+        hy2 <- headlength * sin(beta2)
+        if(any(left <- (arrowtype %in% c(1,3)))) {
+          segments(x0[left], y0[left], (x0 + hx1)[left], (y0 + hy1)[left],
+                   ..., col=cols[left], lwd=lwd[left], lty=lty[left])
+          segments(x0[left], y0[left], (x0 + hx2)[left], (y0 + hy2)[left],
+                   ..., col=cols[left], lwd=lwd[left], lty=lty[left])
+        }
+        if(any(right <- (arrowtype %in% c(2,3)))) {
+          segments(x1[right], y1[right], (x1 - hx1)[right], (y1 - hy1)[right],
+                   ..., col=cols[right], lwd=lwd[right], lty=lty[right])
+          segments(x1[right], y1[right], (x1 - hx2)[right], (y1 - hy2)[right],
+                   ..., col=cols[right], lwd=lwd[right], lty=lty[right])
+        }
+      }
+    })
+    return(invisible(NULL))
+  }
+  
   ## main function
-  invoke.symbolmap <- function(map, values, x, y=NULL, ...,
+  invoke.symbolmap <- function(map, values, x=NULL, y=NULL, ...,
                                  add=FALSE, do.plot=TRUE,
                                  started = add && do.plot) {
     if(!inherits(map, "symbolmap"))
       stop("map should be an object of class 'symbolmap'")
-    ## function will return maximum size of symbols plotted.
-    maxsize <- 0
-    if(do.plot) {
+    if(hasxy <- (!is.null(x) || !is.null(y))) {
       xy <- xy.coords(x, y)
       x <- xy$x
       y <- xy$y
-      if(!add) plot(x, y, type="n", ...)
-    }
+    } 
+    ## function will return maximum size of symbols plotted.
+    maxsize <- 0
+    if(do.plot && !add) plot(x, y, type="n", ...)
     force(values)
     g <- map(values)
     parnames <- colnames(g)
@@ -294,7 +383,7 @@ invoke.symbolmap <- local({
       if(nrow(xydf) == 0)
         return(invisible(maxsize))
       g <- if(prod(dim(g)) == 0) xydf else 
-           do.call("data.frame",
+           do.call(data.frame,
                    c(as.list(g), as.list(xydf), list(stringsAsFactors=FALSE)))
     }
     n <- nrow(g)
@@ -313,20 +402,20 @@ invoke.symbolmap <- local({
     ## display using 'pch'
     zpoints <- z[["points"]]
     if(!is.null(zpoints) && nrow(zpoints) > 0) {
-      ms <- do.call("do.points",
+      ms <- do.call(do.points,
                     resolve.defaults(as.list(zpoints),
                                      list(...),
                                      list(do.plot=do.plot)))
       ## value is max(cex)
       ## guess size of one character
       charsize <- if(started) max(par('cxy')) else
-                    max(sidelengths(boundingbox(x,y))/40)
+                  if(hasxy) max(sidelengths(boundingbox(x,y))/40) else 1/40
       maxsize <- max(maxsize, charsize * ms)
     }
     ## display using 'symbols'
     zsymbols <- z[["symbols"]]
     if(!is.null(zsymbols) && nrow(zsymbols) > 0) {
-      ms <- do.call("do.symbols",
+      ms <- do.call(do.symbols,
                     resolve.defaults(as.list(zsymbols),
                                      list(...),
                                      list(do.plot=do.plot)))
@@ -346,7 +435,8 @@ plot.symbolmap <- function(x, ..., main,
                            xlim=NULL, ylim=NULL,
                            vertical=FALSE,
                            side=c("bottom", "left", "top", "right"),
-                           annotate=TRUE, labelmap=NULL, add=FALSE) {
+                           annotate=TRUE, labelmap=NULL, add=FALSE,
+                           nsymbols=NULL) {
   if(missing(main))
     main <- short.deparse(substitute(x))
   miss.side <- missing(side)
@@ -376,12 +466,14 @@ plot.symbolmap <- function(x, ..., main,
            ra <- stuff$range
            if(is.null(ra))
              stop("Cannot plot symbolmap with an infinite range")
-           vv <- prettyinside(ra)
+           vv <- if(is.null(nsymbols)) prettyinside(ra) else
+                 prettyinside(ra, n = nsymbols)
            if(is.numeric(vv))
              vv <- signif(vv, 4)
          },
          discrete = {
-           vv <- prettydiscrete(stuff$inputs)
+           vv <- if(is.null(nsymbols)) prettydiscrete(stuff$inputs) else
+                 prettydiscrete(stuff$inputs, n = nsymbols)
            if(vertical) vv <- rev(vv)
          })
   nn <- length(vv)
@@ -396,7 +488,8 @@ plot.symbolmap <- function(x, ..., main,
     if(is.null(ylim)) ylim <- usr[3:4]
   } else {
     ## create new plot
-    zz <- c(0, 1)
+    maxdiam <- invoke.symbolmap(map, vv, do.plot=FALSE, started=FALSE)
+    zz <- c(0, max(1, maxdiam))
     if(is.null(xlim) && is.null(ylim)) {
       if(vertical) {
         xlim <- zz
@@ -414,7 +507,7 @@ plot.symbolmap <- function(x, ..., main,
 
   ## .......... initialise plot ...............................
   if(!add)
-    do.call.matched("plot.default",
+    do.call.matched(plot.default,
                     resolve.defaults(list(x=xlim, y=ylim,
                                           type="n", main=main,
                                           axes=FALSE, xlab="", ylab="",
@@ -463,7 +556,7 @@ plot.symbolmap <- function(x, ..., main,
                       "is not consistent with vertical orientation"))
       pos <- c(ylim[1], xlim[1], ylim[2], xlim[2])[sidecode]
       ## draw axis
-      do.call.matched("axis",
+      do.call.matched(graphics::axis,
                       resolve.defaults(list(...),
                                        list(side=sidecode, pos=pos, at=yp,
                                             labels=ll, tick=FALSE, las=1)),
@@ -477,7 +570,7 @@ plot.symbolmap <- function(x, ..., main,
                       "is not consistent with horizontal orientation"))
       pos <- c(ylim[1], xlim[1], ylim[2], xlim[2])[sidecode]
       ## draw axis
-      do.call.matched("axis",
+      do.call.matched(graphics::axis,
                       resolve.defaults(list(...),
                                        list(side = sidecode, pos = pos,
                                             at = xp, labels=ll, tick=FALSE)),
@@ -516,13 +609,14 @@ plan.legend.layout <- function(B,
     stopifnot(sep > 0)
   }
   if(is.null(map) || !inherits(map, "symbolmap")) {
+    vv <- NULL
     textlength <- 8
   } else {
     vv <- with(attr(map, "stuff"),
                if(type == "discrete") inputs else prettyinside(range))
     textlength <- max(nchar(paste(vv)))
   }
-  if(started) {
+  if(started && !is.null(vv)) {
     textwidth <- max(strwidth(vv))
     textheight <- max(strheight(vv))
   } else {

@@ -2,11 +2,14 @@
 
   close3pair.c
 
-  $Revision: 1.1 $     $Date: 2015/02/21 03:28:53 $
+  $Revision: 1.3 $     $Date: 2018/12/18 02:43:11 $
 
   closepairs and crosspairs for 3D
 
   Assumes point pattern is sorted in increasing order of x coordinate
+
+  Copyright (C) Adrian Baddeley, Ege Rubak and Rolf Turner 2001-2018
+  Licence: GNU Public Licence >= 2
 
 */
 
@@ -28,6 +31,9 @@ double sqrt();
 
 /* .......  define functions, using closefuns.h  ........*/
 
+/* return only one of the pairs (i,j) and (j,i) */
+#define SINGLE
+
 /* enable 3D code */
 #define ZCOORD
 
@@ -37,6 +43,19 @@ double sqrt();
 #undef THRESH
 #undef COORDS
 #undef DIST
+#include "closefuns.h"
+#undef CLOSEFUN
+#undef CROSSFUN
+#undef THRESH
+#undef COORDS
+#undef DIST
+
+/* return i, j, d */
+#define CLOSEFUN close3IJDpairs
+#define CROSSFUN cross3IJDpairs
+#undef THRESH
+#undef COORDS
+#define DIST
 #include "closefuns.h"
 #undef CLOSEFUN
 #undef CROSSFUN

@@ -9,7 +9,7 @@
 }
 \usage{
    bw.smoothppp(X, nh = spatstat.options("n.bandwidth"),
-   hmin=NULL, hmax=NULL, warn=TRUE)
+   hmin=NULL, hmax=NULL, warn=TRUE, kernel="gaussian")
 }
 
 \arguments{
@@ -29,6 +29,12 @@
     Logical. If \code{TRUE}, issue a warning if the minimum of
     the cross-validation criterion occurs at one of the ends of the
     search interval.
+  }
+  \item{kernel}{
+    The smoothing kernel.
+    A character string specifying the smoothing kernel
+    (current options are \code{"gaussian"}, \code{"epanechnikov"},
+    \code{"quartic"} or \code{"disc"}).
   }
 }
 \details{
@@ -82,11 +88,11 @@
   plot(b)
   \testonly{spatstat.options(op)}
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{methods}

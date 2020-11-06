@@ -44,6 +44,7 @@ Jdot(X, i, eps=NULL, r=NULL, breaks=NULL, \dots, correction=NULL)
     Optional. Character string specifying the edge correction(s)
     to be used. Options are \code{"none"}, \code{"rs"}, \code{"km"},
     \code{"Hanisch"} and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
   }
 }
 \value{
@@ -134,7 +135,7 @@ Jdot(X, i, eps=NULL, r=NULL, breaks=NULL, \dots, correction=NULL)
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape.
   Biases due to edge effects are
   treated in the same manner as in \code{\link{Jest}},
@@ -144,7 +145,7 @@ Jdot(X, i, eps=NULL, r=NULL, breaks=NULL, \dots, correction=NULL)
   The argument \code{r} is the vector of values for the
   distance \eqn{r} at which \eqn{J_{i\bullet}(r)}{Ji.(r)} should be evaluated. 
   The values of \eqn{r} must be increasing nonnegative numbers
-  and the maximum \eqn{r} value must exceed the radius of the
+  and the maximum \eqn{r} value must not exceed the radius of the
   largest disc contained in the window.
 }
 \references{
@@ -171,15 +172,15 @@ Jdot(X, i, eps=NULL, r=NULL, breaks=NULL, \dots, correction=NULL)
 }
 \examples{
      # Lansing woods data: 6 types of trees
-    data(lansing)
+   woods <- lansing
 
     \testonly{
-        lansing <- lansing[seq(1,lansing$n, by=30), ]
+        woods <- woods[seq(1,npoints(woods), by=30), ]
     }
-    Jh. <- Jdot(lansing, "hickory")
+    Jh. <- Jdot(woods, "hickory")
     plot(Jh.)
     # diagnostic plot for independence between hickories and other trees
-    Jhh <- Jest(lansing[lansing$marks == "hickory", ])
+    Jhh <- Jest(split(woods)$hickory)
     plot(Jhh, add=TRUE, legendpos="bottom")
 
     \dontrun{
@@ -188,11 +189,11 @@ Jdot(X, i, eps=NULL, r=NULL, breaks=NULL, \dots, correction=NULL)
     J <- Jdot(pp, "a")
     }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -21,7 +21,8 @@ textureplot(x, \dots,
   \item{x}{
     A tessellation (object of class \code{"tess"} or something
     acceptable to \code{\link{as.tess}}) with at most 8 tiles,
-    or a pixel image (object of class \code{"im"}) whose pixel values
+    or a pixel image (object of class \code{"im"} or something
+    acceptable to \code{\link{as.im}}) whose pixel values
     are a \code{factor} with at most 8 levels.
   }
   \item{\dots}{
@@ -93,13 +94,7 @@ textureplot(x, \dots,
   associating a texture with each level of the factor.
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{im}}, 
@@ -107,8 +102,10 @@ and Ege Rubak
   \code{\link{add.texture}}.
 }
 \examples{
-  Z <- cut(setcov(owin()), 3, labels=c("Lo", "Med", "Hi"))
-  textureplot(Z)
+  nd <- if(interactive()) 128 else 32
+  Z <- setcov(owin(), dimyx=nd)
+  Zcut <- cut(Z, 3, labels=c("Lo", "Med", "Hi"))
+  textureplot(Zcut)
   textureplot(dirichlet(runifpoint(6)))
 }
 \keyword{spatial}

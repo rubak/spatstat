@@ -7,12 +7,14 @@
 }
 \usage{
 Hest(X, r=NULL, breaks=NULL, ...,
-                 correction=c("km", "rs", "han"),
-                 conditional=TRUE)
+     W,
+     correction=c("km", "rs", "han"),
+     conditional=TRUE)
 }
 \arguments{
   \item{X}{The observed random set.
     An object of class \code{"ppp"}, \code{"psp"} or \code{"owin"}.
+    Alternatively a pixel image (class \code{"im"}) with logical values.
   }
   \item{r}{
     Optional. Vector of values for the argument \eqn{r} at which \eqn{H(r)} 
@@ -25,12 +27,21 @@ Hest(X, r=NULL, breaks=NULL, ...,
   \item{\dots}{Arguments passed to \code{\link{as.mask}}
     to control the discretisation.
   }
+  \item{W}{
+    Optional. A window (object of class \code{"owin"})
+    to be taken as the window of observation.
+    The contact distribution function will be estimated
+    from values of the contact distance inside \code{W}.
+    The default is \code{W=Frame(X)} when \code{X} is a window,
+    and \code{W=Window(X)} otherwise.
+  }
   \item{correction}{
    Optional.
     The edge correction(s) to be used to estimate \eqn{H(r)}.
     A vector of character strings selected from
     \code{"none"}, \code{"rs"}, \code{"km"}, \code{"han"}
     and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{conditional}{
     Logical value indicating whether to compute the
@@ -134,15 +145,24 @@ Hest(X, r=NULL, breaks=NULL, ...,
    Y <- rpoisline(10)
    H <- Hest(Y)
    H <- Hest(Y, dimyx=256)
-   data(heather)
-   H <- Hest(heather$coarse)
-   H <- Hest(heather$coarse, conditional=FALSE)
+   X <- heather$coarse
+   plot(Hest(X))
+   H <- Hest(X, conditional=FALSE)
+
+   P <- owin(poly=list(x=c(5.3, 8.5, 8.3, 3.7, 1.3, 3.7),
+                       y=c(9.7, 10.0, 13.6, 14.4, 10.7, 7.2)))
+   plot(X)
+   plot(P, add=TRUE, col="red")
+   H <- Hest(X, W=P)
+   Z <- as.im(FALSE, Frame(X))
+   Z[X] <- TRUE
+   Z <- Z[P, drop=FALSE]
+   plot(Z)
+   H <- Hest(Z)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
+  with contributions from Kassel Hingee.
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -14,7 +14,8 @@
 Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
          correction = c("border", "isotropic", "Ripley", "translate"),
          sigma=NULL, varcov=NULL,
-         lambdaIJ=NULL)
+         lambdaIJ=NULL,
+         lambdaX=NULL, update=TRUE, leaveoneout=TRUE)
 }
 \arguments{
   \item{X}{The observed point pattern, 
@@ -37,11 +38,13 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
   }
   \item{lambdaI}{
     Optional.
-    Values of the the estimated intensity of the sub-process of
+    Values of the estimated intensity of the sub-process of
     points of type \code{i}.
     Either a pixel image (object of class \code{"im"}),
     a numeric vector containing the intensity values
     at each of the type \code{i} points in \code{X},
+    a fitted point process model
+    (object of class \code{"ppm"} or \code{"kppm"} or \code{"dppm"}),
     or a \code{function(x,y)} which
     can be evaluated to give the intensity value at any location.
   }
@@ -52,6 +55,8 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
     Either a pixel image (object of class \code{"im"}),
     a numeric vector containing the intensity values
     at each of the type \code{j} points in \code{X},
+    a fitted point process model
+    (object of class \code{"ppm"} or \code{"kppm"} or \code{"dppm"}),
     or a \code{function(x,y)} which
     can be evaluated to give the intensity value at any location. 
   }
@@ -73,6 +78,7 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
     \code{"translation"},
     \code{"none"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{\dots}{
     Ignored.
@@ -80,18 +86,47 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
   \item{sigma}{
     Standard deviation of isotropic Gaussian smoothing kernel,
     used in computing leave-one-out kernel estimates of
-    \code{lambdaI}, \code{lambdadot} if they are omitted.
+    \code{lambdaI}, \code{lambdaJ} if they are omitted.
   }
   \item{varcov}{
     Variance-covariance matrix of anisotropic Gaussian kernel,
     used in computing leave-one-out kernel estimates of
-    \code{lambdaI}, \code{lambdadot} if they are omitted.
+    \code{lambdaI}, \code{lambdaJ} if they are omitted.
     Incompatible with \code{sigma}.
   }
   \item{lambdaIJ}{
     Optional. A matrix containing estimates of the
     product of the intensities \code{lambdaI} and \code{lambdaJ}
     for each pair of points of types \code{i} and \code{j} respectively.
+  }
+  \item{lambdaX}{
+    Optional. Values of the intensity for all points of \code{X}.
+    Either a pixel image (object of class \code{"im"}),
+    a numeric vector containing the intensity values
+    at each of the points in \code{X},
+    a fitted point process model
+    (object of class \code{"ppm"} or \code{"kppm"} or \code{"dppm"}),
+    or a \code{function(x,y)} which
+    can be evaluated to give the intensity value at any location.
+    If present, this argument overrides both \code{lambdaI} and
+    \code{lambdaJ}.
+  }
+  \item{update}{
+    Logical value indicating what to do when
+    \code{lambdaI}, \code{lambdaJ} or \code{lambdaX}
+    is a fitted point process model
+    (class \code{"ppm"}, \code{"kppm"} or \code{"dppm"}).
+    If \code{update=TRUE} (the default),
+    the model will first be refitted to the data \code{X}
+    (using \code{\link{update.ppm}} or \code{\link{update.kppm}})
+    before the fitted intensity is computed.
+    If \code{update=FALSE}, the fitted intensity of the
+    model will be computed without re-fitting it to \code{X}.
+  }
+  \item{leaveoneout}{
+    Logical value (passed to \code{\link{density.ppp}} or
+    \code{\link{fitted.ppm}}) specifying whether to use a
+    leave-one-out rule when calculating the intensity.
   }
 }
 \value{
@@ -117,8 +152,7 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
   in a manner similar to the function \code{\link{Kinhom}}.
 
   The inhomogeneous cross-type \eqn{K} function is described by
-  \ifelse{latex}{\out{M\o ller}}{Moller}
-  and Waagepetersen (2003, pages 48-49 and 51-53).
+  \Moller and Waagepetersen (2003, pages 48-49 and 51-53).
   
   Briefly, given a multitype point process, suppose the sub-process
   of points of type \eqn{j} has intensity function
@@ -168,6 +202,12 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
       which can be evaluated to give values of the intensity at
       any locations.
     }
+     \item{a fitted point process model}{
+      (object of class \code{"ppm"}, \code{"kppm"} or \code{"dppm"})
+      whose fitted \emph{trend} can be used as the fitted intensity.
+      (If \code{update=TRUE} the model will first be refitted to the
+      data \code{X} before the trend is computed.)
+    }
     \item{omitted:}{
       if \code{lambdaI} is omitted then it will be estimated
       using a leave-one-out kernel smoother. 
@@ -175,7 +215,7 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
   }
   If \code{lambdaI} is omitted, then it will be estimated using
   a `leave-one-out' kernel smoother,
-  as described in Baddeley, \ifelse{latex}{\out{M\o ller}}{Moller}
+  as described in Baddeley, \Moller 
   and Waagepetersen (2000).  The estimate of \code{lambdaI} for a given
   point is computed by removing the point from the
   point pattern, applying kernel smoothing to the remaining points using
@@ -189,6 +229,10 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
   type \code{j}. It may be either a pixel image, a function,
   a numeric vector, or omitted.
   
+  Alternatively if the argument \code{lambdaX} is given, then it specifies
+  the intensity values for all points of \code{X}, and the
+  arguments \code{lambdaI}, \code{lambdaJ} will be ignored.
+  
   The optional argument \code{lambdaIJ} is for advanced use only.
   It is a matrix containing estimated
   values of the products of these two intensities for each pair of
@@ -197,7 +241,7 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
   The argument \code{r} is the vector of values for the
   distance \eqn{r} at which \eqn{K_{ij}(r)}{Kij(r)} should be evaluated. 
   The values of \eqn{r} must be increasing nonnegative numbers
-  and the maximum \eqn{r} value must exceed the radius of the
+  and the maximum \eqn{r} value must not exceed the radius of the
   largest disc contained in the window.
 
   The argument \code{correction} chooses the edge correction
@@ -207,13 +251,12 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
   result of \code{Kcross.inhom}; see \code{\link{pcf}}.
 }
 \references{
-  Baddeley, A.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2000)
+  Baddeley, A., \Moller, J. and Waagepetersen, R. (2000)
   Non- and semiparametric estimation of interaction in
   inhomogeneous point patterns.
   \emph{Statistica Neerlandica} \bold{54}, 329--350.
 
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R.
+  \Moller, J. and Waagepetersen, R.
   Statistical Inference and Simulation for Spatial Point Processes
   Chapman and Hall/CRC
   Boca Raton, 2003.
@@ -234,27 +277,32 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
 }
 \examples{
     # Lansing Woods data
-    data(lansing)
-    lansing <- lansing[seq(1,lansing$n, by=10)]
-    ma <- split(lansing)$maple
-    wh <- split(lansing)$whiteoak
+    woods <- lansing
+    \testonly{woods <- woods[seq(1,npoints(woods), by=10)]}
+    ma <- split(woods)$maple
+    wh <- split(woods)$whiteoak
 
     # method (1): estimate intensities by nonparametric smoothing
     lambdaM <- density.ppp(ma, sigma=0.15, at="points")
     lambdaW <- density.ppp(wh, sigma=0.15, at="points")
-    K <- Kcross.inhom(lansing, "whiteoak", "maple", lambdaW, lambdaM)
+    K <- Kcross.inhom(woods, "whiteoak", "maple", lambdaW, lambdaM)
 
     # method (2): leave-one-out
-    K <- Kcross.inhom(lansing, "whiteoak", "maple", sigma=0.15)
+    K <- Kcross.inhom(woods, "whiteoak", "maple", sigma=0.15)
 
     # method (3): fit parametric intensity model
-    fit <- ppm(lansing, ~marks * polynom(x,y,2))
-    # evaluate fitted intensities at data points
+    fit <- ppm(woods ~marks * polynom(x,y,2))
+    # alternative (a): use fitted model as 'lambda' argument
+    K <- Kcross.inhom(woods, "whiteoak", "maple",
+                      lambdaI=fit, lambdaJ=fit, update=FALSE)
+    K <- Kcross.inhom(woods, "whiteoak", "maple",
+                      lambdaX=fit, update=FALSE)
+    # alternative (b): evaluate fitted intensities at data points
     # (these are the intensities of the sub-processes of each type)
     inten <- fitted(fit, dataonly=TRUE)
     # split according to types of points
-    lambda <- split(inten, lansing$marks)
-    K <- Kcross.inhom(lansing, "whiteoak", "maple",
+    lambda <- split(inten, marks(woods))
+    K <- Kcross.inhom(woods, "whiteoak", "maple",
               lambda$whiteoak, lambda$maple)
     
     # synthetic example: type A points have intensity 50,
@@ -262,13 +310,10 @@ Kcross.inhom(X, i, j, lambdaI=NULL, lambdaJ=NULL, \dots,  r=NULL, breaks=NULL,
     lamB <- as.im(function(x,y){50 + 100 * x}, owin())
     X <- superimpose(A=runifpoispp(50), B=rpoispp(lamB))
     K <- Kcross.inhom(X, "A", "B",
-        lambdaI=as.im(50, X$window), lambdaJ=lamB)
+        lambdaI=as.im(50, Window(X)), lambdaJ=lamB)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{nonparametric}

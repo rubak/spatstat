@@ -3,12 +3,12 @@
 #
 # Makes diagnostic plots based on residuals or energy weights
 #
-# $Revision: 1.39 $ $Date: 2015/05/05 09:54:08 $
+# $Revision: 1.44 $ $Date: 2019/10/02 10:33:21 $
 #
 
 diagnose.ppm.engine <- function(object, ..., type="eem", typename, opt,
                                 sigma=NULL,
-                                rbord = reach(object),
+                                rbord=reach(object),
                                 compute.sd=is.poisson(object),
                                 compute.cts=TRUE,
                                 envelope=FALSE, nsim=39, nrank=1,
@@ -23,7 +23,7 @@ diagnose.ppm.engine <- function(object, ..., type="eem", typename, opt,
   Q <- quad.ppm(object)
   U <- union.quad(Q)
   Qweights <- w.quad(Q)
-  
+
   # -------------- Calculate residuals/weights -------------------
 
   # Discretised residuals
@@ -39,7 +39,7 @@ diagnose.ppm.engine <- function(object, ..., type="eem", typename, opt,
     residobj <-
       if(!is.null(rv)) rv else residuals.ppm(object, type=type, check=FALSE)
     residval <- with(residobj, "increment")
-    if(ncol(as.matrix(residval)) > 1)
+    if(ncol(as.matrix(residval)) > 1L)
       stop("Not implemented for vector-valued residuals; use [.msr to split into separate components")
     Y <- U %mark% residval
   }
@@ -70,11 +70,11 @@ diagnose.ppm.engine <- function(object, ..., type="eem", typename, opt,
           Qweights <- Qweights[ok]
         }
         # interpolate continuous part to yield an image for plotting
-        if(type == "inverse" && all(cts > 0)) {
+        if(type == "inverse" && all(cts != 0)) {
           Ydens <- as.im(-1, Y$window)
         } else if(is.stationary.ppm(object) && is.poisson.ppm(object)) {
           # all values of `cts' will be equal
-          Ydens <- as.im(cts[1], Y$window)
+          Ydens <- as.im(cts[1L], Y$window)
         } else {
           smallsigma <- maxnndist(Ycts)
           Ujitter <- U
@@ -96,7 +96,7 @@ diagnose.ppm.engine <- function(object, ..., type="eem", typename, opt,
   W <- Y$window
 
   # Erode window if required
-  clip <- (rbord > 0)
+  clip <- !is.null(rbord) && is.finite(rbord) && (rbord > 0) 
   if(clip) {
     Wclip <- erosion.owin(W, rbord)
     Yclip <- Y[Wclip]
@@ -140,16 +140,16 @@ diagnose.ppm.engine <- function(object, ..., type="eem", typename, opt,
   if(opt$xmargin) {
     xZ <- apply(Z$v, 2, sum, na.rm=TRUE) * Z$xstep
     if(type == "eem") 
-      ExZ <- apply(Z$v, 2, function(column) { sum(!is.na(column)) }) * Z$xstep
+      ExZ <- colSums(!is.na(Z$v)) * Z$xstep
     else 
       ExZ <- numeric(length(xZ))
     result$xmargin <- list(x=Z$xcol, xZ=xZ, ExZ=ExZ)
   }
   
   if(opt$ymargin) {
-    yZ <- apply(Z$v, 1, sum, na.rm=TRUE) * Z$ystep
+    yZ <- apply(Z$v, 1L, sum, na.rm=TRUE) * Z$ystep
     if(type == "eem")
-      EyZ <- apply(Z$v, 1, function(roww) { sum(!is.na(roww)) }) * Z$ystep
+      EyZ <- rowSums(!is.na(Z$v)) * Z$ystep
     else
       EyZ <- numeric(length(yZ))
     result$ymargin <- list(y=Z$yrow, yZ=yZ, EyZ=EyZ)
@@ -210,39 +210,42 @@ diagnose.ppm.engine <- function(object, ..., type="eem", typename, opt,
 
 diagnose.ppm <- function(object, ..., type="raw", which="all", 
                          sigma=NULL, 
-                         rbord = reach(object), cumulative=TRUE,
+                         rbord =reach(object), cumulative=TRUE,
                          plot.it = TRUE, rv = NULL, 
                          compute.sd=is.poisson(object), compute.cts=TRUE,
                          envelope=FALSE, nsim=39, nrank=1,
                          typename, check=TRUE, repair=TRUE, oldstyle=FALSE,
                          splineargs=list(spar=0.5))
 {
+  asked.newstyle <- !missing(oldstyle) && !oldstyle
+
   if(is.marked.ppm(object))
     stop("Sorry, this is not yet implemented for marked models")
+  
+  # check whether model originally came from replicated data
+  is.subfit <- (object$method == "mppm")
 
+  Coefs <- coef(object)
   if(check && damaged.ppm(object)) {
     if(!repair)
       stop("object format corrupted; try update(object, use.internal=TRUE)")
     message("object format corrupted; repairing it.")
     object <- update(object, use.internal=TRUE)
-  } else if(compute.sd && is.null(getglmfit(object)))
+    object <- tweak.coefs(object, Coefs)
+  } else if(compute.sd && is.null(getglmfit(object))) {
     object <- update(object, forcefit=TRUE, use.internal=TRUE)
+    object <- tweak.coefs(object, Coefs)
+  }
 
-    
   # -------------  Interpret arguments --------------------------
 
-  # edge effect avoidance
-  if(!is.finite(rbord)) {
-    if(missing(rbord))
-      stop(paste(sQuote("rbord"),
-                 "must be specified; the model has infinite range"))
-    else
-      stop(paste(sQuote("rbord"), "is infinite"))
+  # Edge-effect avoidance
+  if(missing(rbord) && !is.finite(rbord)) {
+    ## Model has infinite reach
+    ## Use correction rule employed when fitting
+    rbord <- if(object$correction == "border") object$rbord else 0
   }
   
-#  # whether window should be clipped
-#  clip <- (rbord > 0)
-
   # match type argument
   type <- pickoption("type", type,
                      c(eem="eem",
@@ -286,6 +289,18 @@ diagnose.ppm <- function(object, ..., type="raw", which="all",
   if(missing(compute.sd))
     compute.sd <- plot.sd
 
+  # default for mppm objects is oldstyle=TRUE
+  if(compute.sd && is.subfit) {
+    if(!asked.newstyle) {
+      # silently change default
+      oldstyle <- TRUE
+    } else {
+      stop(paste("Variance calculation for a subfit of an mppm object",
+                 "is only implemented for oldstyle=TRUE"),
+           call.=FALSE)
+    }
+  }
+    
   # interpolate the density of the residual measure?
   if(missing(compute.cts)) {
     plot.neg <- resolve.defaults(list(...),
@@ -331,6 +346,15 @@ plot.diagppm <-
   plot.smooth <- match.arg(plot.smooth)
   
   if(!missing(which)) {
+    witches <- c("all", "marks", "smooth", "x", "y", "sum")
+    unknown <- is.na(match(which, witches))
+    if(any(unknown))
+      warning(paste("Unrecognised",
+                    ngettext(sum(unknown), "option", "options"),
+                    "which =",
+                    commasep(sQuote(which[unknown])),
+                    ": valid options are",
+                    commasep(sQuote(witches))), call.=FALSE)
     oldopt <- opt
     newopt <- list()
     newopt$all <- "all" %in% which

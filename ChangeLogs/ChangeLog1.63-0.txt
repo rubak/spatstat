@@ -1,0 +1,666 @@
+Change log from 1.62-2 to 1.63-0
+================================
+
+10 dec 2019
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to 'Adult supervision recommended'
+	Version 1.62-2.001
+
+   fv.R
+	Buglet fix
+	
+   fvproblems.R
+	More tests
+
+11 dec 2019
+
+   smooth.ppp.R
+	Bug fixes.
+	
+   tests/density.R
+	Test these bugs.
+	
+   tests/lppstuff.R
+   tests/randoms.R
+	More tests.
+	
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+12 dec 2019
+
+   relrisk.R
+	Bug fixes.
+
+   Kest.R
+   spatstat-internal.Rd
+	Modify Krect.engine to allow testing of code for very large patterns.
+	
+   tests/density.R
+   tests/diagnostique.R
+   tests/imageops.R
+   tests/Kfuns.R
+   tests/resid.R
+	Tests to cover bugs.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.002
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/lppstuff.R
+	More tests of density.lpp
+
+13 dec 2019
+
+   rmh.default.R
+	Bug fix
+	
+   tests/rmhBasic.R
+   tests/rmhMulti.R
+	Cover some bugs 
+
+   rmhcontrol.R
+   rmh.default.R
+	Tweaks to error messages
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.003
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+14 dec 2019
+
+   envelope.R
+	Changed handling of argument 'theory' in envelope.matrix
+	
+   tests/envelopes.R
+	Test of non-dual global envelope
+
+   tests/hypotests.R
+	Cover scan.test and supporting code
+
+   tests/Kfuns.R
+	Check normalised versions of markconnect, markcorr
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.004
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+15 dec 2019
+
+   split.ppp.R
+   split.ppp.Rd
+	Bug fix in split<-.ppp (inconsistency with defaults of split.ppp)
+
+   colourschemes.R
+	beachcolours now allows 'sealevel' to be outside 'srange'
+	
+   resid4plot.R
+	Bug fix in handling colours
+	
+   tests/diagnostique.R
+   tests/segments.R
+   tests/splitpea.R
+	Tests of bugs and related code
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.005
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+21 dec 2019
+
+   lineardisc.R
+	Bug fix in handling marked lines. 
+
+   lineardisc.R
+   lineardisc.Rd
+	New argument 'add'.
+	Change default graphics behaviour.
+
+   tests/cluck.R
+   tests/density.R
+   tests/hyperframe.R
+   tests/imageops.R
+   tests/lppstuff.R
+   tests/mctests.R
+   tests/ppp.R
+   tests/resid.R
+   tests/testparres.R
+   tests/windows.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.006
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+31 dec 2019
+
+   sparsecommon.R
+	Bug fix in applySparseEntries
+
+   sparse3Darray.R
+	Bug fix in [.sparse3Darray
+
+   sparselinalg.R
+	Various bug fixes
+
+   tests/sparse3Darrays.R
+	Added more tests of sparse array code.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.007
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   covering.R
+   cdftest.R
+	Bug fixes.
+
+   Kcom.R
+   Gcom.R
+	More argument checks.
+	
+   tests/density.R
+   tests/diagnostique.R
+   tests/imageops.R
+   tests/lppstuff.R
+   tests/Kfuns.R
+   tests/ppx.R
+   tests/prediction.R
+   tests/randoms.R
+   tests/rmhBasic.R
+   tests/sumfun.R [New file]
+   tests/symbolmaps.R
+   tests/tessera.R
+   tests/threedee.R
+   tests/windows.R
+	More tests
+
+   bw.lppl.Rd
+   exactMPLEstrauss.Rd
+   rDGS.Rd
+   rDiggleGratton.Rd
+   rHardcore.Rd
+   rPenttinen.Rd
+   rStrauss.Rd
+   rStraussHard.Rd
+	More examples.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.008
+
+------------- passed R-3.6.1 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+++++++++++++  installed R 3.6.2        +++++++++++++++
+
+01 jan 2020
+
+   idw.c
+	Bug fix
+
+   idw.R
+	Tweak output format
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.009
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   updates.Rnw
+	Mention spatstat.Knet
+
+   tests/testsAtoD.R [Deleted]
+   tests/testsGtoK.R [Deleted]
+   tests/testsLtoM.R [Deleted]
+   tests/testsNtoP.R [Deleted]
+   tests/testsQtoR.R [Deleted]
+   tests/testsStoZ.R [Deleted]
+
+   tests/testsAtoC.R [New file]
+   testsD.R 	     [New file]
+   testsGtoJ.R 	     [New file]
+   testsK.R 	     [New file]
+   testsL.R 	     [New file]
+   testsM.R 	     [New file]
+   testsNtoO.R 	     [New file]
+   testsP1.R 	     [New file]
+   testsP2.R 	     [New file]
+   testsQ.R 	     [New file]
+   testsR1.R 	     [New file]
+   testsR2.R 	     [New file]
+   testsS.R 	     [New file]
+   testsT.R 	     [New file]
+   testsUtoZ.R 	     [New file]
+
+       Test code files rearranged to reduce chances of timeout
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.010
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   bugfixes.Rnw
+   updates.Rnw   
+	Updated to cover all the above.
+
+   fitted.mppm.R
+	Bug fix.
+
+   mppm.R
+	Bug fix in model.matrix.mppm
+
+   tests/mppm.R
+	Added tests of these bugs.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.011
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+04 jan 2020
+
+   multihard.c
+	Bug fix.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.012
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+05 jan 2020
+
+   nncross.R
+	Bug fix in format of result when one pattern is empty.
+	
+   minnndist.R 
+   maxnndist.Rd
+	New argument 'by'
+	
+   nndist.Rd
+	Added cross-reference
+
+   tests/rmhMulti.R
+	Added test of multitype hard core constraint.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.013
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   randomlpp.R
+	Bug fix in rlpp, multitype 
+	
+   tests/density.R
+   tests/imageops.R
+   tests/Kfuns.R
+   tests/linalgeb.R
+   tests/lppstuff.R
+   tests/nndist.R
+   tests/perspim.R
+   tests/rmhExpand.R
+   tests/rmhmodel.ppm.R
+   tests/sumfun.R
+	More tests of code blocks.
+
+   exactMPLE.Rd
+	More examples
+	
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.014
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+07 jan 2020
+
+   tests/rmhExpand.R
+	tweak to overcome puzzling omission in codecov
+
+   tests/ppmlogi.R
+   tests/ppmclass.R [New file]
+   	more tests
+
+   bugfixes.Rnw
+   updates.Rnw
+	Updated to cover all the above.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.015
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/ppmclass.R
+   tests/ppmtricks.R
+	More tests of internals
+
+   rmh.default.R
+	Bug fixes in 'snoop' code for multitype models
+
+   tests/rmhsnoopy.R
+	Tests a multitype example.
+   
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.016
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   rmhsnoop.R
+	Improved printed output.
+
+   tests/fvproblems.R
+   tests/ppmclass.R
+   tests/ippm.R
+	More tests.
+
+8 jan 2020
+
+   tests/rmhExpand.R
+	still tweaking to overcome puzzling omission in codecov
+
+   tests/formuli.R
+   tests/fvproblems.R
+   tests/kppm.R
+   tests/nndist.R
+   tests/undoc.R
+	More tests
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.017
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   logLik.kppm.Rd
+	Modified explanation to include method='clik2'
+
+   kppm.R
+	Modified logLik, AIC methods
+	Modified objective function for clik2
+
+   rat.R
+	Bug fix
+
+   profilepl.R
+	Bug fix in plot.profilepl
+
+   plot.profilepl.Rd [New file]
+   	Documented this plot method.
+
+   profilepl.Rd
+	Tweaks and cross-references
+
+   effectfun.R
+	Bug fix
+	
+   tests/deepeepee.R
+   tests/fvproblems.R
+   tests/prediction.R
+	More tests of code blocks.
+
+   morphology.R
+   spatstat-internal.Rd
+	Deleted the deprecated functions erode.owin, dilate.owin
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.018
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   nndist.R
+	Added secret option: method ="test"
+
+   deldir.R
+   weights.R
+   spatstat-deprecated.Rd
+	Deleted the deprecated functions
+	delaunay.distance, delaunay.network, dirichlet.edges,
+	dirichlet.network, dirichlet.vertices, dirichlet.weights
+	
+   tests/enveltest.R
+   tests/Kfuns.R
+   tests/nndist.R
+   tests/ppmlogi.R
+   tests/tessera.R
+	More tests of code blocks
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.019
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   plot.profilepl.Rd
+	Improved examples
+
+11 jan 2020
+
+   tests/colour.R
+   tests/hyperframe.R
+   tests/linalgeb.R
+   tests/lppstuff.R
+   tests/nndist.R
+   tests/symbolmaps.R
+   tests/testaddvar.R
+   tests/threedee.R
+	More tests of code blocks
+
+   symbolmap.R
+	Bug fix.
+
+   linearKmulti.R
+   linearpcfmulti.R
+	Bug fixes
+	
+   linearK.R
+   linearpcf.R
+	Return value has attribute 'correction'
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.020
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   measures.R
+	Bug fix in scalardilate method.
+
+   measures.R
+   spatstat-internal.Rd
+	Methods for unitname, unitname<-, rescale,
+	affine, rotate, flipxy
+
+   pairs.im.R
+   linim.R
+	Bug fixes in handling names of variables in 'pairs' methods
+	
+   repairNetwork.Rd
+	Improved explanation.
+
+   tests/imageops.R
+   tests/lppstuff.R
+   tests/msr.R
+   tests/ppmlogi.R
+   tests/prediction.R
+   tests/segments.R
+   tests/vcovppm.R
+	More better tests.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.021
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+18 jan 2020
+
+   nnfun.R
+	Bug fix
+	
+   tests/nndist.R
+   tests/ppmclass.R
+   tests/ppp.R
+   tests/rmhmodel.ppm.R
+   tests/segments.R
+	More tests.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.022
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+19 jan 2020
+
+   tests/leverinf.R
+	Test leverage code for ippm object fitted using logistic likelihood
+
+21 jan 2020
+
+   hyperframe.R
+	Bug fix in handling 'Date' vectors.
+
+   as.im.R
+	Bug fix in handling factor values in as.im.data.frame
+
+   rho2hat.R
+	Bug fix in predict.rho2hat
+
+   tests/nndist.R
+   tests/threedee.R
+   tests/rhohat.R
+	Test bug fixes
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.023
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   predictmppm.R
+	Bug fix in predict.mppm
+	
+   tests/mppm.R
+	Test the bug fix and other cases.
+	
+   updates.Rnw
+   bugfixes.Rnw
+	updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to 'Space camouflage'
+	Version 1.62-2.024
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+23 jan 2020
+
+   plot.owin.R
+   plot.owin.Rd
+	New argument 'use.polypath'
+
+   tests/nndist.R
+   tests/windows.R
+	More tests of marginal cases
+
+   updates.Rnw
+	Updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+	Version 1.62-2.025
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   effectfun.R
+	Removed unused variable
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname changed to 'Trees in space'
+	Version 1.63-0
+
+------------- passed R-3.6.2 CMD check ---------------
+------------- installed on laptop      ---------------
+
+............. passed 'make bookcheck'  ...............
+............. passed R-devel CMD check ...............
+	        (2020-01-21 r77688)
++++++++++++++ made release             +++++++++++++++		
++++++++++++++ submitted to CRAN        +++++++++++++++		
+------------- uploaded to github       ---------------
+
+

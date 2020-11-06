@@ -1,4 +1,4 @@
-\name{compatible.fv}  %DontDeclareMethods
+\name{compatible.fv}  
 \alias{compatible.fv}
 \title{Test Whether Function Objects Are Compatible}
 \description{
@@ -6,10 +6,17 @@
   are compatible.
 }
 \usage{
-  \method{compatible}{fv}(A, B, \dots)
+  \method{compatible}{fv}(A, B, \dots, samenames=TRUE)
 }
 \arguments{
-  \item{A,B,\dots}{Two or more function value objects (class \code{"fv"}).}
+  \item{A,B,\dots}{Two or more function value objects (class
+    \code{"fv"}).}
+  \item{samenames}{
+    Logical value indicating whether to check for complete agreement
+    between the column names of the objects (\code{samenames=TRUE}, the
+    default) or just to check that the name of the function argument
+    is the same (\code{samenames=FALSE}).
+  }
 }
 \details{
   An object of class \code{"fv"} is essentially a data frame
@@ -32,11 +39,11 @@
 \seealso{
   \code{\link{eval.fv}} 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{manip}

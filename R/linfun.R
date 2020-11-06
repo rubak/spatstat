@@ -3,7 +3,7 @@
 #
 #   Class of functions of location on a linear network
 #
-#   $Revision: 1.7 $   $Date: 2015/08/26 08:41:58 $
+#   $Revision: 1.14 $   $Date: 2019/07/30 07:12:50 $
 #
 
 linfun <- function(f, L) {
@@ -49,40 +49,75 @@ print.linfun <- function(x, ...) {
   invisible(NULL)
 }
 
-as.linim.linfun <- function(X, L, ..., eps = NULL, dimyx = NULL, xy = NULL) {
-  if(missing(L) || is.null(L))
-    L <- as.linnet(X)
-  # create template
-  Y <- as.linim(1, L, eps=eps, dimyx=dimyx, xy=xy)
-  # extract (x,y) and local coordinates
+summary.linfun <- function(object, ...) { print(object, ...) }
+
+as.linim.linfun <- function(X, L=domain(X),
+                            ..., eps = NULL, dimyx = NULL, xy = NULL,
+                                       delta=NULL) {
+  if(is.null(L))
+    L <- domain(X)
+  #' create template
+  typical <- X(runiflpp(1, L), ...)
+  if(length(typical) != 1)
+    stop(paste("The function must return a single value",
+               "when applied to a single point"))
+  Y <- as.linim(typical, L, eps=eps, dimyx=dimyx, xy=xy, delta=delta)
+  # extract coordinates of sample points along network
   df <- attr(Y, "df")
   coo <- df[, c("x", "y", "mapXY", "tp")]
-  colnames(coo)[3] <- "seg"
-  # evaluate function
+  colnames(coo)[3L] <- "seg"
+  # evaluate function at sample points
   vals <- do.call(X, append(as.list(coo), list(...)))
-  # replace values
+  # write values in data frame
   df$values <- vals
-  typ <- typeof(vals)
-  storage.mode(Y$v) <- typ
-  Y[] <- vals
-  Y$type <- if(typ == "double") "real" else typ
   attr(Y, "df") <- df
+  #' overwrite values in pixel array
+  Y$v[] <- NA
+  pix <- nearest.raster.point(df$xc, df$yc, Y)
+  Y$v[cbind(pix$row, pix$col)] <- vals
+  #'
   return(Y)
 }
-  
-plot.linfun <- function(x, ..., L=NULL, eps = NULL, dimyx = NULL, xy = NULL,
-                        main) {
+
+as.data.frame.linfun <- function(x, ...) {
+  as.data.frame(as.linim(x, ...))
+}
+
+as.linfun.linim <- function(X, ...) {
+  trap.extra.arguments(..., .Context="as.linfun.linim")
+  ## extract info
+  L <- as.linnet(X)
+  df <- attr(X, "df")
+  ## function values and corresponding locations
+  values <- df$values
+  locations <- with(df, as.lpp(x=x, y=y, seg=mapXY, tp=tp, L=L))
+  ## Function that maps any spatial location to the nearest data location 
+  nearestloc <- nnfun(locations)
+  ## Function that reads value at nearest data location
+  f <- function(x, y, seg, tp) {
+    values[nearestloc(x,y,seg,tp)]
+  }
+  g <- linfun(f, L)
+  return(g)
+}
+
+plot.linfun <- function(x, ..., L=NULL, main) {
   if(missing(main)) main <- short.deparse(substitute(x))
   if(is.null(L)) L <- as.linnet(x)
-  Z <- as.linim(x, eps=eps, dimyx=dimyx, xy=xy, L=L)
-  plot(Z, ..., main=main)
+  argh <- list(...)
+  fargnames <- get("otherfargs", envir=environment(x))
+  resolution <- c("eps", "dimyx", "xy", "delta")
+  convert <- names(argh) %in% c(fargnames, resolution)
+  Z <- do.call(as.linim, append(list(x, L=L), argh[convert]))
+  rslt <- do.call(plot.linim, append(list(Z, main=main), argh[!convert]))
+  return(invisible(rslt))
 }
 
 as.owin.linfun <- function(W, ...) {
   as.owin(as.linnet(W))
 }
 
-as.linnet.linfun <- function(X, ...) {
+domain.linfun <- as.linnet.linfun <- function(X, ...) {
   attr(X, "L")
 }
 
@@ -95,6 +130,13 @@ as.function.linfun <- function(x, ...) {
   return(x)
 }
 
-integral.linfun <- function(f, domain=NULL, ...) {
-  integral(as.linim(f), domain=domain, ...)
+integral.linfun <- function(f, domain=NULL, ..., delta) {
+  if(missing(delta)) delta <- NULL
+  integral(as.linim(f, delta=delta), domain=domain, ...)
 }
+
+as.linfun <- function(X, ...) {
+  UseMethod("as.linfun")
+}
+
+as.linfun.linfun <- function(X, ...) { return(X) }

@@ -2,7 +2,7 @@
 #
 #    fiksel.R
 #
-#    $Revision: 1.10 $	$Date: 2014/11/24 04:30:03 $
+#    $Revision: 1.18 $	$Date: 2018/03/15 07:37:41 $
 #
 #    Fiksel interaction 
 #    
@@ -20,7 +20,7 @@ Fiksel <- local({
     nU <- npoints(U)
     # subtract contrinbutions from identical pairs (exp(-0) = 1 for each)
     if(length(EqualPairs) > 0) {
-      idcount <- as.integer(table(factor(EqualPairs[,2], levels=1:nU)))
+      idcount <- as.integer(table(factor(EqualPairs[,2L], levels=1:nU)))
       answer <- answer - idcount
     }
     return(answer)
@@ -45,7 +45,8 @@ Fiksel <- local({
             ytarget  = as.double(Ysort$y),
             rrmax    = as.double(r),
             kkappa   = as.double(kappa),
-            values   = as.double(double(nX)))
+            values   = as.double(double(nX)),
+            PACKAGE = "spatstat")
     answer <- integer(nX)
     answer[oX] <- out$values
     return(answer)
@@ -67,7 +68,8 @@ Fiksel <- local({
          par    = list(r = NULL, hc = NULL, kappa=NULL),  # filled in later
          parnames = c("interaction distance",
                       "hard core distance",
-                      "rate parameter"), 
+                      "rate parameter"),
+         hasInf = TRUE, 
          selfstart = function(X, self) {
            # self starter for Fiksel
            nX <- npoints(X)
@@ -106,7 +108,7 @@ Fiksel <- local({
          update = NULL,       # default OK
          print = NULL,         # default OK
          interpret =  function(coeffs, self) {
-           a <- as.numeric(coeffs[1])
+           a <- as.numeric(coeffs[1L])
            return(list(param=list(a=a),
                        inames="interaction strength a",
                        printable=signif(a)))
@@ -124,9 +126,9 @@ Fiksel <- local({
          irange = function(self, coeffs=NA, epsilon=0, ...) {
            r <- self$par$r
            hc <- self$par$hc
-           if(any(is.na(coeffs)))
+           if(anyNA(coeffs))
              return(r)
-           a <- coeffs[1]
+           a <- coeffs[1L]
            if(abs(a) <= epsilon)
              return(hc)
            else
@@ -137,8 +139,9 @@ Fiksel <- local({
        can.do.fast=function(X,correction,par) {
          return(all(correction %in% c("border", "none")))
        },
-       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction, ...) {
-         # fast evaluator for Fiksel interaction
+       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction,
+                         splitInf=FALSE, ...) {
+         ## fast evaluator for Fiksel interaction
          if(!all(correction %in% c("border", "none")))
            return(NULL)
          if(spatstat.options("fasteval") == "test")
@@ -146,14 +149,22 @@ Fiksel <- local({
          r <- potpars$r
          hc <- potpars$hc
          kappa <- potpars$kappa
-         hclose <- strausscounts(U, X, hc, EqualPairs)
+         hclose <- (strausscounts(U, X, hc, EqualPairs) != 0)
          fikselbit <- fikselterms(U, X, r, kappa, EqualPairs)
-         answer <- ifelseXB(hclose == 0, fikselbit, -Inf)
-         return(matrix(answer, ncol=1))
+         if(!splitInf) {
+           answer <- ifelseAX(hclose, -Inf, fikselbit)
+           answer <- matrix(answer, ncol=1L)
+         } else {
+           answer <- fikselbit
+           answer <- matrix(answer, ncol=1L)
+           attr(answer, "-Inf") <- hclose
+         }
+         return(answer)
+           
        },
        Mayer=function(coeffs, self) {
          # second Mayer cluster integral
-         a <- as.numeric(coeffs[1])
+         a <- as.numeric(coeffs[1L])
          r     <- self$par$r
          hc    <- self$par$hc
          kappa <- self$par$kappa

@@ -1,10 +1,10 @@
 \name{cdf.test} 
 \alias{cdf.test}
 \alias{cdf.test.ppm}
-\alias{cdf.test.lppm}
-\alias{cdf.test.lpp}
 \alias{cdf.test.ppp}
 \alias{cdf.test.slrm}
+\alias{cdf.test.lppm}
+\alias{cdf.test.lpp}
 \title{Spatial Distribution Test for Point Pattern or Point Process Model} 
 \description{
   Performs a test of goodness-of-fit of a point process model.
@@ -18,18 +18,20 @@
 \usage{
 cdf.test(...)
 
-\method{cdf.test}{ppp}(X, covariate, test=c("ks", "cvm", "ad"), \dots, jitter=TRUE)
+\method{cdf.test}{ppp}(X, covariate, test=c("ks", "cvm", "ad"), \dots,
+                       interpolate=TRUE, jitter=TRUE)
 
 \method{cdf.test}{ppm}(model, covariate,  test=c("ks", "cvm", "ad"), \dots,
-          jitter=TRUE, nsim=99, verbose=TRUE)
+          interpolate=TRUE, jitter=TRUE, nsim=99, verbose=TRUE)
 
-\method{cdf.test}{lpp}(X, covariate,  test=c("ks", "cvm", "ad"), \dots, jitter=TRUE)
+\method{cdf.test}{lpp}(X, covariate,  test=c("ks", "cvm", "ad"), \dots,
+        interpolate=TRUE, jitter=TRUE)
 
-\method{cdf.test}{lppm}(model, covariate,  test=c("ks", "cvm", "ad"),
-\dots,
-          jitter=TRUE, nsim=99, verbose=TRUE)
+\method{cdf.test}{lppm}(model, covariate,  test=c("ks", "cvm", "ad"), \dots,
+          interpolate=TRUE, jitter=TRUE, nsim=99, verbose=TRUE)
 
-\method{cdf.test}{slrm}(model, covariate,  test=c("ks", "cvm", "ad"), \dots, modelname=NULL, covname=NULL)
+\method{cdf.test}{slrm}(model, covariate,  test=c("ks", "cvm", "ad"), \dots,
+          modelname=NULL, covname=NULL)
 }
 \arguments{
   \item{X}{
@@ -57,6 +59,13 @@ cdf.test(...)
     \code{\link[goftest]{cvm.test}} or
     \code{\link[goftest]{ad.test}} (from the \pkg{goftest} package)
     to control the test.
+  }
+  \item{interpolate}{
+    Logical flag indicating whether to interpolate pixel images.
+    If \code{interpolate=TRUE}, the value of the covariate
+    at each point of \code{X} will be approximated by interpolating
+    the nearby pixel values.
+    If \code{interpolate=FALSE}, the nearest pixel value will be used.
   }
   \item{jitter}{
     Logical flag. If \code{jitter=TRUE}, values of the covariate
@@ -208,11 +217,8 @@ cdf.test(...)
   \eqn{p}-values will not be exactly the same. To avoid this behaviour,
   set \code{jitter=FALSE}.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf
 }
 \seealso{
   \code{\link{plot.cdftest}},
@@ -225,7 +231,7 @@ cdf.test(...)
 }
 \references{
   Baddeley, A., Turner, R.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005)
+  \Moller, J. and Hazelton, M. (2005)
   Residual analysis for spatial point processes.
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.

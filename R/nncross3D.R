@@ -1,7 +1,7 @@
 #
 #   nncross3D.R
 #
-#    $Revision: 1.7 $  $Date: 2014/10/24 00:22:30 $
+#    $Revision: 1.9 $  $Date: 2020/04/25 10:14:28 $
 #
 #  Copyright (C) Adrian Baddeley, Jens Oehlschlaegel and Rolf Turner 2000-2013
 #  Licence: GNU Public Licence >= 2
@@ -135,7 +135,8 @@ nncross.pp3 <- function(X, Y, iX=NULL, iY=NULL,
             wantwhich = as.integer(want.which),
             nnd=as.double(nndv),
             nnwhich=as.integer(nnwh),
-            huge=as.double(huge))
+            huge=as.double(huge),
+            PACKAGE = "spatstat")
 
     if(want.which) {
       # conversion to R indexing is done in C code
@@ -183,7 +184,8 @@ nncross.pp3 <- function(X, Y, iX=NULL, iY=NULL,
             wantwhich = as.integer(want.which),
             nnd=as.double(nndv),
             nnwhich=as.integer(nnwh),
-            huge=as.double(huge))
+            huge=as.double(huge),
+            PACKAGE = "spatstat")
 
     # extract results
     nnD <- z$nnd
@@ -219,10 +221,7 @@ nncross.pp3 <- function(X, Y, iX=NULL, iY=NULL,
       if(want.which)
         NNW <- NNW[, k, drop=TRUE]
     }
-
-    result <- as.data.frame(list(dist=NND, which=NNW)[what])
-    if(ncol(result) == 1)
-      result <- result[, , drop=TRUE]
+    result <- packupNNdata(NND, NNW, what, k)
     return(result)
   }
 }

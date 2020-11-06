@@ -71,6 +71,7 @@ G3est(X, ..., rmax = NULL, nrval = 128, correction = c("rs", "km", "Hanisch"))
       the Hanisch estimator (Hanisch, 1984).
     }
   }
+  Alternatively \code{correction="all"} selects all options.
 }
 \value{
   A function value table (object of class \code{"fv"}) that can be
@@ -93,9 +94,7 @@ G3est(X, ..., rmax = NULL, nrval = 128, correction = c("rs", "km", "Hanisch"))
   \bold{15}, 409--412.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
   and Rana Moyeed.
 }
 \section{Warnings}{
@@ -104,9 +103,16 @@ G3est(X, ..., rmax = NULL, nrval = 128, correction = c("rs", "km", "Hanisch"))
   calculation).
 }
 \seealso{
+  \code{\link{pp3}} to create a three-dimensional point
+  pattern (object of class \code{"pp3"}).
+  
   \code{\link{F3est}},
   \code{\link{K3est}},
-  \code{\link{pcf3est}}
+  \code{\link{pcf3est}} for other summary functions of
+  a three-dimensional point pattern.
+
+  \code{\link{Gest}} to estimate the empty space function of
+  point patterns in two dimensions.
 }
 \examples{
   X <- rpoispp3(42)

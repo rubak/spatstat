@@ -13,8 +13,10 @@ at new locations.
    se=FALSE,
    interval=c("none", "confidence", "prediction"),
    level = 0.95, 
-   X=data.ppm(object), correction, 
-   \dots, new.coef=NULL, check=TRUE, repair=TRUE)
+   X=data.ppm(object), correction, ignore.hardcore=FALSE,
+   \dots,
+   dimyx=NULL, eps=NULL,
+   new.coef=NULL, check=TRUE, repair=TRUE)
 }
 \arguments{
   \item{object}{
@@ -33,7 +35,8 @@ at new locations.
     inside \code{window} where the predictions should be computed.
     An integer, or an integer vector of length 2,
     specifying the number of grid points in the \eqn{y} and \eqn{x}
-    directions. (Incompatible with \code{locations})
+    directions. (Incompatible with \code{locations}. Equivalent to
+    \code{dimyx}.) 
   }
   \item{locations}{
     Optional. Data giving the exact
@@ -41,7 +44,7 @@ at new locations.
     of locations at which predictions should be computed.
     Either a point pattern, or a data frame with columns named \code{x} and
     \code{y}, or a binary image mask, or a pixel image.
-    (Incompatible with \code{ngrid})
+    (Incompatible with \code{ngrid}, \code{dimyx} and \code{eps}).
   }
   \item{covariates}{
     Values of external covariates required by the model.
@@ -83,8 +86,21 @@ at new locations.
     \code{"isotropic"} and \code{"translate"} depending on the model.
     The default correction is the one that was used to fit \code{object}.
   }
+  \item{ignore.hardcore}{
+    Advanced use only.
+    Logical value specifying whether to compute only the
+    finite part of the interaction potential (effectively removing
+    any hard core interaction terms).
+  }
   \item{\dots}{
     Ignored.
+  }
+  \item{dimyx}{
+    Equivalent to \code{ngrid}.
+  }
+  \item{eps}{
+    Width and height of pixels in the prediction grid.
+    A numerical value, or numeric vector of length 2.
   }
   \item{new.coef}{
     Numeric vector of parameter values to replace the 
@@ -340,12 +356,15 @@ at new locations.
   \dontrun{
   persp(cif)
   }
-  data(japanesepines)
   mj <- ppm(japanesepines ~ harmonic(x,y,2))
-  se <- predict(mj, se=TRUE)
+  se <- predict(mj, se=TRUE) # image of standard error
+  ci <- predict(mj, interval="c") # two images, confidence interval
 
   # prediction interval for total number of points
   predict(mj, type="count", interval="p")
+
+  # prediction intervals for counts in tiles
+  predict(mj, window=quadrats(japanesepines, 3), type="count", interval="p")
 
   # prediction at arbitrary locations
   predict(mj, locations=data.frame(x=0.3, y=0.4))
@@ -362,11 +381,9 @@ at new locations.
 
   \testonly{spatstat.options(op)}
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{models}

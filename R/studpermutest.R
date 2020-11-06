@@ -3,7 +3,7 @@
 #' 
 #'  Original by Ute Hahn 2014
 #'
-#' $Revision: 1.4 $ $Date: 2015/03/13 07:49:58 $
+#' $Revision: 1.10 $ $Date: 2019/10/16 02:36:54 $
 #' 
 #' Studentized permutation test for comparison of grouped point patterns;
 #' functions to generate these grouped point patterns;
@@ -143,8 +143,8 @@ studpermu.test <-
       ppname <- "pp"
     }
   
-    framename <- deparse(substitute(X))
-    fooname <- deparse(substitute(summaryfunction))
+    framename <- short.deparse(substitute(X))
+    fooname <- short.deparse(substitute(summaryfunction))
   
     #' sorting out the patterns that contain too few points
   
@@ -183,8 +183,9 @@ studpermu.test <-
                  commasep(m)),
            call.=FALSE)
     #' check if number of possible outcomes is small
-    npossible <- factorial(sum(m))/prod(factorial(m))/prod(factorial(table(m)))
-    if (npossible < max(100, nperm)) 
+    #' WAS: npossible <- factorial(sum(m))/prod(factorial(m))/prod(factorial(table(m)))
+    lognpossible <- lgamma(sum(m)+1)-sum(lgamma(m+1))-sum(lgamma(table(m)+1))
+    if (lognpossible < log(max(100, nperm)))
       warning("Don't expect exact results - group sizes are too small")
   
     #' --------- real preliminaries now ------
@@ -211,18 +212,38 @@ studpermu.test <-
     #' TO DO!!!! Match function call of summary function with data columns!
     #' use arguments.in.data, if applicable. This is for inhomogeneous summary 
     #' functions
- 
-    #' --------- retrieve arguments for summary function from data, hvis det er 
- 
-    if(arguments.in.data) 
-      fvlist <- multicall(summaryfunction, pp, data, r = rr, ...)
-    else fvlist <- with(data, summaryfunction(pp, r = rr, ...))
+
+    #' Force all calls to summaryfunction to use the same edge correction,
+    #' rather than allowing correction to depend on npoints
+    needcorx <- "correction" %in% names(formals(summaryfunction))
+    gavecorx <- "correction" %in% names(list(...))
+    corx <- if(needcorx && !gavecorx) "best" else NULL
+
+    #' --------- retrieve arguments for summary function from data, hvis det er
+    fvlist <-
+      if(arguments.in.data) {
+        #' use arguments in hyperframe 'data' as well as explicit arguments
+        if(is.null(corx)) {
+          multicall(summaryfunction, pp, data, r = rr, ...)
+        } else {
+          multicall(summaryfunction, pp, data, r = rr, ..., correction=corx)
+        }
+      } else {
+        #' use explicit arguments only
+        if(is.null(corx)) {
+          with(data, summaryfunction(pp, r = rr, ...))
+        } else {
+          with(data, summaryfunction(pp, r = rr, ..., correction=corx))
+        }
+      }
+
     fvtemplate <- fvlist[[1]]
  
     valu <- attr(fvtemplate, "valu")
     argu <- attr(fvtemplate, "argu")
-  
-    foar <- sapply(fvlist, function(x)x[[valu]][taker])
+
+    foar <- sapply(lapply(fvlist, "[[", valu),
+                   "[", taker)
 
     #' --------- the real stuff --------------
   

@@ -8,9 +8,11 @@
   compute residuals.
 }
 \usage{
-  \method{residuals}{ppm}(object, type="raw", \dots, check=TRUE, drop=FALSE,
-                fittedvalues=fitted.ppm(object, check=check, drop=drop),
-                new.coef=NULL, quad=NULL)
+  \method{residuals}{ppm}(object, type="raw", \dots,
+                check=TRUE, drop=FALSE,
+                fittedvalues=NULL, 
+                new.coef=NULL, dropcoef=FALSE,
+                quad=NULL)
 }
 \arguments{
   \item{object}{
@@ -48,6 +50,9 @@
     Optional. Numeric vector of coefficients for the model,
     replacing \code{coef(object)}.
     See the section on Modified Residuals below.
+  }
+  \item{dropcoef}{
+    Internal use only.
   }
   \item{quad}{
     Optional. Data specifying how to re-fit the model.
@@ -187,14 +192,12 @@
   \emph{dummy points} in a new quadrature scheme.
 }
 \references{
-  Baddeley, A., Turner, R.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Hazelton, M. (2005)
+  Baddeley, A., Turner, R., \Moller, J. and Hazelton, M. (2005)
   Residual analysis for spatial point processes.
   \emph{Journal of the Royal Statistical Society, Series B}
   \bold{67}, 617--666.
 
-  Baddeley, A.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Pakes, A.G. (2008) 
+  Baddeley, A., \Moller, J. and Pakes, A.G. (2008) 
   Properties of residuals for spatial point processes.
   \emph{Annals of the Institute of Statistical Mathematics}
   \bold{60}, 627--649.
@@ -225,11 +228,11 @@
    truecoef <- c(log(100), log(0.7))
    res.true <- residuals(fit, new.coef=truecoef)  
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{models}

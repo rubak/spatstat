@@ -1,7 +1,7 @@
 #
 #        edgeRipley.R
 #
-#    $Revision: 1.12 $    $Date: 2014/10/24 00:22:30 $
+#    $Revision: 1.18 $    $Date: 2019/09/21 05:19:19 $
 #
 #    Ripley isotropic edge correction weights
 #
@@ -27,11 +27,17 @@ edge.Ripley <- local({
     answer
   }
 
-  edge.Ripley <- function(X, r, W=X$window, method="C", maxweight=100) {
+  edge.Ripley <- function(X, r, W=Window(X),
+                          method=c("C", "interpreted"),
+                          maxweight=100, internal=list()) {
     # X is a point pattern, or equivalent
     X <- as.ppp(X, W)
     W <- X$window
 
+    method <- match.arg(method)
+    debug  <- resolve.1.default(list(debug=FALSE), internal)
+    repair <- resolve.1.default(list(repair=TRUE), internal)
+    
     switch(W$type,
            rectangle={},
            polygonal={
@@ -65,18 +71,16 @@ edge.Ripley <- local({
     x <- X$x
     y <- X$y
 
-    stopifnot(method %in% c("interpreted", "C"))
-
     switch(method,
            interpreted = {
            ######## interpreted R code for rectangular case #########
 
              # perpendicular distance from point to each edge of rectangle
              # L = left, R = right, D = down, U = up
-             dL  <- x - W$xrange[1]
-             dR  <- W$xrange[2] - x
-             dD  <- y - W$yrange[1]
-             dU  <- W$yrange[2] - y
+             dL  <- x - W$xrange[1L]
+             dR  <- W$xrange[2L] - x
+             dD  <- y - W$yrange[1L]
+             dU  <- W$yrange[2L] - y
 
              # detect whether any points are corners of the rectangle
              corner <- (small(dL) + small(dR) + small(dD) + small(dU) >= 2)
@@ -133,37 +137,59 @@ edge.Ripley <- local({
                               y=as.double(y),
                               rmat=as.double(r),
                               nr=as.integer(Nc), #sic
-                              xmin=as.double(W$xrange[1]),
-                              ymin=as.double(W$yrange[1]),
-                              xmax=as.double(W$xrange[2]),
-                              ymax=as.double(W$yrange[2]),
+                              xmin=as.double(W$xrange[1L]),
+                              ymin=as.double(W$yrange[1L]),
+                              xmax=as.double(W$xrange[2L]),
+                              ymax=as.double(W$yrange[2L]),
                               epsilon=as.double(.Machine$double.eps),
-                              out=as.double(numeric(Nr * Nc)))
+                              out=as.double(numeric(Nr * Nc)),
+                              PACKAGE = "spatstat")
                       weight <- matrix(z$out, nrow=Nr, ncol=Nc)
                     },
                     polygonal={
                       Y <- edges(W)
-                      z <- .C("ripleypoly",
-                              nc=as.integer(n),
-                              xc=as.double(x),
-                              yc=as.double(y),
-                              nr=as.integer(Nc),
-                              rmat=as.double(r),
-                              nseg=as.integer(Y$n),
-                              x0=as.double(Y$ends$x0),
-                              y0=as.double(Y$ends$y0),
-                              x1=as.double(Y$ends$x1),
-                              y1=as.double(Y$ends$y1),
-                              out=as.double(numeric(Nr * Nc)))
+                      bd <- bdist.points(X)
+                      if(!debug) {
+                        z <- .C("ripleypoly",
+                                nc=as.integer(n),
+                                xc=as.double(x),
+                                yc=as.double(y),
+                                bd=as.double(bd),
+                                nr=as.integer(Nc),
+                                rmat=as.double(r),
+                                nseg=as.integer(Y$n),
+                                x0=as.double(Y$ends$x0),
+                                y0=as.double(Y$ends$y0),
+                                x1=as.double(Y$ends$x1),
+                                y1=as.double(Y$ends$y1),
+                                out=as.double(numeric(Nr * Nc)),
+                                PACKAGE = "spatstat")
+                      } else {
+                        z <- .C("rippolDebug",
+                                nc=as.integer(n),
+                                xc=as.double(x),
+                                yc=as.double(y),
+                                bd=as.double(bd),
+                                nr=as.integer(Nc),
+                                rmat=as.double(r),
+                                nseg=as.integer(Y$n),
+                                x0=as.double(Y$ends$x0),
+                                y0=as.double(Y$ends$y0),
+                                x1=as.double(Y$ends$x1),
+                                y1=as.double(Y$ends$y1),
+                                out=as.double(numeric(Nr * Nc)),
+                                PACKAGE = "spatstat")
+                      }
                       angles <- matrix(z$out, nrow = Nr, ncol = Nc)
                       weight <- 2 * pi/angles
                     }
                     )
            }
     )
-    # eliminate wild values
-    weight <- matrix(pmax.int(0, pmin.int(maxweight, weight)),
-                     nrow=Nr, ncol=Nc)
+    ## eliminate wild values
+    if(repair)
+      weight <- matrix(pmax.int(1, pmin.int(maxweight, weight)),
+                       nrow=Nr, ncol=Nc)
     return(weight)
   }
 
@@ -173,11 +199,11 @@ edge.Ripley <- local({
 rmax.Ripley <- function(W) {
   W <- as.owin(W)
   if(is.rectangle(W))
-    return(circumradius(W))
-  if(is.polygonal(W) && length(W$bdry) == 1)
-    return(circumradius(W))
+    return(boundingradius(W))
+  if(is.polygonal(W) && length(W$bdry) == 1L)
+    return(boundingradius(W))
   ## could have multiple connected components
   pieces <- tiles(tess(image=connected(W)))
-  answer <- sapply(pieces, circumradius)
+  answer <- sapply(pieces, boundingradius)
   return(as.numeric(answer))
 }

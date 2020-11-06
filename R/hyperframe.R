@@ -1,17 +1,19 @@
 #
 #  hyperframe.R
 #
-# $Revision: 1.60 $  $Date: 2015/06/03 11:20:08 $
+# $Revision: 1.75 $  $Date: 2020/10/31 10:06:08 $
 #
 
 hyperframe <- local({
 
   hyperframe <- function(...,
                          row.names=NULL, check.rows=FALSE, check.names=TRUE,
-                         stringsAsFactors=default.stringsAsFactors()) {
+                         stringsAsFactors=NULL) {
     aarg <- list(...)
     nama <- names(aarg)
 
+    stringsAsFactors <- resolve.stringsAsFactors(stringsAsFactors)
+    
     ## number of columns (= variables)
     nvars <- length(aarg)
   
@@ -53,7 +55,7 @@ hyperframe <- local({
       ncases <- 1
     } else {
       heights <- rep.int(1, nvars)
-      heights[columns] <-  unlist(lapply(aarg[columns], length))
+      heights[columns] <-  lengths(aarg[columns])
       u <- unique(heights)
       if(length(u) > 1) {
         u <- u[u != 1]
@@ -69,7 +71,7 @@ hyperframe <- local({
       }
       if(any(stubs <- hypercolumns & (heights != ncases))) {
         ## hypercolumns of height 1 should be hyperatoms
-        aarg[stubs] <- lapply(aarg[stubs], "[[", i=1)
+        aarg[stubs] <- lapply(aarg[stubs], "[[", i=1L)
         hypercolumns[stubs] <- FALSE
         hyperatoms[stubs] <- TRUE
       }
@@ -77,16 +79,16 @@ hyperframe <- local({
   
     ## Collect the data frame columns into a data frame
     if(!any(dfcolumns))
-      df <- as.data.frame(matrix(, ncases, 0), row.names=row.names)
+      df <- as.data.frame(matrix(, ncases, 0))
     else {
-      df <- do.call("data.frame",
+      df <- do.call(data.frame,
                     append(aarg[dfcolumns],
-                           list(row.names=row.names,
-                                check.rows=check.rows,
+                           list(check.rows=check.rows,
                                 check.names=check.names,
                                 stringsAsFactors=stringsAsFactors)))
       names(df) <- nama[dfcolumns]
     }
+    if(length(row.names)) row.names(df) <- row.names
 
     ## Storage type of each variable
     vtype <- character(nvars)
@@ -102,9 +104,7 @@ hyperframe <- local({
     if(any(hyperatoms))
       vclass[hyperatoms] <- unlist(lapply(aarg[hyperatoms], class1))
     if(any(hypercolumns))
-      vclass[hypercolumns] <- unlist(lapply(aarg[hypercolumns],
-                                            function(x) { class1(x[[1]]) }))
-  
+      vclass[hypercolumns] <- unlist(lapply(aarg[hypercolumns], class1of1))
     ## Put the result together
     result <- list(nvars=nvars,
                    ncases=ncases,
@@ -119,8 +119,13 @@ hyperframe <- local({
     return(result)
   }
 
+  dateclasses <- 
+  
   is.dfcolumn <- function(x) {
-    is.atomic(x) && (is.vector(x) || is.factor(x))
+    is.atomic(x) &&
+      (is.vector(x) ||
+       is.factor(x) ||
+       inherits(x, c("POSIXlt", "POSIXct", "Date")))
   }
   
   is.hypercolumn <- function(x) {
@@ -130,11 +135,13 @@ hyperframe <- local({
       return(TRUE)
     if(length(x) <= 1)
       return(TRUE)
-    cla <- class(x[[1]])
-    all(sapply(x, function(xi,cla) { identical(class(xi), cla) }, cla=cla))
+    cla <- lapply(x, class)
+    return(length(unique(cla)) == 1)
   }
 
-  class1 <- function(x) { class(x)[1] }
+  class1 <- function(x) { class(x)[1L] }
+
+  class1of1 <- function(x) { class(x[[1L]])[1L] }
   
   hyperframe
 })
@@ -238,13 +245,36 @@ row.names.hyperframe <- function(x) {
 
 "row.names<-.hyperframe" <- function(x, value) {
   y <- unclass(x)
-  df <- y$df
-  row.names(df) <- value
-  y$df <- df
+  row.names(y$df) <- value
   class(y) <- c("hyperframe", class(y))
   return(y)
 }
 
+dimnames.hyperframe <- function(x) {
+  ux <- unclass(x)
+  return(list(row.names(ux$df), ux$vname))
+}
+
+"dimnames<-.hyperframe" <- function(x, value) {
+  if(!is.list(value) || length(value) != 2 || !all(sapply(value, is.character)))
+    stop("Invalid 'dimnames' for a hyperframe", call.=FALSE)
+  rn <- value[[1L]]
+  cn <- value[[2L]]
+  d <- dim(x)
+  if(length(rn) != d[1L])
+    stop(paste("Row names have wrong length:",
+               length(rn), "should be", d[1L]),
+         call.=FALSE)
+  if(length(cn) != d[2L])
+    stop(paste("Column names have wrong length:",
+               length(cn), "should be", d[2L]),
+         call.=FALSE)
+  y <- unclass(x)
+  row.names(y$df) <- value[[1L]]
+  y$vname <- value[[2]]
+  class(y) <- c("hyperframe", class(y))
+  return(y)
+}
 
 ## conversion to hyperframe
 
@@ -258,7 +288,7 @@ as.hyperframe.hyperframe <- function(x, ...) {
 
 as.hyperframe.data.frame <- function(x, ..., stringsAsFactors=FALSE) {
   xlist <- if(missing(x)) NULL else as.list(x)
-  do.call("hyperframe",
+  do.call(hyperframe,
           resolve.defaults(
                            xlist,
                            list(...),
@@ -274,7 +304,7 @@ as.hyperframe.listof <- function(x, ...) {
     xlist <- list(x)
     names(xlist) <- xname
   } else xlist <- NULL
-  do.call("hyperframe",
+  do.call(hyperframe,
           resolve.defaults(
                            xlist,
                            list(...),
@@ -311,7 +341,7 @@ as.data.frame.hyperframe <- function(x, row.names = NULL,
     if(any(!dfcol)) 
       lx[!dfcol] <- lapply(as.list(vclassstring[!dfcol]),
                            rep.int, times=nrows)
-    df <- do.call("data.frame", append(lx, list(row.names=row.names)))
+    df <- do.call(data.frame, append(lx, list(row.names=row.names)))
     colnames(df) <- ux$vname
   }
   return(df)
@@ -343,12 +373,12 @@ as.list.hyperframe <- function(x, ...) {
 
 # evaluation
 
-eval.hyper <- function(e, h, simplify=TRUE, ee=NULL) {
-  .Deprecated("with.hyperframe", package="spatstat")
-  if(is.null(ee))
-    ee <- as.expression(substitute(e))
-  with.hyperframe(h, simplify=simplify, ee=ee)
-}
+# eval.hyper <- function(e, h, simplify=TRUE, ee=NULL) {
+#   .Deprecated("with.hyperframe", package="spatstat")
+#   if(is.null(ee))
+#     ee <- as.expression(substitute(e))
+#   with.hyperframe(h, simplify=simplify, ee=ee)
+# }
 
 with.hyperframe <- function(data, expr, ..., simplify=TRUE, ee=NULL,
                             enclos=NULL) {
@@ -371,7 +401,7 @@ with.hyperframe <- function(data, expr, ..., simplify=TRUE, ee=NULL,
   if(simplify && all(unlist(lapply(out, is.vector)))) {
     # if all results are atomic vectors of equal length,
     # return a matrix or vector.
-    lenfs <- unlist(lapply(out, length))
+    lenfs <- lengths(out)
     if(all(unlist(lapply(out, is.atomic))) &&
             length(unique(lenfs)) == 1) {
       out <- t(as.matrix(as.data.frame(out)))
@@ -409,7 +439,12 @@ cbind.hyperframe <- function(...) {
       columns <- append(columns, nextcolumn)
     }
   }
-  result <- do.call("hyperframe", columns)
+  result <- do.call(hyperframe, columns)
+  ## tack on row names
+  rona <- lapply(aarg, row.names)
+  good <- (lengths(rona) == nrow(result))
+  if(any(good)) 
+    row.names(result) <- rona[[min(which(good))]]
   return(result)
 }
 
@@ -422,7 +457,7 @@ rbind.hyperframe <- function(...) {
   #
   nargh <- length(argh)
   if(nargh == 1)
-    return(argh[[1]])
+    return(argh[[1L]])
   # check for compatibility of dimensions & names
   dfs <- lapply(argh, as.data.frame, discard=FALSE)
   dfall <- do.call(rbind, dfs)
@@ -439,22 +474,20 @@ rbind.hyperframe <- function(...) {
       # data frame column: already made
       rslt[[k]] <- dfall[,k]
     } else {
-      # hypercolumns or hyperatoms: extract them
-      hdata <- lapply(argh,
-                      function(x,nama) { x[, nama, drop=FALSE] },
-                      nama=nama)
+      ## hypercolumns or hyperatoms: extract them
+      hdata <- lapply(argh, "[", j=nama, drop=FALSE)
       hdata <- lapply(lapply(hdata, as.list), getElement, name=nama)
-      # append them
-      hh <- hdata[[1]]
-      for(j in 2:nargh) {
-        hh <- append(hh, hdata[[j]])
-      }
+      ## bind them
+      hh <- Reduce(append, hdata)
       rslt[[k]] <- hh
     }
   }
-  # make hyperframe
+  ## make hyperframe
   names(rslt) <- nam
-  out <- do.call(hyperframe, append(rslt, list(stringsAsFactors=FALSE)))
+  rona <- row.names(dfall)
+  out <- do.call(hyperframe, append(rslt,
+                                    list(stringsAsFactors=FALSE,
+                                         row.names=rona)))
   return(out)
 }
 
@@ -472,7 +505,7 @@ plot.hyperframe <-
     ok <- (summary(x)$storage %in% c("hypercolumn", "hyperatom"))
     if(any(ok)) {
       j <- min(which(ok))
-      x <- x[,j, drop=TRUE]
+      x <- x[,j, drop=TRUE, strip=FALSE]
       x <- as.solist(x, demote=TRUE)
       plot(x, ..., main=main, arrange=arrange, nrows=nrows, ncols=ncols)
       return(invisible(NULL))
@@ -522,7 +555,7 @@ plot.hyperframe <-
     # Increment existing panel numbers
     # New panel 1 is the banner
     panels <- (mat > 0)
-    mat[panels] <- mat[panels] + 1
+    mat[panels] <- mat[panels] + 1L
     mat <- rbind(rep.int(1,ncols), mat)
     heights <- c(0.1 * (1 + nlines), heights)
   }
@@ -537,7 +570,7 @@ plot.hyperframe <-
     text(0,0,main, cex=cex)
   }
   # plot panels
-  npa <- do.call("par", parargs)
+  npa <- do.call(par, parargs)
   if(!banner) opa <- npa
   with(x, ee=ee)
   # revert
@@ -552,12 +585,12 @@ str.hyperframe <- function(object, ...) {
   x <- unclass(object)
   argh <- resolve.defaults(list(...), list(nest.lev=0, indent.str="  .."))
   cat(paste("'hyperframe':\t",
-            d[1], ngettext(d[1], "row", "rows"),
+            d[1L], ngettext(d[1L], "row", "rows"),
             "and",
-            d[2], ngettext(d[2], "column", "columns"),
+            d[2L], ngettext(d[2L], "column", "columns"),
             "\n"))
-  nr <- d[1]
-  nc <- d[2]
+  nr <- d[1L]
+  nc <- d[2L]
   if(nc > 0) {
     vname <- x$vname
     vclass <- x$vclass

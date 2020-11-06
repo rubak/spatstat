@@ -2,22 +2,24 @@
 \alias{rthin}
 \title{Random Thinning}
 \description{
-  Applies independent random thinning to a point pattern.
+  Applies independent random thinning to a point pattern or segment pattern.
 }
 \usage{
 rthin(X, P, \dots, nsim=1, drop=TRUE)
 }
 \arguments{
   \item{X}{
-    A point pattern (object of class \code{"ppp"})
-    that will be thinned.
+    A point pattern (object of class \code{"ppp"} or \code{"lpp"}
+    or \code{"pp3"} or \code{"ppx"}) or line segment pattern
+    (object of class \code{"psp"}) that will be thinned.
   }
   \item{P}{
     Data giving the retention probabilities, i.e. the probability
-    that each point in \code{X} will be retained.
+    that each point or line in \code{X} will be retained.
     Either a single number, or a vector of numbers,
-    or a \code{function(x,y)}, or a pixel image (object of class
-    \code{"im"}).
+    or a \code{function(x,y)} in the \R language,
+    or a function object (class \code{"funxy"} or \code{"linfun"}),
+    or a pixel image (object of class \code{"im"} or \code{"linim"}).
   }
   \item{\dots}{
     Additional arguments passed to \code{P}, if it is a function.
@@ -30,11 +32,11 @@ rthin(X, P, \dots, nsim=1, drop=TRUE)
   }
 }
 \value{
-  A point pattern (an object of class \code{"ppp"})
-  if \code{nsim=1}, or a list of point patterns if \code{nsim > 1}.
+  An object of the same kind as \code{X}
+  if \code{nsim=1}, or a list of such objects if \code{nsim > 1}.
 }
 \details{
-  In a random thinning operation, each point of the pattern \code{X}
+  In a random thinning operation, each point of the point pattern \code{X}
   is randomly either deleted or retained (i.e. not deleted).
   The result is a point pattern,
   consisting of those points of \code{X} that were retained.
@@ -54,11 +56,16 @@ rthin(X, P, \dots, nsim=1, drop=TRUE)
     \item{a function \code{P(x,y)},}{so that a point at a location
       \code{(x,y)} will be retained with probability \code{P(x,y)};
     }
+    \item{an object of class \code{"funxy"} or \code{"linfun"},}{so that
+    points in the pattern \code{X} will be retained with probabilities
+    \code{P(X)};
+    }
     \item{a pixel image,}{containing values of the retention probability
       for all locations in a region encompassing the point pattern.
     }
   }
-  If \code{P} is a function, it should be \sQuote{vectorised}, that is,
+  If \code{P} is a function \code{P(x,y)},
+  it should be \sQuote{vectorised}, that is,
   it should accept vector arguments \code{x,y} and should yield a
   numeric vector of the same length. The function may have extra
   arguments which are passed through the \code{\dots} argument.
@@ -70,7 +77,6 @@ rthin(X, P, \dots, nsim=1, drop=TRUE)
   results obtained with earlier versions.
 }
 \examples{
-  data(redwood)
   plot(redwood, main="thinning")
   
   # delete 20\% of points
@@ -82,14 +88,22 @@ rthin(X, P, \dots, nsim=1, drop=TRUE)
   Y <- rthin(redwood, f)
 
   # pixel image
-  Z <- as.im(f, redwood$window)
+  Z <- as.im(f, Window(redwood))
   Y <- rthin(redwood, Z)
+
+  # pattern on a linear network
+  A <- runiflpp(30, simplenet)
+  B <- rthin(A, 0.2)
+  g <- function(x,y,seg,tp) { ifelse(y < 0.4, 1, 0.5) }
+  B <- rthin(A, linfun(g, simplenet))
+
+  # thin other kinds of patterns
+  E <- rthin(osteo$pts[[1]], 0.6)
+  L <- rthin(copper$Lines, 0.5)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{datagen}
+\keyword{manip}

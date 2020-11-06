@@ -1,5 +1,5 @@
 #
-#	$Revision: 1.51 $	$Date: 2015/08/27 08:28:22 $
+#	$Revision: 1.58 $	$Date: 2017/10/04 04:10:33 $
 #
 #    ppm()
 #          Fit a point process model to a two-dimensional point pattern
@@ -16,6 +16,13 @@ ppm.formula <- function(Q, interaction=NULL, ..., data=NULL, subset) {
   callstring <- short.deparse(sys.call())
   cl <- match.call()
 
+  ## trap a common error to give a more informative message
+  if(is.sob(data) || is.function(data)) 
+    stop(paste("The argument", sQuote("data"),
+               "should not be a spatial object;",
+               "it should be a list of spatial objects"),
+         call.=FALSE)
+  
   ########### INTERPRET FORMULA ##############################
   
   if(!inherits(Q, "formula"))
@@ -42,8 +49,7 @@ ppm.formula <- function(Q, interaction=NULL, ..., data=NULL, subset) {
     thecall[ncall + 1:nargh] <- argh
     names(thecall)[ncall + 1:nargh] <- names(argh)
   }
-  callenv <- parent.frame()
-  if(!is.null(data)) callenv <- list2env(data, parent=callenv)
+  callenv <- list2env(as.list(data), parent=parent.frame())
   result <- eval(thecall, envir=callenv)
 
   result$call <- cl
@@ -63,6 +69,7 @@ function(Q,
          data = NULL,
          covfunargs = list(),
          subset,
+         clipwin,
 	 correction="border",
 	 rbord = reach(interaction),
          use.gam=FALSE,
@@ -85,6 +92,9 @@ function(Q,
   Qname <- short.deparse(substitute(Q))
 
   subsetexpr <- if(!missing(subset)) substitute(subset) else NULL
+  clipwin    <- if(!missing(clipwin)) clipwin else NULL
+
+  datalistname <- if(missing(covariates)) "data" else "covariates"
 
   if(!(method %in% c("mpl", "ho", "logi", "VBlogi")))
       stop(paste("Unrecognised fitting method", sQuote(method)))
@@ -105,7 +115,13 @@ function(Q,
   } else{
       VB <- FALSE
   }
-  
+
+  if(is.sob(covariates) || is.function(covariates))
+    stop(paste("The argument", sQuote(datalistname),
+               "should not be a spatial object;",
+               "it should be a list of spatial objects"),
+         call.=FALSE)
+    
   if(inherits(Q, "logiquad")){
     if(missing(method))
       method <- "logi"
@@ -120,16 +136,22 @@ function(Q,
   if(is.ppp(Q) && is.marked(Q) && !is.multitype(Q)) 
     stop(paste("ppm is not yet implemented for marked point patterns,",
                "other than multitype patterns."))
-  if(!(is.ppp(Q) ||
-       inherits(Q, "quad") ||
-       checkfields(Q, c("data", "dummy")))) {
+  if(!(is.ppp(Q) || is.quad(Q) || checkfields(Q, c("data", "dummy")))) {
     stop("Argument Q must be a point pattern or a quadrature scheme")
   }
   X <- if(is.ppp(Q)) Q else Q$data
 
-  ## Ensure interaction is fully defined  
-  if(is.null(interaction)) 
+  ## Validate interaction
+  if(is.null(interaction)) {
     interaction <- Poisson()
+  } else if(inherits(interaction, "intermaker")) {
+    ## e.g. 'interaction=Hardcore': invoke it without arguments
+    interaction <- (f <- interaction)()
+    dont.complain.about(f)
+  } else if(!is.interact(interaction))
+    stop("Argument 'interaction' must be an object of class 'interact'")
+  
+  ## Ensure interaction is fully defined  
   if(!is.null(ss <- interaction$selfstart)) {
     # invoke selfstart mechanism to fix all parameters
     interaction <- ss(X, interaction)
@@ -191,6 +213,7 @@ function(Q,
                            covariates=covariates,
                            covfunargs=covfunargs,
                            subsetexpr=subsetexpr,
+                           clipwin=clipwin,
                            correction=correction,
                            rbord=rbord,
                            use.gam=use.gam,
@@ -206,8 +229,8 @@ function(Q,
     fitLOGI$call <- cl
     fitLOGI$callstring <- callstring
     fitLOGI$callframe <- parent.frame()
-    if(project && !valid.ppm(fitLOGI))
-      fitLOGI <- project.ppm(fitLOGI)
+    if(emend && !valid.ppm(fitLOGI))
+      fitLOGI <- emend.ppm(fitLOGI)
     return(fitLOGI)
   }
   
@@ -217,6 +240,7 @@ function(Q,
                        covariates=covariates,
                        covfunargs=covfunargs,
                        subsetexpr=subsetexpr,
+                       clipwin=clipwin,
                        correction=correction,
                        rbord=rbord,
                        use.gam=use.gam,
@@ -237,8 +261,8 @@ function(Q,
   fitMPL$callstring <- callstring
   fitMPL$callframe <- parent.frame()
 
-  if(project && !valid.ppm(fitMPL))
-    fitMPL <- project.ppm(fitMPL)
+  if(emend && !valid.ppm(fitMPL))
+    fitMPL <- emend.ppm(fitMPL)
   
   if(method == "mpl" || is.poisson.ppm(fitMPL))
     return(fitMPL)
@@ -249,8 +273,8 @@ function(Q,
   if(is.null(fitHO))
     return(fitMPL)
   
-  if(project && !valid.ppm(fitHO))
-    fitHO <- project.ppm(fitHO)
+  if(emend && !valid.ppm(fitHO))
+    fitHO <- emend.ppm(fitHO)
   
   return(fitHO)
 }

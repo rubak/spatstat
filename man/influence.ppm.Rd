@@ -7,7 +7,8 @@
   Computes the influence measure for a fitted spatial point process model.
 }
 \usage{
-\method{influence}{ppm}(model, ..., drop = FALSE, iScore=NULL, iHessian=NULL, iArgs=NULL)
+\method{influence}{ppm}(model, \dots,
+        drop = FALSE, iScore=NULL, iHessian=NULL, iArgs=NULL)
 }
 \arguments{
   \item{model}{
@@ -33,7 +34,8 @@
 \details{
   Given a fitted spatial point process model \code{model},
   this function computes the influence measure
-  described in Baddeley, Chang and Song (2013).
+  described in Baddeley, Chang and Song (2013)
+  and Baddeley, Rubak and Turner (2019).
    
   The function \code{\link[stats]{influence}} is generic,
   and \code{influence.ppm} is the method for objects of class
@@ -63,33 +65,37 @@
   log trend with respect to each pair of irregular parameters.
   
   The result of \code{influence.ppm} is 
-  an object of class \code{"influence.ppm"}. It can be plotted
-  (by \code{\link{plot.influence.ppm}}), or converted to a marked
+  an object of class \code{"influence.ppm"}. It can be printed and plotted.
+  It can be converted to a marked
   point pattern by \code{as.ppp} (see \code{\link{as.ppp.influence.ppm}}).
+  There are also methods for \code{[},
+  \code{\link{as.owin}}, \code{\link{domain}},
+  \code{\link{shift}}, \code{\link{integral}} and \code{\link{Smooth}}.
 }
 \value{
-  An object of class \code{"influence.ppm"} that can be plotted
-  (by \code{\link{plot.influence.ppm}}). There are also methods
-  for \code{print}, \code{[}, \code{as.ppp} and \code{as.owin}.
+  An object of class \code{"influence.ppm"}.
 }
 \references{
   Baddeley, A. and Chang, Y.M. and Song, Y. (2013)
   Leverage and influence diagnostics for spatial point process models.
   \emph{Scandinavian Journal of Statistics} \bold{40}, 86--104.
+  
+  Baddeley, A., Rubak, E. and Turner, R. (2019)
+  Leverage and influence diagnostics for Gibbs spatial point processes.
+  \emph{Spatial Statistics} \bold{29}, {15--48}.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{leverage.ppm}},
   \code{\link{dfbetas.ppm}},
+  \code{\link{ppmInfluence}},
   \code{\link{plot.influence.ppm}}
 }
 \examples{
    X <- rpoispp(function(x,y) { exp(3+3*x) })
-   fit <- ppm(X, ~x+y)
+   fit <- ppm(X ~x+y)
    plot(influence(fit))
 }
 \keyword{spatial}

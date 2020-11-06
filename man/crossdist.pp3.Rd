@@ -1,4 +1,4 @@
-\name{crossdist.pp3} %DontDeclareMethods
+\name{crossdist.pp3} 
 \alias{crossdist.pp3}
 \title{Pairwise distances between two different three-dimensional point patterns}
 \description{
@@ -62,9 +62,9 @@
    d <- crossdist(X, Y, periodic=TRUE)
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
+  
+  
   based on code for two dimensions by 
   Pavel Grabarnik.
 }

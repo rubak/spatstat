@@ -1,7 +1,7 @@
 #
 #    discarea.R
 #
-#  $Revision: 1.17 $  $Date: 2014/10/24 00:22:30 $
+#  $Revision: 1.21 $  $Date: 2019/02/20 03:34:50 $
 #
 #
 #  Compute area of intersection between a disc and a window,
@@ -44,7 +44,8 @@ discpartarea <- function(X, r, W=as.owin(X)) {
           x1=as.double(Y$ends$x1),
           y1=as.double(Y$ends$y1),
           eps=as.double(.Machine$double.eps),
-          out=as.double(numeric(length(r))))
+          out=as.double(numeric(length(r))),
+          PACKAGE = "spatstat")
   areas <- matrix(z$out, n, nr)
   return(areas)
 }
@@ -57,7 +58,7 @@ dilated.areas <- function(X, r, W=as.owin(X), ...,
                           constrained=TRUE,
                           exact=FALSE) {
   if(is.matrix(r)) {
-    if(sum(dim(r) > 1) > 1)
+    if(sum(dim(r) > 1) > 1L)
       stop("r should be a vector or single value")
     r <- as.vector(r)
   }
@@ -65,7 +66,7 @@ dilated.areas <- function(X, r, W=as.owin(X), ...,
     exact <- FALSE
     warning("Option exact=TRUE is only available for ppp objects")
   }
-  if(!constrained) {
+  if(!constrained || is.null(W)) {
     # unconstrained dilation
     bb <- as.rectangle(X)
     W <- grow.rectangle(bb, max(r))
@@ -75,7 +76,7 @@ dilated.areas <- function(X, r, W=as.owin(X), ...,
       X$window <- W
   } else W <- as.owin(W)
   if(!exact) {
-    D <- distmap(X)
+    D <- distmap(X, ...)
     pixelarea <- D$xstep * D$ystep
     Dvals <- D[W, drop=TRUE]
     if(is.im(Dvals))
@@ -85,26 +86,29 @@ dilated.areas <- function(X, r, W=as.owin(X), ...,
     h <- cumsum(whist(Dvals, rr))
     return(h * pixelarea)
   }
-  X <- unique(X)
   npts <- npoints(X)
   nr <- length(r)
   if(npts == 0)
     return(numeric(nr))
-  else if(npts == 1) 
+  else if(npts == 1L) 
     return(discpartarea(X, r, W))
   samebox <- (W$type == "rectangle") &&
-              identical(all.equal(W, as.owin(X)), "TRUE")
+              isTRUE(all.equal(W, as.owin(X)))
   needclip <- constrained && !samebox
+  X <- unique(X)
   dd <- dirichlet(X)
   til <- tiles(dd)
-  out <- matrix(0, npts, nr)
-  for(i in 1:npts) {
-    Ti <- til[[i]]
+  #' some data points may not have a tile
+  whichpoint <- as.integer(names(til))
+  partareas <- matrix(0, length(til), nr)
+  for(j in seq_along(til)) {
+    Tj <- til[[j]]
     if(needclip)
-      Ti <- intersect.owin(Ti, W)
-    out[i,] <- discpartarea(X[i], r, Ti)
+      Tj <- intersect.owin(Tj, W)
+    i <- whichpoint[j]
+    partareas[j,] <- discpartarea(X[i], r, Tj)
   }
-  return(apply(out, 2, sum))
+  return(colSums(partareas))
 }
 
   

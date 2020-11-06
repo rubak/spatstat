@@ -111,7 +111,7 @@ Vmark(X, r=NULL,
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape.
 
   Biases due to edge effects are
@@ -171,17 +171,17 @@ Vmark(X, r=NULL,
   for factor-valued marks.
 }
 \examples{
-    data(spruces)
-
     plot(Emark(spruces))
     E <- Emark(spruces, method="density", kernel="epanechnikov")
     plot(Vmark(spruces))
+
+    plot(Emark(finpines))
+    V <- Vmark(finpines)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and
+  \rolf
 }
 \keyword{spatial}
 \keyword{nonparametric}

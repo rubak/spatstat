@@ -2,7 +2,7 @@
 #
 #    multihard.R
 #
-#    $Revision: 1.15 $	$Date: 2015/03/31 03:57:19 $
+#    $Revision: 1.18 $	$Date: 2018/03/15 07:37:41 $
 #
 #    The Hard core process
 #
@@ -101,6 +101,7 @@ MultiHard <- local({
        parnames = c("possible types", "hardcore distances"),
        pardesc  = c("vector of possible types",
                     "matrix of hardcore distances"),
+       hasInf   = TRUE,
        selfstart = function(X, self) {
          types <- self$par$types
          hradii <- self$par$hradii
@@ -128,7 +129,7 @@ MultiHard <- local({
              stop(paste("The", sQuote("types"),
                         "argument should be",
                         "either NULL or a vector of all possible types"))
-           if(any(is.na(types)))
+           if(anyNA(types))
              stop("NA's not allowed in types")
            if(is.factor(types)) {
              types <- levels(types)

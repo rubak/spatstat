@@ -6,7 +6,8 @@
   a point pattern dataset in the two-dimensional plane.
 }
 \usage{
-  ppp(x,y, \dots, window, marks, check=TRUE, drop=TRUE)
+  ppp(x,y, \dots, window, marks,
+      check=TRUE, checkdup=check, drop=TRUE)
 }
 \arguments{
   \item{x}{Vector of \eqn{x} coordinates of data points}
@@ -17,10 +18,15 @@
     window, if \code{window} is missing}
   \item{marks}{(optional) mark values for the points.
     A vector or data frame.}
-  \item{check}{Logical flag indicating whether to check
+  \item{check}{
+    Logical value indicating whether to check
     that all the \eqn{(x,y)} points lie inside the specified window.
-    Do not set this to \code{FALSE} unless you are sure that this
-    check is unnecessary.
+    Do not set this to \code{FALSE} unless you are absolutely sure that this
+    check is unnecessary. See Warnings below.
+  }
+  \item{checkdup}{
+    Logical value indicating whether to check for duplicated
+    coordinates. See Warnings below.
   }
   \item{drop}{
     Logical flag indicating whether to simplify data frames of marks.
@@ -39,7 +45,9 @@
 
   The vectors \code{x} and \code{y} must be numeric vectors of
   equal length. They are interpreted as the cartesian coordinates
-  of the points in the pattern.
+  of the points in the pattern. Note that \code{x} and \code{y} are
+  permitted to have length zero, corresponding to an empty point
+  pattern; this is the default if these arguments are missing.
 
   A point pattern dataset is assumed to have been observed within a specific
   region of the plane called the observation window.
@@ -70,7 +78,12 @@
     the window.
     \item
     \code{window} is an object of class \code{"owin"}
-    (see \code{\link{owin.object}}) specifying the window.
+    specifying the window. A window object can be created
+    by \code{\link{owin}} from raw coordinate data. Special shapes
+    of windows can be created by the functions
+    \code{\link{square}}, \code{\link{hexagon}},
+    \code{\link{regularpolygon}}, \code{\link{disc}}
+    and \code{\link{ellipse}}. See the Examples.
   }
   The arguments \code{xrange, yrange} or \code{poly}
   or \code{mask} are passed to the window creator function
@@ -132,6 +145,12 @@
   but the functions \code{\link{as.ppp}} and 
   \code{scanpp} may sometimes be convenient.
 }
+\section{Invalid coordinate values}{
+  The coordinate vectors \code{x} and \code{y} must contain only
+  finite numerical values. If the coordinates include
+  any of the values \code{NA}, \code{NaN}, \code{Inf} or \code{-Inf},
+  these will be removed. 
+}
 \section{Rejected points}{
   The points with coordinates \code{x} and \code{y}
   \bold{must} lie inside the specified window, in order to
@@ -151,7 +170,35 @@
   you will need to find a larger window that contains them,
   and use this larger window in a call to \code{ppp}.
 }
+\section{Warnings}{
+  The code will check for problems with the data,
+  and issue a warning if any problems are found.
+  The checks and warnings can be switched off, for efficiency's sake,
+  but this should only be done if you are confident that the data
+  do not have these problems. 
 
+  Setting \code{check=FALSE} will disable all the checking procedures:
+  the check for points outside the window, and the check for
+  duplicated points. This is extremely dangerous, because points lying
+  outside the window will break many of the procedures in
+  \pkg{spatstat}, causing crashes and strange errors.
+  Set \code{check=FALSE} only if you are absolutely
+  sure that there are no points outside the window.
+
+  If duplicated points are found, a warning is issued, but no action is
+  taken. Duplicated points are not illegal, but may cause unexpected problems
+  later. Setting \code{checkdup=FALSE} will disable the check for duplicated
+  points. Do this only if you already know the answer.
+
+  Methodology and software for spatial point patterns often assume
+  that all points are distinct so that there are no duplicated points.
+  If duplicated points are present, the consequence could be
+  an incorrect result or a software crash. To the best of our knowledge,
+  all \pkg{spatstat} code handles duplicated points correctly.
+  However, if duplicated points are present, we advise using
+  \code{\link{unique.ppp}} or \code{\link{multiplicity.ppp}}
+  to eliminate duplicated points and re-analyse the data.
+}
 \seealso{
   \code{\link{ppp.object}},
   \code{\link{as.ppp}},
@@ -184,15 +231,15 @@
   X <- ppp(x, y, poly=list(x=c(0,10,0), y=c(0,0,10)))
   \dontrun{plot(X)}
 
+  # circular window of radius 2
+  X <- ppp(x, y, window=disc(2))
+
   # copy the window from another pattern
   data(cells)
-  X <- ppp(x, y, window=cells$window)
+  X <- ppp(x, y, window=Window(cells))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{datagen}

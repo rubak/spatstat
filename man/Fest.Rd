@@ -42,6 +42,7 @@ Fhazard(X, \dots)
     A vector of character strings selected from
     \code{"none"}, \code{"rs"}, \code{"km"}, \code{"cs"}
     and \code{"best"}.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{domain}{
     Optional. Calculations will be restricted to this subset
@@ -107,9 +108,9 @@ Fhazard(X, \dots)
   true value of \eqn{F} for a completely random (Poisson) point process,
   which is
   \deqn{F(r) = 1 - e^{ - \lambda \pi r^2}}{%
-    F(r) = 1 - exp( - lambda * pi * r^2)      %
+    F(r) = 1 - exp( - \lambda * \pi * r^2)      %
   }
-  where \eqn{\lambda}{lambda}
+  where \eqn{\lambda}{\lambda}
   is the intensity (expected number of points per unit area).
   Deviations between the empirical and theoretical \eqn{F} curves
   may suggest spatial clustering or spatial regularity.
@@ -156,7 +157,7 @@ Fhazard(X, \dots)
   by \code{eps}.
 
   If \code{eps} is not specified, the function
-  checks whether the window \code{X$window} contains pixel raster
+  checks whether the window \code{Window(X)} contains pixel raster
   information. If so, then \code{eps} is set equal to the 
   pixel width of the raster; otherwise, \code{eps}
   defaults to 1/100 of the width of the observation window.
@@ -299,11 +300,11 @@ Fhazard(X, \dots)
    Fh <- Fhazard(cells)
    }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

@@ -2,7 +2,7 @@
 #
 #      distmap.R
 #
-#      $Revision: 1.20 $     $Date: 2014/10/24 00:22:30 $
+#      $Revision: 1.23 $     $Date: 2017/06/05 10:31:58 $
 #
 #
 #     Distance transforms
@@ -67,8 +67,8 @@ distmap.owin <- function(X, ..., discretise=FALSE, invert=FALSE) {
       X <- complement.owin(X)
     xc <- X$xcol
     yr <- X$yrow
-    nr <- X$dim[1]
-    nc <- X$dim[2]
+    nr <- X$dim[1L]
+    nc <- X$dim[2L]
 # pad out the input image with a margin of width 1 on all sides
     mat <- X$m
     pad <- invert # boundary condition is opposite of value inside W
@@ -76,15 +76,16 @@ distmap.owin <- function(X, ..., discretise=FALSE, invert=FALSE) {
     mat <- rbind(pad, mat, pad)
 # call C routine
     res <- .C("distmapbin",
-              as.double(X$xrange[1]),
-              as.double(X$yrange[1]),
-              as.double(X$xrange[2]),
-              as.double(X$yrange[2]),
+              xmin=as.double(X$xrange[1L]),
+              ymin=as.double(X$yrange[1L]),
+              xmax=as.double(X$xrange[2L]),
+              ymax=as.double(X$yrange[2L]),
               nr = as.integer(nr),
               nc = as.integer(nc),
-              as.logical(t(mat)),
+              inp = as.integer(as.logical(t(mat))),
               distances = as.double(matrix(0, ncol = nc + 2, nrow = nr + 2)),
-              boundary = as.double(matrix(0, ncol = nc + 2, nrow = nr + 2)))
+              boundary = as.double(matrix(0, ncol = nc + 2, nrow = nr + 2)),
+              PACKAGE = "spatstat")
   # strip off margins again
     dist <- matrix(res$distances,
                    ncol = nc + 2, byrow = TRUE)[2:(nr + 1), 2:(nc +1)]
@@ -100,31 +101,18 @@ distmap.owin <- function(X, ..., discretise=FALSE, invert=FALSE) {
 
 distmap.psp <- function(X, ...) {
   verifyclass(X, "psp")
-  W <- as.mask(X$window, ...)
+  W <- as.mask(Window(X), ...)
   uni <- unitname(W)
   rxy <- rasterxy.mask(W)
   xp <- rxy$x
   yp <- rxy$y
-  np <- length(xp)
   E <- X$ends
-  big <- 2 * diameter(as.rectangle(W))^2
-  dist2 <- rep.int(big, np)
-  z <- .C("nndist2segs",
-          xp=as.double(xp),
-          yp=as.double(yp),
-          npoints=as.integer(np),
-          x0=as.double(E$x0),
-          y0=as.double(E$y0),
-          x1=as.double(E$x1),
-          y1=as.double(E$y1),
-          nsegments=as.integer(nrow(E)),
-          epsilon=as.double(.Machine$double.eps),
-          dist2=as.double(dist2),
-          index=as.integer(integer(np)))
+  big <- 2 * diameter(Frame(W))^2
+  z <- NNdist2segments(xp, yp, E$x0, E$y0, E$x1, E$y1, big)
   xc <- W$xcol
   yr <- W$yrow
   Dist <- im(array(sqrt(z$dist2), dim=W$dim), xc, yr, unitname=uni)
-  Indx <- im(array(z$index + 1, dim=W$dim), xc, yr, unitname=uni)
+  Indx <- im(array(z$index, dim=W$dim), xc, yr, unitname=uni)
   Bdry <- im(bdist.pixels(W, style="matrix"), xc, yr, unitname=uni)
   attr(Dist, "index") <- Indx
   attr(Dist, "bdry")  <- Bdry

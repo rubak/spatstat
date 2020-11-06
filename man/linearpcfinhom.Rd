@@ -8,7 +8,10 @@
   for a point pattern on a linear network.
 }
 \usage{
-linearpcfinhom(X, lambda=NULL, r=NULL, ..., correction="Ang", normalise=TRUE)
+linearpcfinhom(X, lambda=NULL, r=NULL, ..., correction="Ang",
+               normalise=TRUE, normpower=1,
+	       update = TRUE, leaveoneout = TRUE,
+	       ratio = FALSE)
 }
 \arguments{
   \item{X}{
@@ -35,8 +38,35 @@ linearpcfinhom(X, lambda=NULL, r=NULL, ..., correction="Ang", normalise=TRUE)
   \item{normalise}{
     Logical. If \code{TRUE} (the default), the denominator of the estimator is 
     data-dependent (equal to the sum of the reciprocal intensities at the data
-    points), which reduces the sampling variability.
+    points, raised to \code{normpower}), which reduces the sampling variability.
     If \code{FALSE}, the denominator is the length of the network.
+  }
+  \item{normpower}{
+    Integer (usually either 1 or 2).
+    Normalisation power. See explanation in \code{\link{linearKinhom}}.
+  }
+  \item{update}{
+    Logical value indicating what to do when \code{lambda} is a fitted model
+    (class \code{"lppm"} or \code{"ppm"}).
+    If \code{update=TRUE} (the default),
+    the model will first be refitted to the data \code{X}
+    (using \code{\link{update.lppm}} or \code{\link{update.ppm}})
+    before the fitted intensity is computed.
+    If \code{update=FALSE}, the fitted intensity of the
+    model will be computed without re-fitting it to \code{X}.
+  }
+  \item{leaveoneout}{
+    Logical value (passed to \code{\link{fitted.lppm}} or
+    \code{\link{fitted.ppm}}) specifying whether to use a
+    leave-one-out rule when calculating the intensity,
+    when \code{lambda} is a fitted model.
+    Supported only when \code{update=TRUE}.
+  }
+  \item{ratio}{
+    Logical. 
+    If \code{TRUE}, the numerator and denominator of
+    each estimate will also be saved,
+    for use in analysing replicated point patterns.
   }
 }
 \details{
@@ -62,15 +92,26 @@ linearpcfinhom(X, lambda=NULL, r=NULL, ..., correction="Ang", normalise=TRUE)
   any correction for the geometry of the linear network.
   If \code{correction="Ang"}, the pair counts are weighted using
   Ang's correction (Ang, 2010). 
+
+  The bandwidth for smoothing the pairwise distances
+  is determined by arguments \code{\dots}
+  passed to \code{\link{density.default}}, mainly the arguments
+  \code{bw} and \code{adjust}. The default is
+  to choose the bandwidth by Silverman's rule of thumb 
+  \code{bw="nrd0"} explained in \code{\link{density.default}}.
 }
 \value{
   Function value table (object of class \code{"fv"}).
+
+  If \code{ratio=TRUE} then the return value also has two
+  attributes called \code{"numerator"} and \code{"denominator"}
+  which are \code{"fv"} objects
+  containing the numerators and denominators of each
+  estimate of \eqn{g(r)}. 
 }
 \author{
   Ang Qi Wei \email{aqw07398@hotmail.com} and
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian.
 }
 \references{
   Ang, Q.W. (2010) Statistical methodology for spatial point patterns
@@ -95,7 +136,7 @@ linearpcfinhom(X, lambda=NULL, r=NULL, ..., correction="Ang", normalise=TRUE)
 \examples{
   data(simplenet)
   X <- rpoislpp(5, simplenet)
-  fit <- lppm(X, ~x)
+  fit <- lppm(X ~x)
   K <- linearpcfinhom(X, lambda=fit)
   plot(K)
 }

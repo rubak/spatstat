@@ -4,7 +4,7 @@
 #	Class 'ppm' representing fitted point process models.
 #
 #
-#	$Revision: 2.127 $	$Date: 2015/10/16 07:47:19 $
+#	$Revision: 2.147 $	$Date: 2020/03/04 04:25:22 $
 #
 #       An object of class 'ppm' contains the following:
 #
@@ -265,6 +265,9 @@ coef.ppm <- function(object, ...) {
   object$coef
 }
 
+hasglmfit <- function(object) {
+  return(!is.null(object$internal$glmfit))
+}
 
 getglmfit <- function(object) {
   verifyclass(object, "ppm")
@@ -348,6 +351,9 @@ valid.ppm <- function(object, warn=TRUE, ...) {
     if(warn) warning("Internal error: unable to check validity of model")
     return(NA)
   }
+  #' remove prefix to obtain coefficient names expected by interaction
+  if(npre <- sum(nchar(object$internal$vnameprefix)))
+    names(Icoeffs) <- substring(names(Icoeffs), npre+1L)
   answer <- checker(Icoeffs, inte)
   return(answer)
 }
@@ -578,8 +584,9 @@ deviance.ppm <- function(object, ...) {
 
 logLik.ppm <- function(object, ..., new.coef=NULL, warn=TRUE, absolute=FALSE) {
   if(!is.poisson.ppm(object) && warn) 
-    warning(paste("log likelihood is not available for non-Poisson model;",
-                  "log-pseudolikelihood returned"))
+    warn.once("ppmLogLik",
+              "log likelihood is not available for non-Poisson model;",
+              "log pseudolikelihood returned")
   ## degrees of freedom
   nip <- if(!inherits(object, "ippm")) 0 else
            length(attr(object$covfunargs, "free"))
@@ -635,9 +642,18 @@ pseudoR2 <- function(object, ...) {
   UseMethod("pseudoR2")
 }
 
-pseudoR2.ppm <- function(object, ...) {
+pseudoR2.ppm <- function(object, ..., keepoffset=TRUE) {
   dres <- deviance(object, ..., warn=FALSE)
-  nullmod <- update(object, . ~ 1, forcefit=TRUE)
+  nullfmla <- . ~ 1
+  if(keepoffset && has.offset.term(object)) {
+    off <- attr(model.depends(object), "offset")
+    offterms <- row.names(off)[apply(off, 1, any)]
+    if(length(offterms)) {
+      nullrhs <- paste(offterms, collapse=" + ") 
+      nullfmla <- as.formula(paste(". ~ ", nullrhs))
+    }
+  } 
+  nullmod <- update(object, nullfmla, forcefit=TRUE)
   dnul <- deviance(nullmod, warn=FALSE)
   return(1 - dres/dnul)
 }
@@ -705,33 +721,107 @@ model.frame.ppm <- function(formula, ...) {
     object <- update(object, forcefit=TRUE)
     gf <- getglmfit(object)
   }
-#  gd <- getglmdata(object)
-#  model.frame(gf, data=gd, ...)
-  model.frame(gf, ...)
+  argh <- resolve.defaults(list(formula=gf),
+                           list(...),
+                           list(data = getglmdata(object),
+                                subset = TRUE))
+  result <- switch(object$fitter,
+                   gam = do.call(modelFrameGam, argh),
+                   do.call(model.frame, argh))
+  return(result)
+}
+
+#' a hacked version of model.frame.glm that works for gam objects (mgcv)
+modelFrameGam <- function(formula, ...) {
+  dots <- list(...)
+  nargs <- dots[match(c("data", "na.action", "subset"), names(dots), 
+                      0L)]
+  if (length(nargs) || is.null(formula$model)) {
+    fcall <- formula$call
+#    fcall$method <- "model.frame"
+    fcall[[1L]] <- quote(mgcv::gam)
+    fcall[names(nargs)] <- nargs
+    env <- environment(formula$terms)
+    if (is.null(env)) 
+      env <- parent.frame()
+    refut <- eval(fcall, env)
+    refut$model
+  } else formula$model
 }
 
 #
 # method for model.matrix
 
-model.matrix.ppm <- function(object, data=model.frame(object),
+model.matrix.ppm <- function(object,
+                             data=model.frame(object, na.action=NULL),
                              ..., Q=NULL, keepNA=TRUE) {
-  data.given <- !missing(data) && !is.null(data)
+  if(missing(data)) data <- NULL
+  PPMmodelmatrix(object, data=data, ..., Q=Q, keepNA=keepNA)
+}
+
+model.matrix.ippm <- function(object,
+                              data=model.frame(object, na.action=NULL),
+                              ..., Q=NULL, keepNA=TRUE, irregular=FALSE) {
+  if(missing(data)) data <- NULL 
+  PPMmodelmatrix(object, data=data, ...,
+                 Q=Q, keepNA=keepNA, irregular=irregular)
+}
+
+PPMmodelmatrix <- function(object,
+                           data = NULL, 
+                           ...,
+                           subset, Q=NULL, keepNA=TRUE, irregular=FALSE,
+                           splitInf=FALSE) {
+  # handles ppm and ippm			      
+  data.given <- !is.null(data)
+  irregular <- irregular && inherits(object, "ippm") && !is.null(object$iScore)
+  if(splitInf && !data.given && is.null(Q)) {
+    #' force re-computation
+    Q <- quad.ppm(object)
+  }
   if(!is.null(Q)) {
     if(data.given) stop("Arguments Q and data are incompatible")
     if(!inherits(Q, c("ppp", "quad")))
       stop("Q should be a point pattern or quadrature scheme")
     if(is.ppp(Q)) Q <- quad(Q, Q[FALSE])
     ## construct Berman-Turner frame
-    needed <- c("trend", "interaction", "covariates", "correction", "rbord")
-    bt <- do.call("bt.frame", append(list(Q), object[needed]))
+    needed <- c("trend", "interaction", "covariates", "covfunargs",
+                "correction", "rbord")
+    bt <- do.call(bt.frame,
+                  c(list(Q), object[needed], list(splitInf=splitInf)))
+    forbid <- bt$forbid
     ## compute model matrix
     mf <- model.frame(bt$fmla, bt$glmdata, ...)
     mm <- model.matrix(bt$fmla, mf, ...)
+    ass <- attr(mm, "assign")
+    if(irregular) {
+      ## add irregular score components
+      U <- union.quad(Q)
+      mi <- sapply(object$iScore, do.call,
+                   args=append(list(x=U$x, y=U$y), object$covfunargs),
+                   envir=environment(terms(object)))
+      if(nrow(mi) != nrow(mm))
+        stop("Internal error: incorrect number of rows in iScore")
+      mm <- cbind(mm, mi)
+    }
+    ## subset
+    if(!missing(subset)) {
+      ok <- eval(substitute(subset), envir=bt$glmdata)
+      mm <- mm[ok, , drop=FALSE]
+      if(!is.null(forbid)) forbid <- forbid[ok]
+    }
     ## remove NA's ?
-    if(!keepNA)
-      mm <- mm[complete.cases(mm), ..., drop=FALSE]
+    if(!keepNA) {
+      ok <- complete.cases(mm)
+      mm <- mm[ok, , drop=FALSE]
+      if(!is.null(forbid)) forbid <- forbid[ok]
+    }
+    attr(mm, "assign") <- ass 
+    attr(mm, "-Inf") <- forbid
     return(mm)
   }
+
+  #' extract GLM fit 
   gf <- getglmfit(object)
   if(is.null(gf)) {
     warning("Model re-fitted with forcefit=TRUE")
@@ -740,27 +830,60 @@ model.matrix.ppm <- function(object, data=model.frame(object),
     if(is.null(gf))
       stop("internal error: unable to extract a glm fit")
   }
-  
+
   if(data.given) {
-    # new data. Must contain the Berman-Turner variables as well.
+    #' new data. Must contain the Berman-Turner variables as well.
     bt <- list(.mpl.Y=1, .mpl.W=1, .mpl.SUBSET=TRUE)
     if(any(forgot <- !(names(bt) %in% names(data)))) 
-      data <- do.call("cbind", append(list(data), bt[forgot]))
-    mm <- model.matrix(gf, data=data, ...)
+      data <- do.call(cbind, append(list(data), bt[forgot]))
+    mm <- model.matrix(gf, data=data, ..., subset=NULL)
+    ass <- attr(mm, "assign")
+    if(irregular) {
+      ## add irregular score components 
+      mi <- sapply(object$iScore, do.call,
+                   args=append(list(x=data$x, y=data$y), object$covfunargs),
+                   envir=environment(terms(object)))
+      if(nrow(mi) != nrow(mm))
+        stop("Internal error: incorrect number of rows in iScore")
+      mm <- cbind(mm, mi)
+      attr(mm, "assign") <- ass
+    }
+    if(inherits(gf, "gam")) 
+      attr(mm, "assign") <- gf$assign
     return(mm)
   }
 
-  if(!keepNA) {
+  scrambled <- object$scrambled %orifnull% FALSE
+  ## if TRUE, this object was produced by 'subfits' using jittered covariate
+
+  if(!keepNA && !irregular && !scrambled) {
     # extract model matrix of glm fit object
     # restricting to its 'subset' 
-    mm <- model.matrix(gf, data=data, ...)
+    mm <- model.matrix(gf, ...)
+    if(inherits(gf, "gam")) 
+      attr(mm, "assign") <- gf$assign
     return(mm)
   }
   
-  # extract model matrix for all cases
-  mm <- model.matrix(gf, data, ..., subset=NULL)
+  ## extract model matrix for all cases
+  gd <- getglmdata(object, drop=FALSE) 
+  if(!scrambled) {
+    ## 'gf' was fitted to correct data. Use internals.
+    mm <- model.matrix(gf, ..., subset=NULL, na.action=NULL)
+    ass <- attr(mm, "assign")
+  } else {
+    ## 'gf' was originally fitted using jittered data:
+    ## Use correct data given by 'gd'
+    ## Temporarily add scrambled data to avoid singular matrices etc
+    gds <- object$internal$glmdata.scrambled
+    gdplus <- rbind(gd, gds)
+    mm <- model.matrix(gf, ..., data=gdplus, subset=NULL, na.action=NULL)
+    ass <- attr(mm, "assign")
+    ## Now remove rows corresponding to scrambled data
+    mm <- mm[seq_len(nrow(gd)), , drop=FALSE]
+    attr(mm, "assign") <- ass
+  } 
   cn <- colnames(mm)
-  gd <- getglmdata(object, drop=FALSE)
   if(nrow(mm) != nrow(gd)) {
     # can occur if covariates include NA's or interaction is -Inf
     insubset <- getglmsubset(object)
@@ -771,9 +894,35 @@ model.matrix.ppm <- function(object, data=model.frame(object),
       mmplus[isna, ] <- NA
       mmplus[!isna, ] <- mm
       mm <- mmplus
+      attr(mm, "assign") <- ass
     } else 
     stop("internal error: model matrix does not match glm data frame")
   }
+  if(irregular) {
+    ## add irregular score components 
+    U <- union.quad(quad.ppm(object, drop=FALSE))
+    mi <- sapply(object$iScore, do.call,
+                 args=append(list(x=U$x, y=U$y), object$covfunargs),
+	  envir=environment(terms(object)))
+    if(nrow(mi) != nrow(mm))
+      stop("Internal error: incorrect number of rows in iScore")
+    mm <- cbind(mm, mi)
+    attr(mm, "assign") <- ass
+    cn <- c(cn, colnames(mi))
+  }
+  ## subset
+  if(!missing(subset)) {
+    ok <- eval(substitute(subset), envir=gd)
+    mm <- mm[ok, , drop=FALSE]
+    attr(mm, "assign") <- ass
+  }
+  ## remove NA's
+  if(!keepNA) {
+    mm <- mm[complete.cases(mm), , drop=FALSE]
+    attr(mm, "assign") <- ass
+  }
+  if(inherits(gf, "gam")) 
+    attr(mm, "assign") <- gf$assign
   colnames(mm) <- cn
   return(mm)
 }
@@ -784,10 +933,11 @@ model.images <- function(object, ...) {
 
 model.images.ppm <- function(object, W=as.owin(object), ...) {
   X <- data.ppm(object)
+#  irregular <- resolve.1.default(list(irregular=FALSE), list(...))
   ## make a quadscheme with a dummy point at every pixel
   Q <- pixelquad(X, W)
   ## compute model matrix
-  mm <- model.matrix(object, Q=Q)
+  mm <- model.matrix(object, Q=Q, ...)
   ## retain only the entries for dummy points (pixels)
   mm <- mm[!is.data(Q), , drop=FALSE]
   mm <- as.data.frame(mm)
@@ -855,7 +1005,7 @@ as.owin.ppm <- function(W, ..., from=c("points", "covariates"), fatal=TRUE) {
   if(!any(isim))
     return(datawin)
   cwins <- lapply(covs[isim], as.owin)
-  covwin <- do.call("intersect.owin", unname(cwins))
+  covwin <- do.call(intersect.owin, unname(cwins))
   result <- intersect.owin(covwin, datawin)
   return(result)
 }
@@ -863,5 +1013,16 @@ as.owin.ppm <- function(W, ..., from=c("points", "covariates"), fatal=TRUE) {
 domain.ppm <- Window.ppm <- function(X, ..., from=c("points", "covariates")) {
   from <- match.arg(from)
   as.owin(X, ..., from=from)
+}
+
+## change the coefficients in a ppm or other model
+
+tweak.coefs <- function(model, new.coef) {
+  if(is.null(new.coef)) return(model)
+  co <- coef(model)
+  check.nvector(new.coef, length(co), things="coefficients")
+  model$coef.orig <- co
+  model$coef <- new.coef
+  return(model)
 }
 

@@ -4,17 +4,26 @@
 ##  Plotting functions for 'solist', 'anylist', 'imlist'
 ##       and legacy class 'listof'
 ##
-##  $Revision: 1.15 $ $Date: 2015/05/20 14:41:37 $
+##  $Revision: 1.29 $ $Date: 2019/09/11 11:52:28 $
 ##
 
 plot.anylist <- plot.solist <- plot.listof <-
   local({
 
   ## auxiliary functions
+  classes.with.do.plot <- c("im", "ppp", "psp", "msr", "layered", "tess")
+  classes.with.multiplot <- c("ppp", "lpp", "msr", "tess",
+                              "leverage.ppm", "influence.ppm")
+
+  has.multiplot <- function(x) {
+    inherits(x, classes.with.multiplot) ||
+      (is.function(x) && "multiplot" %in% names(formals(x)))
+  }
+  
   extraplot <- function(nnn, x, ..., add=FALSE, extrargs=list(),
                         panel.args=NULL, plotcommand="plot") {
     argh <- list(...)
-    if(is.ppp(x) && identical(plotcommand,"plot"))
+    if(has.multiplot(x) && identical(plotcommand,"plot"))
       argh <- c(argh, list(multiplot=FALSE))
     if(!is.null(panel.args)) {
       xtra <- if(is.function(panel.args)) panel.args(nnn) else panel.args
@@ -34,11 +43,12 @@ plot.anylist <- plot.solist <- plot.listof <-
 
   exec.or.plot <- function(cmd, i, xi, ..., extrargs=list(), add=FALSE) {
     if(is.null(cmd)) return(NULL)
-    argh <- resolve.defaults(list(...),
-                             extrargs,
-                             ## some plot commands don't recognise 'add' 
-                             if(add) list(add=TRUE) else NULL,
-                             if(is.ppp(cmd)) list(multiplot=FALSE) else NULL)
+    argh <-
+      resolve.defaults(list(...),
+                       extrargs,
+                       ## some plot commands don't recognise 'add' 
+                       if(add) list(add=TRUE) else NULL,
+                       if(has.multiplot(cmd)) list(multiplot=FALSE) else NULL)
     if(is.function(cmd)) {
       do.call(cmd, resolve.defaults(list(i, xi), argh))
     } else {
@@ -49,11 +59,12 @@ plot.anylist <- plot.solist <- plot.listof <-
   exec.or.plotshift <- function(cmd, i, xi, ..., vec=vec,
                                 extrargs=list(), add=FALSE) {
     if(is.null(cmd)) return(NULL)
-    argh <- resolve.defaults(list(...),
-                             extrargs,
-                             ## some plot commands don't recognise 'add' 
-                             if(add) list(add=TRUE) else NULL,
-                             if(is.ppp(cmd)) list(multiplot=FALSE) else NULL)
+    argh <-
+      resolve.defaults(list(...),
+                       extrargs,
+                       ## some plot commands don't recognise 'add' 
+                       if(add) list(add=TRUE) else NULL,
+                       if(has.multiplot(cmd)) list(multiplot=FALSE) else NULL)
     if(is.function(cmd)) {
       do.call(cmd, resolve.defaults(list(i, xi), argh))
     } else {
@@ -63,11 +74,12 @@ plot.anylist <- plot.solist <- plot.listof <-
   }
 
   ## bounding box, including ribbon for images, legend for point patterns
-  getplotbox <- function(x, ..., do.plot, plotcommand="plot") {
-    if(inherits(x, c("im", "ppp", "psp", "msr", "layered", "tess"))) {
+  getplotbox <- function(x, ..., do.plot, plotcommand="plot", multiplot) {
+    if(inherits(x, classes.with.do.plot)) {
       if(identical(plotcommand, "plot")) {
-        y <- if(is.ppp(x)) plot(x, ..., multiplot=FALSE, do.plot=FALSE) else 
-                           plot(x, ..., do.plot=FALSE)      
+        y <- if(has.multiplot(x))
+          plot(x, ..., multiplot=FALSE, do.plot=FALSE) else 
+          plot(x, ..., do.plot=FALSE)
         return(as.owin(y))
       } else if(identical(plotcommand, "contour")) {
         y <- contour(x, ..., do.plot=FALSE)      
@@ -76,9 +88,14 @@ plot.anylist <- plot.solist <- plot.listof <-
         plc <- plotcommand
         if(is.character(plc)) plc <- get(plc)
         if(!is.function(plc)) stop("Unrecognised plot function")
-        if("do.plot" %in% names(args(plc)))
-          return(as.owin(do.call(plc, list(x=x, ..., do.plot=FALSE))))
-        return(as.rectangle(x))
+        if("do.plot" %in% names(args(plc))) {
+          if(has.multiplot(plc)) {
+            y <- do.call(plc, list(x=x, ..., multiplot=FALSE, do.plot=FALSE))
+          } else {
+            y <- do.call(plc, list(x=x, ...,                  do.plot=FALSE))
+          }
+          return(as.owin(y))
+        }
       }
     }
     return(try(as.rectangle(x), silent=TRUE))
@@ -104,6 +121,8 @@ plot.anylist <- plot.solist <- plot.listof <-
     return(!inherits(y, "try-error"))
   }
 
+  maxassigned <- function(i, values) max(-1, values[i[i > 0]])
+  
   plot.anylist <- function(x, ..., main, arrange=TRUE,
                             nrows=NULL, ncols=NULL,
                             main.panel=NULL,
@@ -113,6 +132,9 @@ plot.anylist <- plot.solist <- plot.listof <-
                             panel.begin=NULL,
                             panel.end=NULL,
                             panel.args=NULL,
+                            panel.begin.args=NULL,
+                            panel.end.args=NULL,
+                            panel.vpad = 0.2,
                             plotcommand="plot",
                             adorn.left=NULL,
                             adorn.right=NULL,
@@ -120,9 +142,14 @@ plot.anylist <- plot.solist <- plot.listof <-
                             adorn.bottom=NULL,
                             adorn.size=0.2,
                             equal.scales=FALSE,
-                            halign=FALSE, valign=FALSE) {
+                            halign=FALSE, valign=FALSE
+                           ) {
     xname <- short.deparse(substitute(x))
 
+    ## recursively expand entries which are 'anylist' etc
+    while(any(sapply(x, inherits, what="anylist"))) 
+      x <- as.solist(expandSpecialLists(x, "anylist"), demote=TRUE)
+    
     isSo <- inherits(x, "solist")
     isIm <- inherits(x, "imlist") || (isSo && all(unlist(lapply(x, is.im))))
     
@@ -175,19 +202,24 @@ plot.anylist <- plot.solist <- plot.listof <-
       ylim <- range(unlist(lapply(fvlims, getElement, name="ylim")))
       extrargs <- list(xlim=xlim, ylim=ylim)
     } else extrargs <- list()
+
+    extrargs.begin <- resolve.defaults(panel.begin.args, extrargs)
+    extrargs.end <- resolve.defaults(panel.end.args, extrargs)
     
     if(!arrange) {
       ## sequence of plots
+      result <- vector(mode="list", length=n)
       for(i in 1:n) {
         xi <- x[[i]]
         exec.or.plot(panel.begin, i, xi, main=main.panel[i],
-                     extrargs=extrargs)
-        extraplot(i, xi, ...,
-                  add=!is.null(panel.begin),
-                  main=main.panel[i],
-                  panel.args=panel.args, extrargs=extrargs,
-                  plotcommand=plotcommand)
-        exec.or.plot(panel.end, i, xi, add=TRUE, extrargs=extrargs)
+                     extrargs=extrargs.begin)
+        result[[i]] <-
+          extraplot(i, xi, ...,
+                    add=!is.null(panel.begin),
+                    main=main.panel[i],
+                    panel.args=panel.args, extrargs=extrargs,
+                    plotcommand=plotcommand) %orifnull% list()
+        exec.or.plot(panel.end, i, xi, add=TRUE, extrargs=extrargs.end)
       }
       if(!is.null(adorn.left))
         warning("adorn.left was ignored because arrange=FALSE")
@@ -197,7 +229,7 @@ plot.anylist <- plot.solist <- plot.listof <-
         warning("adorn.top was ignored because arrange=FALSE")
       if(!is.null(adorn.bottom))
         warning("adorn.bottom was ignored because arrange=FALSE")
-      return(invisible(NULL))
+      return(invisible(result))
     }
 
     ## ARRAY of plots
@@ -256,9 +288,15 @@ plot.anylist <- plot.solist <- plot.listof <-
         bheights <- unlist(lapply(sides, "[", 2))
         ## Force equal heights, unless there is only one column
         scales <- if(ncols > 1) 1/bheights else 1/bwidths
-        scaledboxes <- vector(mode="list", length=n)
-        for(i in 1:n)
-          scaledboxes[[i]] <- scalardilate(boxes[[i]], scales[i])
+        if(all(is.finite(scales))) {
+          scaledboxes <- vector(mode="list", length=n)
+          for(i in 1:n)
+            scaledboxes[[i]] <- scalardilate(boxes[[i]], scales[i])
+        } else {
+          #' uh-oh
+          equal.scales <- sizes.known <- FALSE
+          scaledboxes <- boxes
+        }
       }
     }
     ## determine whether to display all objects in one enormous plot
@@ -287,16 +325,19 @@ plot.anylist <- plot.solist <- plot.listof <-
                   byrow=TRUE, ncol=ncols, nrow=nrows)
     if(sizes.known) {
       boxsides <- lapply(scaledboxes, sidelengths)
-      xwidths <- unlist(lapply(boxsides, "[", i=1))
-      xheights <- unlist(lapply(boxsides, "[", i=2))
-      heights <- apply(mat, 1, function(j,h) { max(h[j[j>0]]) }, h=xheights)
-      widths <- apply(mat, 2, function(i,w) { max(w[i[i>0]]) }, w=xwidths)
+      xwidths <- sapply(boxsides, "[", i=1)
+      xheights <- sapply(boxsides, "[", i=2)
+      heights <- apply(mat, 1, maxassigned, values=xheights)
+      widths <- apply(mat, 2, maxassigned, values=xwidths)
     } else {
       heights <- rep.int(1, nrows)
       widths <- rep.int(1, ncols)
     }
-    meanheight <- mean(heights)
-    meanwidth  <- mean(widths)
+    #' negative heights/widths arise if a row/column is not used.
+    meanheight <- mean(heights[heights > 0])
+    meanwidth  <- mean(widths[heights > 0])
+    heights[heights <= 0] <- meanheight
+    widths[widths <= 0] <- meanwidth
     nall <- n
     ##
     if(single.plot) {
@@ -320,6 +361,7 @@ plot.anylist <- plot.solist <- plot.listof <-
       cex <- resolve.1.default(list(cex.title=1.5), list(...))/par('cex.main')
       plot(bigbox, type="n", main=main, cex.main=cex)
       ## plot individual objects
+      result <- vector(mode="list", length=n)
       for(i in 1:n) {
         ## determine shift vector that moves bottom left corner of spatial box
         ## to bottom left corner of target area on plot device
@@ -332,22 +374,27 @@ plot.anylist <- plot.solist <- plot.listof <-
           exec.or.plotshift(panel.begin, i, xishift,
                             add=TRUE,
                             main=main.panel[i], show.all=TRUE,
-                            extrargs=extrargs,
+                            extrargs=extrargs.begin,
                             vec=vec)
-        extraplot(i, xishift, ...,
-                  add=TRUE, show.all=is.null(panel.begin),
-                  main=main.panel[i],
-                  extrargs=extrargs,
-                  panel.args=panel.args, plotcommand=plotcommand)
+        result[[i]] <-
+          extraplot(i, xishift, ...,
+                    add=TRUE, show.all=is.null(panel.begin),
+                    main=main.panel[i],
+                    extrargs=extrargs,
+                    panel.args=panel.args,
+                    plotcommand=plotcommand) %orifnull% list()
         exec.or.plotshift(panel.end, i, xishift, add=TRUE,
-                          extrargs=extrargs,
+                          extrargs=extrargs.end,
                           vec=vec)
       }
-      return(invisible(NULL))
+      return(invisible(result))
     }
     ## ................. multiple logical plots using 'layout' ..............
     ## adjust panel margins to accommodate desired extra separation
     mar.panel <- pmax(0, mar.panel + c(vsep, hsep, vsep, hsep)/2)
+    ## increase heights to accommodate panel titles
+    if(sizes.known && any(nzchar(main.panel))) 
+      heights <- heights * (1 + panel.vpad)
     ## check for adornment
     if(!is.null(adorn.left)) {
       ## add margin at left, of width adorn.size * meanwidth
@@ -395,15 +442,19 @@ plot.anylist <- plot.solist <- plot.listof <-
     ## plot panels
     npa <- par(mar=mar.panel)
     if(!banner) opa <- npa
+    result <- vector(mode="list", length=n)
     for(i in 1:n) {
       xi <- x[[i]]
-      exec.or.plot(panel.begin, i, xi, main=main.panel[i], extrargs=extrargs)
-      extraplot(i, xi, ...,
-                add = !is.null(panel.begin), 
-                main = main.panel[i],
-                extrargs=extrargs,
-                panel.args=panel.args, plotcommand=plotcommand)
-      exec.or.plot(panel.end, i, xi, add=TRUE, extrargs=extrargs)
+      exec.or.plot(panel.begin, i, xi, main=main.panel[i],
+                   extrargs=extrargs.begin)
+      result <-
+        extraplot(i, xi, ...,
+                  add = !is.null(panel.begin), 
+                  main = main.panel[i],
+                  extrargs=extrargs,
+                  panel.args=panel.args,
+                  plotcommand=plotcommand) %orifnull% list()
+      exec.or.plot(panel.end, i, xi, add=TRUE, extrargs=extrargs.end)
     }
     ## adornments
     if(nall > n) {
@@ -420,7 +471,7 @@ plot.anylist <- plot.solist <- plot.listof <-
     ## revert
     layout(1)
     par(opa)
-    return(invisible(NULL))
+    return(invisible(result))
   }
 
   plot.anylist
@@ -429,7 +480,7 @@ plot.anylist <- plot.solist <- plot.listof <-
 
 contour.imlist <- contour.listof <- function(x, ...) {
   xname <- short.deparse(substitute(x))
-  do.call("plot.solist",
+  do.call(plot.solist,
           resolve.defaults(list(x=x, plotcommand="contour"),
                            list(...),
                            list(main=xname)))
@@ -440,11 +491,14 @@ plot.imlist <- local({
   plot.imlist <- function(x, ..., plotcommand="image",
                           equal.ribbon = FALSE, ribmar=NULL) {
     xname <- short.deparse(substitute(x))
+    if(missing(plotcommand) &&
+       any(sapply(x, inherits, what=c("linim", "linfun"))))
+      plotcommand <- "plot"
     if(equal.ribbon &&
        (list(plotcommand) %in% list("image", "plot", image, plot))) {
       out <- imagecommon(x, ..., xname=xname, ribmar=ribmar)
     } else {
-      out <- do.call("plot.solist",
+      out <- do.call(plot.solist,
                      resolve.defaults(list(x=x, plotcommand=plotcommand), 
                                       list(...),
                                       list(main=xname)))
@@ -497,25 +551,26 @@ plot.imlist <- local({
                top    = { ribmar[c(3, 1)] <- newmar }
                )
       }
-       ## function executed to plot colour ribbon
+      ## bespoke function executed to plot colour ribbon
       do.ribbon <- function() {
         opa <- par(mar=ribmar)
-        do.call("plot", ribstuff)
+        do.call(plot, ribstuff)
         par(opa)
       }
-      ## encoded as 'adorn' argument
+      ## ribbon plot function encoded as 'adorn' argument
       ribadorn <- list(adorn=do.ribbon, adorn.size=ribwid)
       names(ribadorn)[1] <- paste("adorn", ribside, sep=".")
     }
     ##
-    do.call("plot.solist",
-            resolve.defaults(list(x=x, plotcommand="image"),
-                             list(...),
-                             list(mar.panel=mar.panel,
-                                  main=xname,
-                                  col=imcolmap, zlim=zlim,
-                                  ribbon=FALSE),
-                             ribadorn))
+    result <- do.call(plot.solist,
+                      resolve.defaults(list(x=x, plotcommand="image"),
+                                       list(...),
+                                       list(mar.panel=mar.panel,
+                                            main=xname,
+                                            col=imcolmap, zlim=zlim,
+                                            ribbon=FALSE),
+                                       ribadorn))
+    return(invisible(result))
   }
 
   plot.imlist

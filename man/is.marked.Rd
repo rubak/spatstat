@@ -22,9 +22,9 @@
 }
 \details{
   ``Marks'' are observations attached to each point of a point pattern.
-  For example the \code{\link{longleaf}} dataset contains the locations
-  of trees, each tree being marked by its diameter;
-  the \code{\link{amacrine}} dataset gives the locations of cells
+  For example the \code{\link[spatstat.data]{longleaf}} dataset
+  contains the locations of trees, each tree being marked by its diameter;
+  the \code{\link[spatstat.data]{amacrine}} dataset gives the locations of cells
   of two types (on/off) and the type of cell may be regarded as a mark attached
   to the location of the cell.
 
@@ -41,11 +41,11 @@
   \code{\link{is.marked.ppp}},
   \code{\link{is.marked.ppm}}
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{manip}

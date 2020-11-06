@@ -1,7 +1,7 @@
 #
 #  dist2dpath.R
 #
-#   $Revision: 1.8 $    $Date: 2014/10/24 00:22:30 $
+#   $Revision: 1.10 $    $Date: 2017/06/05 10:31:58 $
 #
 #       dist2dpath    compute shortest path distances
 #
@@ -12,15 +12,21 @@ dist2dpath <- function(dist, method="C") {
   ## compute the matrix of shortest path distances
   stopifnot(is.matrix(dist) && isSymmetric(dist))
   stopifnot(all(diag(dist) == 0))
-  stopifnot(all(dist[is.finite(dist)] >= 0))
+  findist <- dist[is.finite(dist)]
+  if(any(findist < 0))
+    stop("Some distances are negative")
   ##
   n <- nrow(dist)
-  if(n <= 1) return(dist)
+  if(n <= 1L) return(dist)
   cols <- col(dist)
   ##
-  shortest <- min(dist[is.finite(dist) & dist > 0])
-  tol <- shortest/max(n,1024)
-  tol <- max(tol, .Machine$double.eps)
+  tol <- .Machine$double.eps
+  posdist <- findist[findist > 0]
+  if(length(posdist) > 0) {
+    shortest <- min(posdist)
+    tol2 <- shortest/max(n,1024)
+    tol <- max(tol, tol2)
+  }
   ##
   switch(method,
          interpreted={
@@ -28,8 +34,9 @@ dist2dpath <- function(dist, method="C") {
            changed <- TRUE
            while(changed) {
              for(j in 1:n) 
-               dpathnew[,j] <- apply(dpath + dist[j,][cols], 1, min)
-             changed <- any(abs(dpathnew - dpath) > tol)
+               dpathnew[,j] <- apply(dpath + dist[j,][cols], 1L, min)
+             unequal <- (dpathnew != dpath)
+             changed <- any(unequal) & any(abs(dpathnew-dpath)[unequal] > tol)
              dpath <- dpathnew
            }
          },
@@ -44,9 +51,10 @@ dist2dpath <- function(dist, method="C") {
                    adj=as.integer(adj),
                    dpath=as.double(numeric(n*n)),
                    tol=as.double(tol),
-                   niter=as.integer(integer(1)),
-                   status=as.integer(integer(1)))
-           if(z$status == -1)
+                   niter=as.integer(integer(1L)),
+                   status=as.integer(integer(1L)),
+                   PACKAGE = "spatstat")
+           if(z$status == -1L)
              warning(paste("C algorithm did not converge to tolerance", tol,
                            "after", z$niter, "iterations",
                            "on", n, "vertices and",

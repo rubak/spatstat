@@ -11,16 +11,19 @@
   envelope(Y, fun, \dots)
 
   \method{envelope}{ppp}(Y, fun=Kest, nsim=99, nrank=1, \dots,
+  funargs=list(), funYargs=funargs,
   simulate=NULL,  fix.n=FALSE, fix.marks=FALSE,
   verbose=TRUE, clipdata=TRUE,
   transform=NULL, global=FALSE, ginterval=NULL, use.theory=NULL, 
   alternative=c("two.sided", "less", "greater"),
   scale=NULL, clamp=FALSE, 
   savefuns=FALSE, savepatterns=FALSE,
-  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL, maxnerr=nsim,
+  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL,
+  maxnerr=nsim, rejectNA=FALSE, silent=FALSE,
   do.pwrong=FALSE, envir.simul=NULL)
 
   \method{envelope}{ppm}(Y, fun=Kest, nsim=99, nrank=1, \dots, 
+  funargs=list(), funYargs=funargs,
   simulate=NULL, fix.n=FALSE, fix.marks=FALSE,
   verbose=TRUE, clipdata=TRUE,
   start=NULL, control=update(default.rmhcontrol(Y), nrep=nrep), nrep=1e5,
@@ -28,17 +31,20 @@
   alternative=c("two.sided", "less", "greater"), 
   scale=NULL, clamp=FALSE, 
   savefuns=FALSE, savepatterns=FALSE,
-  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL, maxnerr=nsim,
+  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL, 
+  maxnerr=nsim, rejectNA=FALSE, silent=FALSE,
   do.pwrong=FALSE, envir.simul=NULL)
 
   \method{envelope}{kppm}(Y, fun=Kest, nsim=99, nrank=1, \dots, 
+  funargs=list(), funYargs=funargs,
   simulate=NULL,
   verbose=TRUE, clipdata=TRUE,
   transform=NULL, global=FALSE, ginterval=NULL, use.theory=NULL, 
   alternative=c("two.sided", "less", "greater"), 
   scale=NULL, clamp=FALSE, 
   savefuns=FALSE, savepatterns=FALSE,
-  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL, maxnerr=nsim,
+  nsim2=nsim, VARIANCE=FALSE, nSD=2, Yname=NULL, 
+  maxnerr=nsim, rejectNA=FALSE, silent=FALSE,
   do.pwrong=FALSE, envir.simul=NULL)
 }
 \arguments{
@@ -64,12 +70,22 @@
   \item{\dots}{
     Extra arguments passed to \code{fun}.
   }
+  \item{funargs}{
+    A list, containing extra arguments to be passed to \code{fun}.
+  }
+  \item{funYargs}{
+    Optional. A list, containing extra arguments to be passed to
+    \code{fun} when applied to the original data \code{Y} only.
+  }
   \item{simulate}{
     Optional. Specifies how to generate the simulated point patterns.
     If \code{simulate} is an expression in the R language, then this
     expression will be evaluated \code{nsim} times,
     to obtain \code{nsim} point patterns which are taken as the
     simulated patterns from which the envelopes are computed.
+    If \code{simulate} is a function, then this function will be
+    repeatedly applied to the data pattern \code{Y} to obtain
+    \code{nsim} simulated patterns.
     If \code{simulate} is a list of point patterns, then the entries
     in this list will be treated as the simulated patterns from which
     the envelopes are computed.
@@ -130,6 +146,9 @@
     Logical value indicating whether to use the theoretical value,
     computed by \code{fun}, as the reference value for simultaneous
     envelopes. Applicable only when \code{global=TRUE}.
+    Default is \code{use.theory=TRUE} if \code{Y} is a point pattern,
+    or a point process model equivalent to Complete Spatial Randomness,
+    and \code{use.theory=FALSE} otherwise.
   }
   \item{alternative}{
     Character string determining whether the envelope corresponds
@@ -188,11 +207,22 @@
   }
   \item{maxnerr}{
     Maximum number of rejected patterns.
-    If \code{fun} yields an error when applied to a simulated point
+    If \code{fun} yields a fatal error when applied to a simulated point
     pattern (for example, because the pattern is empty and \code{fun}
     requires at least one point), the pattern will be rejected
     and a new random point pattern will be generated. If this happens
     more than \code{maxnerr} times, the algorithm will give up.
+  }
+  \item{rejectNA}{
+    Logical value specifying whether to reject a simulated pattern
+    if the resulting values of \code{fun} are all equal to \code{NA},
+    \code{NaN} or infinite. If \code{FALSE} (the default), then
+    simulated patterns are only rejected when \code{fun} gives a
+    fatal error. 
+  }
+  \item{silent}{
+    Logical value specifying whether to print a report each time
+    a simulated pattern is rejected.
   }
   \item{do.pwrong}{
     Logical. If \code{TRUE}, the algorithm will also estimate
@@ -207,7 +237,8 @@
   }
 }
 \value{
-  An object of class \code{"fv"}, see \code{\link{fv.object}},
+  An object of class \code{"envelope"}
+  and \code{"fv"}, see \code{\link{fv.object}},
   which can be printed and plotted directly.
 
   Essentially a data frame containing columns
@@ -258,7 +289,8 @@
   the classes \code{"ppp"}, \code{"ppm"} and \code{"kppm"}
   described here. There are also methods for the classes \code{"pp3"},
   \code{"lpp"} and \code{"lppm"} which are described separately
-  under \code{\link{envelope.pp3}} and \code{\link{envelope.lpp}}.
+  under \code{\link{envelope.pp3}}
+  and \code{\link{envelope.lpp}}.
   Envelopes can also be computed from other envelopes, using
   \code{\link{envelope.envelope}}.
   
@@ -292,6 +324,13 @@
       \code{nsim} times to yield \code{nsim} point patterns. For example
       if \code{simulate=expression(runifpoint(100))} then each simulated
       pattern consists of exactly 100 independent uniform random points.
+      \item
+      a function in the R language, typically containing a call to a
+      random generator. This function will be applied repeatedly
+      to the original data pattern \code{Y} to yield \code{nsim} point
+      patterns. For example if \code{simulate=\link{rlabel}} then each
+      simulated pattern was generated by evaluating \code{\link{rlabel}(Y)}
+      and consists of a randomly-relabelled version of \code{Y}.
       \item
       a list of point patterns.
       The entries in this list will be taken as the simulated patterns.
@@ -392,9 +431,29 @@
   sample mean, sample variance and other quantities.
 
   Arguments can be passed to the function \code{fun} through
-  \code{...}. In particular, the argument \code{correction}
-  determines the edge correction to be used to calculate the summary statistic.
-  See the section on Edge Corrections, and the Examples.
+  \code{...}. This means that you simply specify these arguments in the call to
+  \code{envelope}, and they will be passed to \code{fun}.
+  In particular, the argument \code{correction}
+  determines the edge correction to be used to calculate the summary
+  statistic. See the section on Edge Corrections, and the Examples.
+
+  Arguments can also be passed to the function \code{fun}
+  through the list \code{funargs}. This mechanism is typically used if
+  an argument of \code{fun} has the same name as an argument of
+  \code{envelope}. The list \code{funargs} should contain
+  entries of the form \code{name=value}, where each \code{name} is the name
+  of an argument of \code{fun}.
+
+  There is also an option, rarely used, in which different function
+  arguments are used when computing the summary function
+  for the data \code{Y} and for the simulated patterns.
+  If \code{funYargs} is given, it will be used
+  when the summary function for the data \code{Y} is computed,
+  while \code{funargs} will be used when computing the summary function
+  for the simulated patterns.
+  This option is only needed in rare cases: usually the basic principle
+  requires that the data and simulated patterns must be treated
+  equally, so that \code{funargs} and \code{funYargs} should be identical.
 
   If \code{Y} is a fitted cluster point process model (object of
   class \code{"kppm"}), and \code{simulate=NULL},
@@ -430,7 +489,7 @@
       For example, 
       the conventional way to normalise the \eqn{K} function
       (Ripley, 1981) is to transform it to the \eqn{L} function
-      \eqn{L(r) = \sqrt{K(r)/\pi}}{L(r) = sqrt(K(r)/pi)}
+      \eqn{L(r) = \sqrt{K(r)/\pi}}{L(r) = sqrt(K(r)/\pi)}
       and this is implemented by setting
       \code{transform=expression(sqrt(./pi))}.
     }
@@ -543,7 +602,7 @@
 \references{
   Baddeley, A., Diggle, P.J., Hardegen, A., Lawrence, T., Milne,
   R.K. and Nair, G. (2014) On tests of spatial pattern based on
-  simulation envelopes. \emph{Ecological Monographs}, to appear.
+  simulation envelopes. \emph{Ecological Monographs} \bold{84} (3) 477--489.
   
   Cressie, N.A.C. \emph{Statistics for spatial data}.
     John Wiley and Sons, 1991.
@@ -574,6 +633,7 @@
   \code{\link{envelope.envelope}},
   \code{\link{pool.envelope}}
   for handling envelopes.
+  There are also methods for \code{print} and \code{summary}.
   
   \code{\link{Kest}},
   \code{\link{Gest}},
@@ -611,6 +671,8 @@
  \testonly{
   E <- envelope(X, Lest, nsim=3, global=TRUE)
   E <- envelope(X, Kest, nsim=3, global=TRUE, scale=function(r) { r })
+  E
+  summary(E)
  }
 
  # Envelope of K function for simulations from Gibbs model 
@@ -676,7 +738,6 @@
  # We want envelopes for Jcross(X, "A", "B") 
  # where "A" and "B" are types of points in the dataset 'demopat'
 
- data(demopat)
  \dontrun{
  plot(envelope(demopat, Jcross, i="A", j="B"))
  }
@@ -684,7 +745,7 @@
  plot(envelope(demopat, Jcross, correction="rs", i="A", j="B", nsim=3))
  }
  
- # Use of `simulate'
+ # Use of `simulate' expression
  \dontrun{
  plot(envelope(cells, Gest, simulate=expression(runifpoint(42))))
  plot(envelope(cells, Gest, simulate=expression(rMaternI(100,0.02))))
@@ -695,8 +756,15 @@
 nsim=3, global=TRUE))
  }
 
+ # Use of `simulate' function
+ \dontrun{
+   plot(envelope(amacrine, Kcross, simulate=rlabel))
+ }
+ \testonly{
+   plot(envelope(amacrine, Kcross, simulate=rlabel, nsim=3))
+ }
+
  # Envelope under random toroidal shifts
- data(amacrine)
  \dontrun{
  plot(envelope(amacrine, Kcross, i="on", j="off",
                simulate=expression(rshift(amacrine, radius=0.25)))) 
@@ -764,11 +832,8 @@ nsim=3, global=TRUE))
  EG <- envelope(X, Gest, nsim=3, simulate=EK)
 }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{htest}

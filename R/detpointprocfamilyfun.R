@@ -1,6 +1,6 @@
 ##    detpointprocfamilyfun.R
 ##
-##    $Revision: 1.4 $   $Date: 2015/10/06 11:05:30 $
+##    $Revision: 1.5 $   $Date: 2015/10/19 02:27:17 $
 ##
 ## This file contains the function `detpointprocfamilyfun'
 ## to define new DPP model family functions
@@ -35,18 +35,18 @@ detpointprocfamilyfun <-
       stop("If kernel is given it must be a function.")
     given <- "kernel"
     kernelnames <- names_formals(kernel)
-    if(length(kernelnames)<1)
+    if(length(kernelnames)<1L)
       stop("kernel function must have at least one argument")
-    kernelnames <- kernelnames[-1]
+    kernelnames <- kernelnames[-1L]
   }
   if(!is.null(specden)){
     if(!is.function(specden))
       stop("If specden is given it must be a function.")
     given <- c(given, "specden")
     specdennames <- names_formals(specden)
-    if(length(specdennames)<1)
+    if(length(specdennames)<1L)
       stop("specden function must have at least one argument")
-    specdennames <- specdennames[-1]
+    specdennames <- specdennames[-1L]
   }
   if(is.null(given))
     stop("At least one of kernel or specden must be provided.")
@@ -68,9 +68,9 @@ detpointprocfamilyfun <-
   }
   if(!is.null(Kfun)){
     given <- c(given,"Kfun")
-    if(!is.function(Kfun)||length(formals(Kfun))<1)
+    if(!is.function(Kfun)||length(formals(Kfun))<1L)
       stop("If Kfun is given it must be a function with at least one arguments.")
-    if(!setequal(parnames,names_formals(Kfun)[-1]))
+    if(!setequal(parnames,names_formals(Kfun)[-1L]))
       stop("argument names of Kfun must match argument names of kernel and/or specden.")
   }
   if(!is.null(valid)){
@@ -79,17 +79,17 @@ detpointprocfamilyfun <-
   } else{
     warning("No function for checking parameter validity provided. ANY numerical value for the parameters will be accepted.")
   }
-  if(!is.null(intensity)&&!(is.character(intensity)&&length(intensity)==1&&is.element(intensity, parnames)))
+  if(!is.null(intensity)&&!(is.character(intensity)&&length(intensity)==1L&&is.element(intensity, parnames)))
     stop("argument intensity must be NULL or have length one, be of class character and match a parameter name")
       
-  if(!(is.character(dim)|is.numeric(dim))|length(dim)!=1)
+  if(!(is.character(dim)|is.numeric(dim))|length(dim)!=1L)
     stop("argument dim must have length one and be of class character or numeric")
   if(is.character(dim)){
     if(!is.element(dim, parnames))
       stop("When dim is a character it must agree with one of the parameter names of the model")
   } else{
     dim <- round(dim)
-    if(dim<1)
+    if(dim<1L)
       stop("When dim is a numeric it must be a positive integer")
   }
 
@@ -98,7 +98,7 @@ detpointprocfamilyfun <-
 
   ## Create output object.
   out <- function(...){
-    caller <- match.call()[[1]]
+    caller <- match.call()[[1L]]
     caller <- eval(substitute(caller), parent.frame())
     fixedpar <- list(...)
     nam <- names(fixedpar)
@@ -189,7 +189,9 @@ dppBessel <- detpointprocfamilyfun(
     logrslt <- log(lambda) + (d/2)*log(2*pi) + d*log(alpha) + lgamma(0.5*a+1)
     logrslt <- logrslt - (d/2)*log(a) - lgamma(sigma/2+1)
     tmp <- 1-2*pi^2*alpha^2*x^2/a
-    logrslt <- logrslt + (sigma/2)*log(ifelse(tmp<0,0,tmp))
+    warnopt <- options(warn=-1)
+    logrslt <- logrslt + ifelse(tmp<0, -Inf, (sigma/2)*log(tmp))
+    options(warnopt)
     return(exp(logrslt))
   },
   specdenrange=function(model){
@@ -238,7 +240,7 @@ dppBessel <- detpointprocfamilyfun(
       rslt <- c(rslt, "sigma" = sigma)
     }
     if("alpha" %in% model$freepar){
-      alpha <- .8*dppparbounds(model, "alpha")[2]
+      alpha <- .8*dppparbounds(model, "alpha")[2L]
       while(!is.na(OK <- valid(model <- update(model, alpha=alpha)))&&!OK){
         alpha <- alpha/2
       }
@@ -308,7 +310,7 @@ dppCauchy <- detpointprocfamilyfun(
       rslt <- c(rslt, "nu" = nu)
     }
     if("alpha" %in% model$freepar){
-      alpha <- .8*dppparbounds(model, "alpha")[2]
+      alpha <- .8*dppparbounds(model, "alpha")[2L]
       while(!is.na(OK <- valid(model <- update(model, alpha=alpha)))&&!OK){
         alpha <- alpha/2
       }
@@ -362,7 +364,7 @@ dppGauss <- detpointprocfamilyfun(
       model <- update(model, lambda=lambda)
     }
     if("alpha" %in% model$freepar){
-      alpha <- .8*dppparbounds(model, "alpha")[2]
+      alpha <- .8*dppparbounds(model, "alpha")[2L]
       rslt <- c(rslt, "alpha" = alpha)
     }
     return(rslt)
@@ -435,7 +437,7 @@ dppMatern <- detpointprocfamilyfun(
       rslt <- c(rslt, "nu" = nu)
     }
     if("alpha" %in% model$freepar){
-      alpha <- .8*dppparbounds(model, "alpha")[2]
+      alpha <- .8*dppparbounds(model, "alpha")[2L]
       while(!is.na(OK <- valid(model <- update(model, alpha=alpha)))&&!OK){
         alpha <- alpha/2
       }
@@ -480,7 +482,7 @@ dppPowerExp <- detpointprocfamilyfun(
       rslt <- c(rslt, "nu" = nu)
     }
     if("alpha" %in% model$freepar){
-      alpha <- .8*dppparbounds(model, "alpha")[2]
+      alpha <- .8*dppparbounds(model, "alpha")[2L]
       while(!is.na(OK <- valid(model <- update(model, alpha=alpha)))&&!OK){
         alpha <- alpha/2
       }

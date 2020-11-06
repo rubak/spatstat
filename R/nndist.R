@@ -3,7 +3,7 @@
 #
 #   nearest neighbour distances (nndist) and identifiers (nnwhich)
 #
-#   $Revision: 1.6 $ $Date: 2014/10/24 00:22:30 $
+#   $Revision: 1.12 $ $Date: 2020/01/10 06:37:05 $
 #
 
 nndist <- function(X, ...) {
@@ -25,7 +25,7 @@ nndist.ppp <- local({
     idX <- seq_len(npoints(X))
     Y <- split(X %mark% idX, f=by, un=FALSE)
     distY <- lapply(Y, nndistsub, XX=X, iX=idX, k=k)
-    result <- do.call("cbind", distY)
+    result <- do.call(cbind, distY)
     return(result)
   }
 
@@ -50,7 +50,8 @@ nndist.default <-
   n <- length(x)
   if(length(y) != n)
     stop("lengths of x and y do not match")
-  
+
+  method <- match.arg(method, c("C", "interpreted", "test"))
   # other arguments ignored
   trap.extra.arguments(..., .Context="In nndist.default")
 
@@ -91,6 +92,7 @@ nndist.default <-
   if(kmaxcalc == 1) {
     # calculate nearest neighbour distance only
     switch(method,
+         test = ,
          interpreted={
            #  matrix of squared distances between all pairs of points
            sq <- function(a, b) { (a-b)^2 }
@@ -107,7 +109,8 @@ nndist.default <-
            z<- .C("nndistsort",
                   n= as.integer(n),
                   x= as.double(x[o]), y= as.double(y[o]), nnd= as.double(nnd),
-                  as.double(big))
+                  as.double(big),
+                  PACKAGE = "spatstat")
            nnd[o] <- z$nnd
          },
          stop(paste("Unrecognised method", sQuote(method)))
@@ -115,8 +118,9 @@ nndist.default <-
   } else {
     # case kmaxcalc > 1
     switch(method,
+           test = ,
            interpreted={
-             if(n <= 1000) {
+             if(n <= 1000 && method == "interpreted") {
                # form n x n matrix of squared distances
                D2 <- pairdist.default(x, y, method=method, squared=TRUE)
                # find k'th smallest squared distance
@@ -130,7 +134,7 @@ nndist.default <-
                for(i in seq_len(n)) {
                  D2i <- (x - x[i])^2 + (y - y[i])^2
                  D2i[i] <- Inf
-                 NND2[i,] <- sort(D2i)[1:kmaxcalc]
+                 NND2[i,] <- orderstats(D2i, k=1:kmaxcalc)
                }
                nnd <- sqrt(NND2)
              }
@@ -145,7 +149,8 @@ nndist.default <-
                     x    = as.double(x[o]),
                     y    = as.double(y[o]),
                     nnd  = as.double(nnd),
-                    huge = as.double(big))
+                    huge = as.double(big),
+                    PACKAGE = "spatstat")
              nnd <- matrix(nnd, nrow=n, ncol=kmaxcalc)
              nnd[o, ] <- matrix(z$nnd, nrow=n, ncol=kmaxcalc, byrow=TRUE)
            },
@@ -191,7 +196,7 @@ nnwhich.ppp <- local({
     idX <- seq_len(npoints(X))
     Y <- split(X %mark% idX, f=by, un=FALSE)
     whichY <- lapply(Y, nnwhichsub, XX=X, iX=idX, k=k)
-    result <- do.call("cbind", whichY)
+    result <- do.call(cbind, whichY)
     return(result)
   }
 
@@ -229,6 +234,7 @@ nnwhich.default <-
   if(length(y) != n)
     stop("lengths of x and y do not match")
   
+  method <- match.arg(method, c("C", "interpreted", "test"))
   # other arguments ignored
   trap.extra.arguments(..., .Context="In nnwhich.default")
 
@@ -269,6 +275,7 @@ nnwhich.default <-
   if(kmaxcalc == 1) {
     # identify nearest neighbour only
     switch(method,
+           test = ,
            interpreted={
              #  matrix of squared distances between all pairs of points
              sq <- function(a, b) { (a-b)^2 }
@@ -287,7 +294,8 @@ nnwhich.default <-
                     x = as.double(x[o]),
                     y = as.double(y[o]),
                     nnwhich = as.integer(nnw),
-                    huge = as.double(big))
+                    huge = as.double(big),
+                    PACKAGE = "spatstat")
              witch <- z$nnwhich # sic 
              if(any(witch <= 0))
                stop("Internal error: non-positive index returned from C code")
@@ -300,8 +308,9 @@ nnwhich.default <-
   } else {
     # case kmaxcalc > 1
     switch(method,
+           test = ,
            interpreted={
-             if(n <= 1000) {
+             if(n <= 1000 && method == "interpreted") {
                # form n x n matrix of squared distances
                D2 <- pairdist.default(x, y, method=method, squared=TRUE)
                # find k'th smallest squared distance
@@ -322,14 +331,14 @@ nnwhich.default <-
              nnw <- matrix(integer(n * kmaxcalc), nrow=n, ncol=kmaxcalc)
              o <- fave.order(y)
              big <- sqrt(.Machine$double.xmax)
-             z<- .C("knnsort",
+             z<- .C("knnwhich",
                     n = as.integer(n),
                     kmax = as.integer(kmaxcalc),
                     x = as.double(x[o]),
                     y = as.double(y[o]),
-                    nnd = as.double(numeric(n * kmaxcalc)),
                     nnwhich = as.integer(nnw),
-                    huge = as.double(big))
+                    huge = as.double(big),
+                    PACKAGE = "spatstat")
              witch <- z$nnwhich # sic
              witch <- matrix(witch, nrow=n, ncol=kmaxcalc, byrow=TRUE)
              if(any(witch <= 0))

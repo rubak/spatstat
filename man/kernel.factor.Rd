@@ -39,14 +39,17 @@
 }
 \seealso{
   \code{\link[stats]{density.default}},
-  \code{\link{dkernel}}
+  \code{\link{dkernel}},
+  \code{\link{kernel.moment}},
+  \code{\link{kernel.squint}}
 }
 \examples{
-   kernel.factor("epa")
+   kernel.factor("rect")
+   # bandwidth for Epanechnikov kernel with half-width h=1
+   h <- 1
+   bw <- h/kernel.factor("epa")
 }
-\author{Adrian Baddeley
-  \email{adrian@maths.uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+\author{\adrian
   and Martin Hazelton
 }
 \keyword{methods}

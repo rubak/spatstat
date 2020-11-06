@@ -1,4 +1,4 @@
-\name{is.hybrid}  %DontDeclareMethods
+\name{is.hybrid}  
 \alias{is.hybrid}
 \alias{is.hybrid.ppm}
 \alias{is.hybrid.interact}
@@ -48,7 +48,7 @@ is.hybrid(x)
   Baddeley, A., Turner, R., Mateu, J. and Bevan, A. (2013)
   Hybrids of Gibbs point process models and their implementation.
   \emph{Journal of Statistical Software} \bold{55}:11, 1--43.
-  \url{http://www.jstatsoft.org/v55/i11/}
+  \url{https://www.jstatsoft.org/v55/i11/}
 }
 \seealso{
   \code{\link{Hybrid}}
@@ -63,11 +63,11 @@ is.hybrid(x)
   fit <- ppm(redwood, ~1, H)
   is.hybrid(fit)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{models}

@@ -5,7 +5,7 @@
 \title{Spatial smoothing of observations at irregular points}
 \description{
   Performs spatial smoothing of numeric values observed
-  at a set of irregular locations. Uses Gaussian kernel smoothing
+  at a set of irregular locations. Uses kernel smoothing
   and least-squares cross-validated bandwidth selection.
 }
 \usage{
@@ -13,7 +13,10 @@
                      ...,
                      weights = rep(1, npoints(X)),
                      at="pixels",
-                     edge=TRUE, diggle=FALSE)
+                     adjust=1, varcov=NULL, 
+                     edge=TRUE, diggle=FALSE,
+                     kernel="gaussian", scalekernel=is.character(kernel),
+                     geometric=FALSE)
 
 markmean(X, ...)
 
@@ -35,8 +38,8 @@ markvar(X, sigma=NULL, ..., weights=NULL, varcov=NULL)
   }
   \item{weights}{
     Optional weights attached to the observations.
-    A numeric vector, numeric matrix, or an \code{expression}.
-    See \code{\link{density.ppp}}.
+    A numeric vector, a \code{function(x,y)}, a pixel image,
+    or an \code{expression}. See \code{\link{density.ppp}}.
   }
   \item{at}{
     String specifying whether to compute the smoothed values
@@ -47,9 +50,34 @@ markvar(X, sigma=NULL, ..., weights=NULL, varcov=NULL)
     Arguments passed to \code{\link{density.ppp}} to
     determine the edge correction.
   }
+  \item{adjust}{
+    Optional. Adjustment factor for the bandwidth \code{sigma}.
+  }
   \item{varcov}{
     Variance-covariance matrix. An alternative
     to \code{sigma}. See \code{\link{density.ppp}}.
+  }
+  \item{kernel}{
+    The smoothing kernel.
+    A character string specifying the smoothing kernel
+    (current options are \code{"gaussian"}, \code{"epanechnikov"},
+    \code{"quartic"} or \code{"disc"}),
+    or a pixel image (object of class \code{"im"})
+    containing values of the kernel, or a \code{function(x,y)} which
+    yields values of the kernel.
+  }
+  \item{scalekernel}{
+    Logical value.
+    If \code{scalekernel=TRUE}, then the kernel will be rescaled
+    to the bandwidth determined by \code{sigma} and \code{varcov}:
+    this is the default behaviour when \code{kernel} is a character string.
+    If \code{scalekernel=FALSE}, then \code{sigma} and \code{varcov}
+    will be ignored: this is the default behaviour when \code{kernel} is a
+    function or a pixel image.
+  }
+  \item{geometric}{
+    Logical value indicating whether to perform geometric mean
+    smoothing instead of arithmetic mean smoothing. See Details.
   }
 }
 \details{
@@ -64,8 +92,8 @@ markvar(X, sigma=NULL, ..., weights=NULL, varcov=NULL)
   \code{\link{Smooth}} for the class \code{"ppp"} of point patterns.
   Thus you can type simply \code{Smooth(X)}.
   
-  Smoothing is performed by Gaussian kernel weighting. If the
-  observed values are \eqn{v_1,\ldots,v_n}{v[1],...,v[n]}
+  Smoothing is performed by kernel weighting, using the Gaussian kernel
+  by default. If the observed values are \eqn{v_1,\ldots,v_n}{v[1],...,v[n]}
   at locations \eqn{x_1,\ldots,x_n}{x[1],...,x[n]} respectively,
   then the smoothed value at a location \eqn{u} is
   (ignoring edge corrections)
@@ -74,7 +102,8 @@ markvar(X, sigma=NULL, ..., weights=NULL, varcov=NULL)
   }{
     g(u) = (sum of k(u-x[i]) v[i])/(sum of k(u-x[i]))
   }
-  where \eqn{k} is a Gaussian kernel. This is known as the 
+  where \eqn{k} is the kernel (a Gaussian kernel by default).
+  This is known as the
   Nadaraya-Watson smoother (Nadaraya, 1964, 1989; Watson, 1964).
   By default, the smoothing kernel bandwidth is chosen by
   least squares cross-validation (see below).
@@ -111,6 +140,13 @@ markvar(X, sigma=NULL, ..., weights=NULL, varcov=NULL)
     g(u) = (sum of k(u-x[i]) v[i] w[i])/(sum of k(u-x[i]) w[i])
   }
 
+  If \code{geometric=TRUE} then geometric mean smoothing
+  is performed instead of arithmetic mean smoothing.
+  The mark values must be non-negative numbers.
+  The logarithm of the mark values is computed; these logarithmic values are
+  kernel-smoothed as described above; then the exponential function
+  is applied to the smoothed values.
+  
   An alternative to kernel smoothing is inverse-distance weighting,
   which is performed by \code{\link{idw}}.
 }
@@ -174,12 +210,10 @@ markvar(X, sigma=NULL, ..., weights=NULL, varcov=NULL)
    plot(markvar(longleaf, sigma=5))
    # data frame of marks: trees marked by diameter and height
    plot(Smooth(finpines, sigma=2))
+   head(Smooth(finpines, sigma=2, at="points"))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \references{
   Nadaraya, E.A. (1964) On estimating regression.

@@ -1,7 +1,7 @@
 #
 #  sigtrace.R
 #
-#  $Revision: 1.6 $  $Date: 2015/10/05 06:27:53 $
+#  $Revision: 1.10 $  $Date: 2016/02/11 09:36:11 $
 #
 #  Significance traces 
 #
@@ -11,13 +11,13 @@ dclf.sigtrace <- function(X, ...) mctest.sigtrace(X, ..., exponent=2)
 mad.sigtrace <- function(X, ...) mctest.sigtrace(X, ..., exponent=Inf)
 
 mctest.sigtrace <- function(X, fun=Lest, ..., exponent=1,
-                              interpolate=FALSE, alpha=0.05,
-                              confint=TRUE) {
+                            interpolate=FALSE, alpha=0.05,
+                            confint=TRUE, rmin=0) {
   check.1.real(exponent)
   explain.ifnot(exponent >= 0)
   if(missing(fun) && inherits(X, c("envelope", "hasenvelope")))
     fun <- NULL
-  Z <- envelopeProgressData(X, fun=fun, ..., exponent=exponent)
+  Z <- envelopeProgressData(X, fun=fun, ..., rmin=rmin, exponent=exponent)
   R       <- Z$R
   devdata <- Z$devdata
   devsim  <- Z$devsim
@@ -86,7 +86,7 @@ mctestSigtraceEngine <- local({
                 "upper 95%% limit for p-value"),
               labl=c("R", "%s(R)", paste(alpha), "lo(R)", "hi(R)"),
               unitname = unitname, fname = "p")
-      fvnames(p, ".") <- c("pest", "alpha")
+      fvnames(p, ".") <- c("pest", "alpha", "lo", "hi")
       fvnames(p, ".s") <- c("lo", "hi")
     }
     return(p)
@@ -118,43 +118,53 @@ mctestSigtraceEngine <- local({
 dg.sigtrace <- function(X, fun=Lest, ...,   
                         exponent=2, nsim=19, nsimsub=nsim-1,
                         alternative=c("two.sided", "less", "greater"),
+                        rmin=0, leaveout=1,
                         interpolate=FALSE, confint=TRUE, alpha=0.05,
-                        savefuns=FALSE, savepatterns=FALSE) {
+                        savefuns=FALSE, savepatterns=FALSE, verbose=FALSE) {
   alternative <- match.arg(alternative)
   env.here <- sys.frame(sys.nframe())
   if(!missing(nsimsub) && !relatively.prime(nsim, nsimsub))
     stop("nsim and nsimsub must be relatively prime")
   ## generate or extract simulated patterns and functions
+  if(verbose) cat("Generating first-level data...")
   E <- envelope(X, fun=fun, ..., nsim=nsim,
                 savepatterns=TRUE, savefuns=TRUE,
-                verbose=FALSE,
+                verbose=verbose,
                 envir.simul=env.here)
   ## get first level MC test significance trace
+  if(verbose) cat("Computing significance trace...")
   T1 <- mctest.sigtrace(E, fun=fun, nsim=nsim, 
                         exponent=exponent,
+                        rmin=rmin,
                         alternative=alternative,
+                        leaveout=leaveout,
                         interpolate=interpolate,
-                        confint=FALSE, verbose=FALSE, ...)
+                        confint=FALSE, verbose=verbose, ...)
   R    <- T1$R
   phat <- T1$pest
   ## second level traces
-  T2list <- lapply(attr(E, "simpatterns"),
+  if(verbose) cat(" Done.\nGenerating second-level data... [silently] ..")
+  Pat <- attr(E, "simpatterns")
+  T2list <- lapply(Pat,
                    mctest.sigtrace,
                    fun=fun, nsim=nsimsub, 
                    exponent=exponent,
+                   rmin=rmin,
                    alternative=alternative,
+                   leaveout=leaveout,
                    interpolate=interpolate,
                    confint=FALSE, verbose=FALSE, ...)
   phati <- sapply(T2list, getElement, name="pest")
   ## Dao-Genton p-value
+  if(verbose) cat(" Computing significance trace...")
   result <- mctestSigtraceEngine(R, -phat, -phati,
                                  interpolate=FALSE, 
                                  confint=confint,
                                  exponent=exponent,
                                  alpha=alpha,
                                  unitname=unitname(X))
+  if(verbose) cat(" Done.\n")
   if(savefuns || savepatterns)
     result <- hasenvelope(result, E)
   return(result)
 }
-

@@ -49,6 +49,7 @@ Kcross(X, i, j, r=NULL, breaks=NULL, correction,
     \code{"translation"},
     \code{"none"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{\dots}{Ignored.}
   \item{ratio}{
@@ -136,7 +137,7 @@ Kcross(X, i, j, r=NULL, breaks=NULL, correction,
   as a realisation of a stationary (spatially homogeneous) 
   random spatial point process in the plane, observed through
   a bounded window.
-  The window (which is specified in \code{X} as \code{X$window})
+  The window (which is specified in \code{X} as \code{Window(X)})
   may have arbitrary shape.
   Biases due to edge effects are
   treated in the same manner as in \code{\link{Kest}},
@@ -205,11 +206,11 @@ Kcross(X, i, j, r=NULL, breaks=NULL, correction,
     K <- Kcross(pp, 0, 1) # equivalent
     }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

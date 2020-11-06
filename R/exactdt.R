@@ -2,7 +2,7 @@
 #	exactdt.S
 #	S function exactdt() for exact distance transform
 #
-#	$Revision: 4.16 $	$Date: 2014/10/24 00:22:30 $
+#	$Revision: 4.17 $	$Date: 2017/06/05 10:31:58 $
 #
 
 exactdt <- local({
@@ -19,16 +19,16 @@ exactdt <- local({
       yr <- bb$yrange
       rx <- range(X$x)
       ry <- range(X$y)
-      if(rx[1] < xr[1] || rx[2] > xr[2]) die("x-coordinates out of bounds")
-      if(ry[1] < yr[1] || ry[2] > yr[2]) die("y-coordinates out of bounds")
+      if(rx[1L] < xr[1L] || rx[2L] > xr[2L]) die("x-coordinates out of bounds")
+      if(ry[1L] < yr[1L] || ry[2L] > yr[2L]) die("y-coordinates out of bounds")
       if(length(X$x) != length(X$y))
         die("x and y vectors have different length")
       if(length(X$x) != X$n) die("length of x,y vectors does not match n")
     }
     w <- as.mask(w, ...)
     ## dimensions of result
-    nr <- w$dim[1]
-    nc <- w$dim[2]
+    nr <- w$dim[1L]
+    nc <- w$dim[2L]
     ## margins in C array 
     mr <- 2
     mc <- 2
@@ -46,17 +46,18 @@ exactdt <- local({
               as.double(X$x),
               as.double(X$y),
               as.integer(X$n),
-              as.double(w$xrange[1]),
-              as.double(w$yrange[1]),
-              as.double(w$xrange[2]),
-              as.double(w$yrange[2]),
+              as.double(w$xrange[1L]),
+              as.double(w$yrange[1L]),
+              as.double(w$xrange[2L]),
+              as.double(w$yrange[2L]),
               nr = as.integer(nr),
               nc = as.integer(nc),
               mr = as.integer(mr),
               mc = as.integer(mc),
               distances = as.double(double(N)),
               indices = as.integer(integer(N)),
-              boundary = as.double(double(N)))
+              boundary = as.double(double(N)),
+              PACKAGE = "spatstat")
     ## extract 
     dist <- matrix(res$distances,
                    ncol=Nnc, nrow=Nnr, byrow = TRUE)[rmin:rmax, cmin:cmax]

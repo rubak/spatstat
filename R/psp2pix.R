@@ -1,7 +1,7 @@
 #
 # psp2pix.R
 #
-#  $Revision: 1.9 $  $Date: 2015/01/30 03:12:34 $
+#  $Revision: 1.12 $  $Date: 2017/11/15 07:21:21 $
 #
 #
 
@@ -39,7 +39,8 @@ as.mask.psp <- function(x, W=NULL, ...) {
            y1=as.double(y1),
            nx=as.integer(nc),
            ny=as.integer(nr),
-           out=as.integer(integer(nr * nc)))
+           out=as.integer(integer(nr * nc)),
+           PACKAGE = "spatstat")
   mm <- matrix(zz$out, nr, nc)
   # intersect with existing window
   W$m <- W$m & mm
@@ -48,7 +49,8 @@ as.mask.psp <- function(x, W=NULL, ...) {
 
 
 pixellate.psp <- function(x, W=NULL, ..., weights=NULL,
-                          what=c("length", "number")) {
+                          what=c("length", "number"),
+                          DivideByPixelArea=FALSE) {
   L <- as.psp(x)
   what <- match.arg(what)
   
@@ -77,7 +79,7 @@ pixellate.psp <- function(x, W=NULL, ..., weights=NULL,
     weights <- rep.int(1, nseg)
   else {
     if(!is.numeric(weights)) stop("weights must be numeric")
-    if(any(is.na(weights))) stop("weights must not be NA")
+    if(anyNA(weights)) stop("weights must not be NA")
     if(!all(is.finite(weights))) stop("weights must not be infinite")
     if(length(weights) == 1)
       weights <- rep.int(weights, nseg)
@@ -105,7 +107,8 @@ pixellate.psp <- function(x, W=NULL, ..., weights=NULL,
                     pixheight=as.double(Z$ystep),
                     nx=as.integer(nc),
                     ny=as.integer(nr),
-                    out=as.double(numeric(nr * nc)))
+                    out=as.double(numeric(nr * nc)),
+                    PACKAGE = "spatstat")
          },
          number = {
            zz <- .C("seg2pixN",
@@ -117,13 +120,20 @@ pixellate.psp <- function(x, W=NULL, ..., weights=NULL,
                     w=as.double(weights),
                     nx=as.integer(nc),
                     ny=as.integer(nr),
-                    out=as.double(numeric(nr * nc)))
+                    out=as.double(numeric(nr * nc)),
+                    PACKAGE = "spatstat")
          })
   mm <- matrix(zz$out, nr, nc)
-  mm[is.na(Z$v)] <- NA
   ## intersect with existing window
+  mm[is.na(Z$v)] <- NA
+  ##
+  if(DivideByPixelArea) {
+    pixelarea <- W$xstep * W$ystep
+    mm <- mm/pixelarea
+  }
+  ## pack up
   Z$v <- mm
-  Z
+  return(Z)
 }
 
 

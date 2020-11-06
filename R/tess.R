@@ -3,7 +3,7 @@
 #
 # support for tessellations
 #
-#   $Revision: 1.69 $ $Date: 2015/06/20 10:56:11 $
+#   $Revision: 1.97 $ $Date: 2019/09/13 04:29:08 $
 #
 tess <- function(..., xgrid=NULL, ygrid=NULL, tiles=NULL, image=NULL,
                  window=NULL, marks=NULL, keepempty=FALSE,
@@ -21,8 +21,9 @@ tess <- function(..., xgrid=NULL, ygrid=NULL, tiles=NULL, image=NULL,
   if(isrect) {
     stopifnot(is.numeric(xgrid) && all(diff(xgrid) > 0))
     stopifnot(is.numeric(ygrid) && all(diff(ygrid) > 0))
-    if(is.null(window))
-      window <- owin(range(xgrid), range(ygrid), unitname=uname)
+    if(!is.null(window))
+      warning("Argument 'window' ignored, because xgrid, grid are given")
+    window <- owin(range(xgrid), range(ygrid), unitname=uname)
     ntiles <- (length(xgrid)-1) * (length(ygrid)-1)
     out <- list(type="rect", window=window, xgrid=xgrid, ygrid=ygrid, n=ntiles)
   } else if(istiled) {
@@ -61,10 +62,10 @@ tess <- function(..., xgrid=NULL, ygrid=NULL, tiles=NULL, image=NULL,
     lev <- if(!is.null(nam) && all(nzchar(nam))) nam else 1:ntiles
     if(is.null(window)) 
       window <- do.call(union.owin, unname(tiles))
-    if(is.mask(window) || any(unlist(lapply(tiles, is.mask)))) {
+    if(is.mask(window) || any(sapply(tiles, is.mask))) {
       # convert to pixel image tessellation
-      window <- as.mask(window)
-      ima <- as.im(window)
+      Grid <- do.call(commonGrid, append(list(window), unname(tiles)))
+      ima <- as.im(window, W=Grid)
       ima$v[] <- NA
       for(i in 1:ntiles)
         ima[tiles[[i]]] <- i
@@ -126,10 +127,6 @@ print.tess <- function(x, ..., brief=FALSE) {
          rect={
            if(full) {
              unitinfo <- summary(unitname(win))
-             equispaced <- function(z) {
-               dz <- diff(z)
-               diff(range(dz))/mean(dz) < 0.01
-             }
              if(equispaced(x$xgrid) && equispaced(x$ygrid)) 
                splat("Tiles are equal rectangles, of dimension",
                      signif(mean(diff(x$xgrid)), 5),
@@ -184,89 +181,214 @@ unitname.tess <- function(x) unitname(x$window)
 
 plot.tess <- local({
 
-  plotem <- function(z, ..., col=NULL) {
-    if(is.null(col))
-      plot(z, ..., add=TRUE)
-    else if(z$type != "mask")
-      plot(z, ..., border=col, add=TRUE)
-    else plot(z, ..., col=col, add=TRUE)
-  }
-
   plotpars <- c("sub", "lty", "lwd",
                 "cex.main", "col.main", "font.main",
                 "cex.sub", "col.sub", "font.sub", "border")
 
-  plot.tess <- function(x, ..., main, add=FALSE, show.all=!add, col=NULL,
+  plot.tess <- function(x, ..., main, add=FALSE, show.all=!add,
+                        border=NULL,
                         do.plot=TRUE,
                         do.labels=FALSE, labels=tilenames(x),
-                        labelargs=list()) {
+                        labelargs=list(),
+                        do.col=FALSE, 
+                        values=marks(x),
+                        multiplot=TRUE,
+                        col=NULL,
+                        ribargs=list()) {
     if(missing(main) || is.null(main))
       main <- short.deparse(substitute(x))
+    ntiles <- x$n
+    if(!do.col) {
+      #' Plot tiles, with adornment
+      y <- NULL
+      result <- NULL
+      bbox <- NULL
+      need.legend <- FALSE
+    } else {
+      #' Fill tiles with colours determined by 'values'
+      if(markformat(values) == "hyperframe") 
+        values <- as.data.frame(values) #' automatic warning
+      #' Determine values associated with each tile
+      switch(markformat(values),
+             none = {
+               #' no values assigned.
+               #' default is tile name
+               tn <- tilenames(x)
+               values <- factor(tn, levels=tn)
+             },
+             vector = {
+               #' vector of values.
+               #' validate length of vector
+               check.anyvector(values, ntiles, things="tiles")
+             },
+             dataframe = {
+               #' data frame or matrix of values.
+               values <- as.data.frame(values)
+               if(nrow(values) != ntiles)
+                 stop(paste("Number of rows of values =", nrow(values),
+                            "!=", ntiles, "= number of tiles"),
+                      call.=FALSE)
+               if(multiplot && ncol(values) > 1 && !add) {
+                 #' Multiple Panel Plot
+                 result <- multi.plot.tess(x, ...,
+                                           main=main, show.all=show.all,
+                                           border=border, do.plot=do.plot,
+                                           do.labels=do.labels, labels=labels,
+                                           labelargs=labelargs, do.col=do.col, 
+                                           col=col, ribargs=ribargs)
+                 return(invisible(result))
+               }
+               if(ncol(values) > 1)
+                 warning("Using only the first column of values")
+               values <- values[,1]
+             },
+             stop("Format of values is not understood")
+             )
+      #' Single Panel Plot
+      #' Determine colour map and plan layout (including colour ribbon)
+      #' using rules for pixel images
+      y <- as.im(as.function(x, values=values))
+      result <- do.call(plot.im,
+                        resolve.defaults(
+                          list(x=y,
+                               do.plot=FALSE,
+                               show.all=show.all, add=add, main=main,
+                               col=col, ribargs=ribargs),
+                          list(...),
+                          list(valuesAreColours=FALSE)
+                          ))
+      #' exit if not actually plotting
+      if(!do.plot) return(invisible(result))
+      #' extract info
+      colmap <- result
+      bbox <- attr(result, "bbox")
+      bbox.legend <- attr(result, "bbox.legend")
+      need.legend <- !is.null(bbox.legend)
+    }
+    #'      Start Plot 
+    #' initialise plot region if it is determined
+    if(do.plot && !is.null(bbox) && !add) {
+      plot(bbox, main=" ", type="n")
+      add <- TRUE
+    }
     switch(x$type,
            rect={
              win <- x$window
-             result <-
-               do.call.matched("plot.owin",
-                               resolve.defaults(list(x=win, main=main,
-                                                     add=add,
-                                                     show.all=show.all,
-                                                     do.plot=do.plot),
-                                                list(...)),
-                               extrargs=plotpars)
+             z <- do.call.matched(plot.owin,
+                                  resolve.defaults(list(x=win,
+                                                        main=main,
+                                                        add=add,
+                                                        show.all=show.all,
+                                                        do.plot=do.plot),
+                                                   list(...)),
+                                  extrargs=plotpars)
+             if(is.null(result))
+               result <- z
              if(do.plot) {
-               xg <- x$xgrid
-               yg <- x$ygrid
-               do.call.matched("segments",
-                               resolve.defaults(list(x0=xg, y0=win$yrange[1],
-                                                     x1=xg, y1=win$yrange[2]),
-                                                list(col=col),
-                                                list(...),
-                                                .StripNull=TRUE))
-               do.call.matched("segments",
-                               resolve.defaults(list(x0=win$xrange[1], y0=yg,
-                                                     x1=win$xrange[2], y1=yg),
-                                                list(col=col),
-                                                list(...),
-                                                .StripNull=TRUE))
+               #' actually plot
+               if(do.col) {
+                 #' fill tiles with colours
+                 colours <- colmap(values)
+                 til <- tiles(x)
+                 for(i in seq_len(x$n))
+                   plot(til[[i]], add=TRUE,
+                        col=colours[i], border=border,
+                        main="", ...)
+               } else {
+                 #' draw tile boundaries only
+                 xg <- x$xgrid
+                 yg <- x$ygrid
+                 do.call.matched(segments,
+                                 resolve.defaults(list(x0=xg, y0=win$yrange[1],
+                                                       x1=xg, y1=win$yrange[2]),
+                                                  list(col=border),
+                                                  list(...),
+                                                  .StripNull=TRUE))
+                 do.call.matched(segments,
+                                 resolve.defaults(list(x0=win$xrange[1], y0=yg,
+                                                       x1=win$xrange[2], y1=yg),
+                                                  list(col=border),
+                                                  list(...),
+                                                  .StripNull=TRUE))
+               }
              }
            },
            tiled={
-             result <-
-               do.call.matched("plot.owin",
-                               resolve.defaults(list(x=x$window, main=main,
-                                                     add=add,
-                                                     show.all=show.all,
-                                                     do.plot=do.plot),
-                                                list(...)),
-                               extrargs=plotpars)
+             z <- do.call.matched(plot.owin,
+                                  resolve.defaults(list(x=x$window,
+                                                        main=main,
+                                                        add=add,
+                                                        show.all=show.all,
+                                                        do.plot=do.plot),
+                                                   list(...)),
+                                  extrargs=plotpars)
+             if(is.null(result)) result <- z
              if(do.plot) {
+               #' plot each tile
                til <- tiles(x)
-               lapply(til, plotem, ..., col=col)
+               if(!do.col) {
+                 #' border only
+                 lapply(til, plot.owin, ..., add=TRUE, border=border)
+               } else {
+                 #' fill with colour
+                 colours <- colmap(values)
+                 mapply(plot.owin, x=til, col=colours,
+                        MoreArgs=list(add=TRUE, main="", border=border, ...))
+               } 
              }
            },
            image={
+             if(is.null(y)) y <- x$image
              result <-
-               do.call("plot",
-                       resolve.defaults(list(x$image, add=add, main=main,
+               do.call(plot,
+                       resolve.defaults(list(y, add=add, main=main,
                                              show.all=show.all,
-                                             do.plot=do.plot),
+                                             do.plot=do.plot,
+                                             col=col, ribargs=ribargs),
                                         list(...),
                                         list(valuesAreColours=FALSE)))
+             need.legend <- FALSE
            })
     if(do.plot && do.labels) {
       labels <- paste(as.vector(labels))
       til <- tiles(x)
       incircles <- lapply(til, incircle)
-      x0 <- unlist(lapply(incircles, function(z) { z$x }))
-      y0 <- unlist(lapply(incircles, function(z) { z$y }))
-      do.call.matched("text.default",
+      x0 <- sapply(incircles, getElement, name="x")
+      y0 <- sapply(incircles, getElement, name="y")
+      do.call.matched(text.default,
                       resolve.defaults(list(x=x0, y = y0),
                                        list(labels=labels),
-                                       labelargs))
+                                       labelargs),
+                      funargs=graphicsPars("text"))
+    }
+    if(do.plot && need.legend) {
+      #' determine position of legend
+      xlim <- bbox.legend$xrange
+      ylim <- bbox.legend$yrange
+      sidecode <- attr(colmap, "side.legend")
+      vertical <- sidecode %in% c(2,4)
+      do.call(plot.colourmap,
+              resolve.defaults(list(x=colmap,
+                                    add=TRUE, main="",
+                                    xlim=xlim, ylim=ylim,
+                                    side=sidecode, vertical=vertical),
+                               ribargs,
+                               list(...)))
     }
     return(invisible(result))
   }
 
+  multi.plot.tess <- function(x, ..., zlim=NULL, col=NULL, equal.ribbon=FALSE) {
+    if(equal.ribbon && is.null(zlim) && !inherits(col, "colourmap"))
+      zlim <- range(marks(x))
+    if(!is.null(zlim)) {
+      result <- plot(unstack(x), ..., zlim=zlim, col=col)
+    } else {
+      result <- plot(unstack(x), ..., col=col)
+    }
+    return(invisible(result))
+  }
+  
   plot.tess
 })
 
@@ -307,6 +429,7 @@ plot.tess <- local({
 }
 
 tiles <- function(x) {
+  stopifnot(is.tess(x))
   switch(x$type,
          rect={
            out <- list()
@@ -314,34 +437,50 @@ tiles <- function(x) {
            yg <- x$ygrid
            nx <- length(xg) - 1
            ny <- length(yg) - 1
-           for(j in rev(seq_len(ny)))
+           for(j in rev(seq_len(ny))) {
              for(i in seq_len(nx)) {
                winij <- owin(xg[c(i,i+1)], yg[c(j,j+1)])
-               dout <- list(winij)
-               names(dout) <- paste("Tile row ", ny-j+1, ", col ", i,
-                                    sep="")
-               out <- append(out, dout)
+               out <- append(out, list(winij))
              }
+           }
          },
          tiled={
            out <- x$tiles
-           if(is.null(names(out)))
-             names(out) <- paste("Tile", seq_along(out))
-         },
+           },
          image={
            out <- list()
            ima <- x$image
            lev <- levels(ima)
            for(i in seq_along(lev))
              out[[i]] <- solutionset(ima == lev[i])
-           names(out) <- paste(lev)
-         })
+           })
+  names(out) <- tilenames(x)
   out <- as.solist(out)
   return(out)
 }
 
-tilenames <- function(x) {
+tiles.empty <- function(x) {
   stopifnot(is.tess(x))
+  switch(x$type,
+         rect = {
+           nx <- length(x$xgrid) - 1
+           ny <- length(x$ygrid) - 1
+           ans <- rep(FALSE, nx * ny)
+         },
+         tiled = {
+           ans <- sapply(x$tiles, is.empty)
+         },
+         image = {
+           ans <- (table(x$image[]) == 0)
+         })
+  return(ans)
+}
+           
+tilenames <- function(x) {
+  UseMethod("tilenames")
+}
+
+tilenames.tess <- function(x) {
   switch(x$type,
          rect={
            if(!is.null(x$tilenames)) {
@@ -366,7 +505,10 @@ tilenames <- function(x) {
 }
 
 "tilenames<-" <- function(x, value) {
-  stopifnot(is.tess(x))
+  UseMethod("tilenames<-")
+}
+
+"tilenames<-.tess" <- function(x, value) {
   if(!is.null(value)) {
     ## validate length
     value <- as.character(value)
@@ -406,9 +548,10 @@ marks.tess <- function(x, ...) {
   stopifnot(is.tess(x))
   if(!is.null(value)) {
     value <- as.data.frame(value)
-    if(nrow(value) != x$n)
+    ntil <- x$n
+    if(nrow(value) != ntil)
       stop(paste("replacement value for marks has wrong length:",
-                 nrow(value), "should be", x$n),
+                 nrow(value), "should be", ntil),
            call.=FALSE)
     rownames(value) <- NULL
     if(ncol(value) == 1) colnames(value) <- "marks"
@@ -502,8 +645,32 @@ as.im.tess <- function(X, W=NULL, ...,
   return(out)
 }
 
+nobjects.tess <- function(x) {
+  switch(x$type,
+         image = length(levels(x$image)),
+         rect = (length(x$xgrid)-1) * (length(x$ygrid)-1),
+         tiled = length(x$tiles))
+}
+  
+as.function.tess <- function(x, ..., values=NULL) {
+  V <- x
+  if(is.null(values)) {
+    f <- function(x,y) { tileindex(x,y,V) }
+  } else {
+    if(length(values) != nobjects(x))
+      stop("Length of 'values' should equal the number of tiles", call.=FALSE)
+    f <- function(x,y) { values[as.integer(tileindex(x,y,V))] }
+  }
+  g <- funxy(f, Window(V))
+  return(g)
+}
+
 tileindex <- function(x, y, Z) {
   stopifnot(is.tess(Z))
+  if((missing(y) || is.null(y)) && all(c("x", "y") %in% names(x))) {
+    y <- x$y
+    x <- x$x
+  }
   stopifnot(length(x) == length(y))
   switch(Z$type,
          rect={
@@ -542,8 +709,14 @@ tileindex <- function(x, y, Z) {
            m <- factor(m, levels=lev, labels=lab)
          },
          image={
-           Zim <- Z$image
-           m <- factor(Zim[list(x=x, y=y), drop=FALSE], levels=levels(Zim))
+           Zim   <- Z$image
+           m <- lookup.im(Zim, x, y, naok=TRUE)
+           if(anyNA(m)) {
+             #' look up neighbouring pixels
+             isna <- is.na(m)
+             rc <- nearest.valid.pixel(x[isna], y[isna], Zim, nsearch=2)
+             m[isna] <- Zim$v[cbind(rc$row, rc$col)]
+           }
          }
          )
   return(m)
@@ -581,88 +754,107 @@ as.tess.owin <- function(X) {
 
 domain.tess <- Window.tess <- function(X, ...) { as.owin(X) } 
 
-intersect.tess <- function(X, Y, ..., keepmarks=FALSE) {
+intersect.tess <- function(X, Y, ..., keepmarks=FALSE, sep="x") {
   X <- as.tess(X)
-  if(is.owin(Y) && Y$type == "mask") {
-    # special case
-    # convert to pixel image 
-    result <- as.im(Y)
-    Xtiles <- tiles(X)
-    for(i in seq_along(Xtiles)) {
-      tilei <- Xtiles[[i]]
-      result[tilei] <- i
-    }
-    result <- result[Y, drop=FALSE]
-    out <- tess(image=result, window=Y)
-    if(keepmarks) marks(out) <- marks(X)
-    return(out)
-  }
+  check.1.string(sep)
+
   if(is.owin(Y)) {
-    # efficient code when Y is a window, retaining names of tiles of X
-    Ztiles <- lapply(tiles(X), intersect.owin, B=Y, ..., fatal=FALSE)
-    isempty <- sapply(Ztiles, is.empty)
-    Ztiles <- Ztiles[!isempty]
-    Xwin <- as.owin(X)
-    Ywin <- Y
-    if(keepmarks) {
-      marksX <- marks(X)
-      if(!is.null(marksX))
-        marx <- as.data.frame(marksX)[!isempty, ]
-    }
-  } else {
-    # general case
-    Y <- as.tess(Y)
-    Xtiles <- tiles(X)
-    Ytiles <- tiles(Y)
-    Ztiles <- list()
-    namesX <- tilenames(X)
-    namesY <- tilenames(Y)
-    if(keepmarks) {
-      Xmarks <- as.data.frame(marks(X))
-      Ymarks <- as.data.frame(marks(Y))
-      gotXmarks <- (ncol(Xmarks) > 0)
-      gotYmarks <- (ncol(Ymarks) > 0)
-      if(gotXmarks && gotYmarks) {
-        colnames(Xmarks) <- paste0("X", colnames(Xmarks))
-        colnames(Ymarks) <- paste0("Y", colnames(Ymarks))
+    ## intersection of a tessellation with a window
+    if(Y$type == "mask") {
+      ## convert to pixel image 
+      result <- as.im(Y)
+      Xtiles <- tiles(X)
+      seqXtiles <- seq_along(Xtiles)
+      for(i in seqXtiles) {
+        tilei <- Xtiles[[i]]
+        result[tilei] <- i
       }
-      if(gotXmarks || gotYmarks) {
-        marx <- if(gotXmarks && gotYmarks) {
-          cbind(Xmarks[integer(0), , drop=FALSE],
-                Ymarks[integer(0), , drop=FALSE])
-        } else if(gotXmarks) {
-          Xmarks[integer(0), , drop=FALSE]
-        } else {
-          Ymarks[integer(0), , drop=FALSE]
-        }
-      } else keepmarks <- FALSE
-    }
-    for(i in seq_along(Xtiles)) {
-      Xi <- Xtiles[[i]]
-      Ti <- lapply(Ytiles, intersect.owin, B=Xi, ..., fatal=FALSE)
-      isempty <- unlist(lapply(Ti, function(x) { is.null(x) || is.empty(x)}))
-      nonempty <- !isempty
-      if(any(nonempty)) {
-        Ti <- Ti[nonempty]
-        names(Ti) <- paste(namesX[i], namesY[nonempty], sep="x")
-        Ztiles <- append(Ztiles, Ti)
-        if(keepmarks) {
-          extra <- if(gotXmarks && gotYmarks) {
-            data.frame(X=Xmarks[i, ,drop=FALSE],
-                       Y=Ymarks[nonempty, ,drop=FALSE],
-                       row.names=NULL)
-          } else if(gotYmarks) {
-            Ymarks[nonempty, ,drop=FALSE]
-          } else {
-            Xmarks[rep(i, sum(nonempty)), ,drop=FALSE]
-          }
-          marx <- rbind(marx, extra)
-        }
+      result <- result[Y, drop=FALSE]
+      out <- tess(image=result, window=Y)
+      if(keepmarks && !is.null(marx <- marks(X))) {
+        #' identify non-empty tiles
+        tab <- table(factor(result[], levels=seqXtiles))
+        marks(out) <- marksubset(marx, tab > 0)
       }
+      return(out)
+    } else {
+      ## efficient code when Y is a window, retaining names of tiles of X
+      Ztiles <- lapply(tiles(X), intersect.owin, B=Y, ..., fatal=FALSE)
+      isempty <- sapply(Ztiles, is.empty)
+      Ztiles <- Ztiles[!isempty]
+      Xwin <- as.owin(X)
+      Ywin <- Y
+      Zwin <- intersect.owin(Xwin, Ywin)
+      out <- tess(tiles=Ztiles, window=Zwin)
+      if(keepmarks) {
+        marx <- marks(X)
+        if(!is.null(marx))
+          marx <- as.data.frame(marx)[!isempty, ]
+        marks(out) <- marx
+      }
+      return(out)
     }
-    Xwin <- as.owin(X)
-    Ywin <- as.owin(Y)
   }
+  
+  ## general case: intersection of two tessellations
+  Y <- as.tess(Y)
+  Xtiles <- tiles(X)
+  Ytiles <- tiles(Y)
+  Ztiles <- list()
+  namesX <- tilenames(X)
+  namesY <- tilenames(Y)
+
+  if(keepmarks) {
+    ## initialise the mark variables to be inherited from parent tessellations
+    Xmarks <- as.data.frame(marks(X))
+    Ymarks <- as.data.frame(marks(Y))
+    gotXmarks <- (ncol(Xmarks) > 0)
+    gotYmarks <- (ncol(Ymarks) > 0)
+    if(gotXmarks && gotYmarks) {
+      colnames(Xmarks) <- paste0("X", colnames(Xmarks))
+      colnames(Ymarks) <- paste0("Y", colnames(Ymarks))
+    }
+    if(gotXmarks || gotYmarks) {
+      marx <- if(gotXmarks && gotYmarks) {
+                cbind(Xmarks[integer(0), , drop=FALSE],
+                      Ymarks[integer(0), , drop=FALSE])
+              } else if(gotXmarks) {
+                Xmarks[integer(0), , drop=FALSE]
+              } else {
+                Ymarks[integer(0), , drop=FALSE]
+              }
+    } else keepmarks <- FALSE
+  }
+
+  ## now compute intersection tiles
+  Xtrivial <- (length(Xtiles) == 1)
+  for(i in seq_along(Xtiles)) {
+    Xi <- Xtiles[[i]]
+    Ti <- lapply(Ytiles, intersect.owin, B=Xi, ..., fatal=FALSE)
+    isempty <- sapply(Ti, is.empty)
+    nonempty <- !isempty
+    if(any(nonempty)) {
+      Ti <- Ti[nonempty]
+      names(Ti) <- if(Xtrivial) namesY[nonempty] else
+                   paste(namesX[i], namesY[nonempty], sep=sep)
+      Ztiles <- append(Ztiles, Ti)
+      if(keepmarks) {
+        extra <- if(gotXmarks && gotYmarks) {
+                   data.frame(X=Xmarks[i, ,drop=FALSE],
+                              Y=Ymarks[nonempty, ,drop=FALSE],
+                              row.names=NULL)
+                 } else if(gotYmarks) {
+                   Ymarks[nonempty, ,drop=FALSE]
+                 } else {
+                   Xmarks[rep(i, sum(nonempty)), ,drop=FALSE]
+                 }
+        marx <- rbind(marx, extra)
+      }
+    }
+  }
+  ## form tessellation object
+  Xwin <- as.owin(X)
+  Ywin <- as.owin(Y)
   Zwin <- intersect.owin(Xwin, Ywin)
   out <- tess(tiles=Ztiles, window=Zwin)
   if(keepmarks) 
@@ -670,6 +862,29 @@ intersect.tess <- function(X, Y, ..., keepmarks=FALSE) {
   return(out)
 }
 
+venn.tess <- function(..., window=NULL) {
+  argh <- list(...)
+  nargh <- length(argh)
+  if(nargh == 0) stop("No arguments given")
+  iswin <- sapply(argh, is.owin)
+  istes <- sapply(argh, is.tess)
+  if(!all(iswin | istes)) 
+    stop("All arguments must be windows or tessellations", call.=FALSE)
+  nama <- names(argh)
+  if(sum(nzchar(nama)) < nargh)
+    nama <- paste0("T", seq_len(nargh))
+  W <- window %orifnull% do.call(union.owin, unname(lapply(argh, as.owin)))
+  for(i in seq_len(nargh)) {
+    A <- argh[[i]]
+    if(is.owin(A)) {
+      Z <- list(A, Out=setminus.owin(W, A))
+      names(Z) <- paste0(c("", "not"), nama[i])
+      A <- tess(tiles=Z, window=W)
+    }
+    Y <- if(i == 1) A else intersect.tess(Y, A)
+  }
+  return(Y)
+}
 
 bdist.tiles <- local({
 
@@ -780,6 +995,23 @@ reflect.tess <- function(X) {
   return(Y)
 }
 
+flipxy.tess <- function(X) {
+  Y <- X
+  Y$window <- flipxy(Y$window)
+  switch(X$type,
+         rect = {
+           Y$xgrid <- X$ygrid
+           Y$ygrid <- X$xgrid
+         },
+         tiled = {
+           Y$tiles <- lapply(Y$tiles, flipxy)
+         },
+         image = {
+           Y$image <- flipxy(Y$image)
+         })
+  return(Y)
+}
+
 scalardilate.tess <- function(X, f, ...) {
   Y <- X
   Y$window <- scalardilate(X$window, f, ...)
@@ -832,3 +1064,52 @@ rotate.tess <- function(X, angle=pi/2, ..., centre=NULL) {
   return(Y)
 }
   
+as.data.frame.tess <- function(x, ...) {
+  switch(x$type,
+         rect =,
+         tiled = {
+           y <- lapply(tiles(x), as.data.frame, ...)
+           z <- mapply(assignDFcolumn,
+                       x=y, value=tilenames(x),
+                       MoreArgs=list(name="Tile", ...),
+                       SIMPLIFY=FALSE)
+           z <- do.call(rbind, z)
+           row.names(z) <- NULL
+         },
+         image = {
+           z <- as.data.frame(x$image, ...)
+           if(!is.na(m <- match("value", colnames(z))))
+             colnames(z)[m] <- "Tile"
+         },
+         {
+           z <- NULL
+           warning("Unrecognised type of tessellation")
+         })
+  return(z)
+}
+
+connected.tess <- function(X, ...) {
+  Xim <- as.im(X, ...)
+  X <- as.tess(Xim)
+  tilesX <- tiles(X)
+  namesX <- names(tilesX)
+  shards <- lapply(tilesX, connected) # list of factor images
+  shardnames <- lapply(shards, levels)
+  nshards <- lengths(shardnames)
+  broken <- (nshards > 1)
+  #' unbroken tiles keep their original tile names
+  shardnames[!broken] <- namesX[!broken]
+  #' shards of broken tiles are named "tilename[i] shard j"
+  shardnames[broken] <- mapply(paste,
+                               namesX[broken], "shard", shardnames[broken],
+                               SIMPLIFY=FALSE)
+  #' rename them
+  shards <- mapply("levels<-", shards, shardnames, SIMPLIFY=FALSE)
+  #' separate them
+  shards <- lapply(lapply(shards, as.tess), tiles)
+  shards <- unlist(shards, recursive=FALSE, use.names=FALSE)
+  names(shards) <- unlist(shardnames)
+  #' form tessellation
+  result <- tess(tiles=shards, window=as.owin(Xim))
+  result
+}

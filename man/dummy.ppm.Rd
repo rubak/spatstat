@@ -60,14 +60,14 @@
  data(cells)
  fit <- ppm(cells, ~1, Strauss(r=0.1))
  X <- dummy.ppm(fit)
- X$n
+ npoints(X)
  # this is the number of dummy points in the quadrature scheme
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{utilities}

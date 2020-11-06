@@ -8,7 +8,7 @@
   estimate the inhomogeneous version of the dot \eqn{L} function.
 }
 \usage{
-Ldot.inhom(X, i, \dots)
+Ldot.inhom(X, i, \dots, correction)
 }
 \arguments{
   \item{X}{The observed point pattern, 
@@ -23,7 +23,7 @@ Ldot.inhom(X, i, \dots)
     character string).
     Defaults to the first level of \code{marks(X)}.
   }
-  \item{\dots}{
+  \item{correction,\dots}{
     Other arguments passed to \code{\link{Kdot.inhom}}.
   }
 }
@@ -56,7 +56,7 @@ Ldot.inhom(X, i, \dots)
   transformed by taking \eqn{L(r) = \sqrt{K(r)/\pi}}{L(r) = sqrt(K(r)/pi)}.
 }
 \references{
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R.
+  \Moller, J. and Waagepetersen, R.
   Statistical Inference and Simulation for Spatial Point Processes
   Chapman and Hall/CRC
   Boca Raton, 2003.
@@ -76,16 +76,16 @@ Ldot.inhom(X, i, \dots)
 }
 \examples{
     # Lansing Woods data
-    data(lansing)
-    lansing <- lansing[seq(1,lansing$n, by=10)]
-    ma <- split(lansing)$maple
-    lg <- unmark(lansing)
+    lan <- lansing
+    lan <- lan[seq(1,npoints(lan), by=10)]
+    ma <- split(lan)$maple
+    lg <- unmark(lan)
 
     # Estimate intensities by nonparametric smoothing
     lambdaM <- density.ppp(ma, sigma=0.15, at="points")
     lambdadot <- density.ppp(lg, sigma=0.15, at="points")
-    L <- Ldot.inhom(lansing, "maple", lambdaI=lambdaM,
-                                      lambdadot=lambdadot)
+    L <- Ldot.inhom(lan, "maple", lambdaI=lambdaM,
+                                  lambdadot=lambdadot)
 
 
     # synthetic example: type A points have intensity 50,
@@ -95,11 +95,8 @@ Ldot.inhom(X, i, \dots)
     X <- superimpose(A=runifpoispp(50), B=rpoispp(lamB))
     L <- Ldot.inhom(X, "B",  lambdaI=lamB,     lambdadot=lamdot)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{nonparametric}

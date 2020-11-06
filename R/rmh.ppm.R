@@ -1,13 +1,15 @@
 #
 # simulation of FITTED model
 #
-#  $Revision: 1.32 $ $Date: 2015/07/11 08:19:26 $
+#  $Revision: 1.37 $ $Date: 2020/09/10 06:14:36 $
 #
 #
 rmh.ppm <- function(model, start = NULL,
                     control = default.rmhcontrol(model, w=w),
                     ...,
-                    w = NULL, project=TRUE, verbose=TRUE,
+                    w = NULL, project=TRUE,
+                    nsim=1, drop=TRUE, saveinfo=TRUE,
+                    verbose=TRUE,
                     new.coef=NULL) {
   verifyclass(model, "ppm")
   argh <- list(...)
@@ -38,8 +40,9 @@ rmh.ppm <- function(model, start = NULL,
   known <- names(argh) %in% names(formals(rmhcontrol.default))
   fargs <- argh[!known]
 
-  Y <- do.call("rmh.default",
+  Y <- do.call(rmh.default,
                append(list(model=X, start=start, control=control,
+                           nsim=nsim, drop=drop, saveinfo=saveinfo,
                            verbose=verbose),
                       fargs))
   return(Y)
@@ -49,7 +52,8 @@ simulate.ppm <- function(object, nsim=1, ...,
                          singlerun=FALSE,
                          start = NULL,
                          control = default.rmhcontrol(object, w=w),
-                         w = NULL,
+                         w = window,
+                         window = NULL, 
                          project=TRUE,
                          new.coef=NULL,
                          verbose=FALSE,
@@ -75,7 +79,7 @@ simulate.ppm <- function(object, nsim=1, ...,
                                list(nburn=nsave),
                                .MatchNull=FALSE)
     if(!is.null(nsave)) {
-      nrep <- nburn + (nsim-1) * nsave
+      nrep <- nburn + (nsim-1) * sum(nsave)
       rcontr <- update(rcontr, nrep=nrep, nsave=nsave, nburn=nburn)
     } 
   }
@@ -109,7 +113,7 @@ simulate.ppm <- function(object, nsim=1, ...,
       rcontr <- update(rcontr, nsave=nsave, nburn=nburn)
     }
     # check nrep is enough
-    nrepmin <- with(rcontr, nburn + (nsim-1) * nsave)
+    nrepmin <- with(rcontr, nburn + (nsim-1) * sum(nsave))
     if(rcontr$nrep < nrepmin)
       rcontr <- update(rcontr, nrep=nrepmin)
     # OK, run it
@@ -122,9 +126,14 @@ simulate.ppm <- function(object, nsim=1, ...,
       cat("Done.\n")
     # extract sampled states
     out <- attr(Y, "saved")
-    if(length(out) != nsim)
+    nout <- length(out)
+    if(nout == nsim+1L && identical(names(out)[1], "Iteration_0")) {
+      ## expected behaviour: first entry is initial state
+      out <- out[-1L]
+    } else if(nout != nsim) {
       stop(paste("Internal error: wrong number of simulations generated:",
-                 length(out), "!=", nsim))
+                 nout, "!=", nsim))
+    }
   } else {
     # //////////////////////////////////////////////////
     # execute 'nsim' independent runs
@@ -147,18 +156,12 @@ simulate.ppm <- function(object, nsim=1, ...,
       if(progress)
         pstate <- list()
       for(i in 1:nsim) {
-        out[[i]] <- do.call("rmhEngine", rmhargs)
+        out[[i]] <- do.call(rmhEngine, rmhargs)
         if(progress) pstate <- progressreport(i, nsim, state=pstate)
       }
     }
   }
-  if(nsim == 1 && drop) {
-    out <- out[[1]]
-  } else {
-    out <- as.solist(out)
-    if(nsim > 0)
-      names(out) <- paste("Simulation", 1:nsim)
-  }
+  out <- simulationresult(out, nsim, drop)
   out <- timed(out, starttime=starttime)
   return(out)
 }  

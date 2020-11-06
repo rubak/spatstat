@@ -10,22 +10,24 @@
                    main,
                    add=FALSE, clipwin=NULL,
                    col=NULL, valuesAreColours=NULL, log=FALSE,
+                   ncolours=256, gamma=1, 
                    ribbon=show.all, show.all=!add,
                    ribside=c("right", "left", "bottom", "top"),
                    ribsep=0.15, ribwid=0.05, ribn=1024,
-                   ribscale=1, ribargs=list(), colargs=list(),
-                   useRaster=NULL,
+                   ribscale=1, ribargs=list(), riblab=NULL, colargs=list(),
+                   useRaster=NULL, workaround=FALSE, zap=1,
                    do.plot=TRUE) 
 
   \method{image}{im}(x, \dots,
                    main,
                    add=FALSE, clipwin=NULL,
-                   col=NULL, valuesAreColours=NULL, log=FALSE,
+                   col=NULL, valuesAreColours=NULL, log=FALSE, 
+                   ncolours=256, gamma=1, 
                    ribbon=show.all, show.all=!add,
                    ribside=c("right", "left", "bottom", "top"),
                    ribsep=0.15, ribwid=0.05, ribn=1024,
-                   ribscale=1, ribargs=list(), colargs=list(),
-                   useRaster=NULL,
+                   ribscale=1, ribargs=list(), riblab=NULL, colargs=list(),
+                   useRaster=NULL, workaround=FALSE, zap=1,
                    do.plot=TRUE) 
 }
 \arguments{
@@ -61,6 +63,14 @@
     Logical value. If \code{TRUE}, the colour map will be
     evenly-spaced on a logarithmic scale.
   }
+  \item{ncolours}{
+    Integer. The default number of colours in the colour map
+    for a real-valued image.
+  }
+  \item{gamma}{
+    Exponent for the gamma correction of the colours.
+    A single positive number.
+  }
   \item{ribbon}{
     Logical flag indicating whether to display a ribbon
     showing the colour map. Default is \code{TRUE}
@@ -90,10 +100,17 @@
   }
   \item{ribargs}{
     List of additional arguments passed to
-    \code{\link[graphics]{image.default}} and
-    \code{\link[graphics]{axis}} 
+    \code{\link[graphics]{image.default}}, 
+    \code{\link[graphics]{axis}} and
+    \code{\link[grDevices]{axisTicks}}
     to control the display of the ribbon and its scale axis. These may override
     the \code{\dots} arguments. 
+  }
+  \item{riblab}{
+    Text to be plotted in the margin near the ribbon.
+    A character string or expression to be interpreted as text,
+    or a list of arguments to be passed to
+    \code{\link[graphics]{mtext}}.
   }
   \item{colargs}{
     List of additional arguments passed to
@@ -107,6 +124,19 @@
     but is not supported on all graphics devices.
     The default is to use bitmap raster display if it is supported.
   }
+  \item{workaround}{
+    Logical value, specifying whether to use a workaround to avoid a bug
+    which occurs with some device drivers in \R, in which the image
+    has the wrong spatial orientation. See the section on
+    \bold{Image is Displayed in Wrong Spatial Orientation} below.
+  }
+  \item{zap}{
+    Noise threshold factor. A numerical value greater than or equal to 1.
+    If the range of pixel values is less than
+    \code{zap * .Machine$double.eps}, the image will be treated as
+    constant. This avoids displaying images which should be constant
+    but contain small numerical errors.
+  }
   \item{do.plot}{
     Logical value indicating whether to actually plot the image
     and colour ribbon.
@@ -118,7 +148,11 @@
   The colour map used. An object of class \code{"colourmap"}.
 
   Also has an attribute \code{"bbox"} giving a bounding box
-  for the colour image (including the ribbon if present).
+  for the plot (containing the main colour image and the
+  colour ribbon if plotted).
+  If a ribbon was plotted, there is also an attribute
+  \code{"bbox.legend"} giving a bounding box for the ribbon image.
+  Text annotation occurs outside these bounding boxes.
 }
 \details{
   This is the \code{plot} method for the class \code{"im"}.
@@ -131,22 +165,44 @@
   The legend consists of a colour ribbon and an axis with tick-marks,
   showing the correspondence between the pixel values and the colour map.
 
+  Arguments \code{ribside, ribsep, ribwid} control the placement
+  of the colour ribbon.
   By default, the ribbon is placed at the right of the main image.
   This can be changed using the argument \code{ribside}.
-  
-  Arguments \code{ribsep, ribwid, ribn} control the appearance of the
-  ribbon.
   The width of the ribbon is \code{ribwid} times the size of the pixel
   image, where `size' means the larger of the width and the height.
   The distance separating the ribbon and the image is \code{ribsep} times
-  the size of the pixel image. The ribbon contains \code{ribn}
+  the size of the pixel image.
+
+  The ribbon contains the colours representing \code{ribn}
   different numerical values, evenly spaced between the minimum and
   maximum pixel values in the image \code{x}, rendered according to
   the chosen colour map.
 
-  Arguments \code{ribscale, ribargs} control the annotation of the
-  colour ribbon. To plot the colour ribbon without the axis and
+  The argument \code{ribargs} controls the annotation of the
+  colour ribbon. It is a list of arguments to be passed to
+  \code{\link[graphics]{image.default}}, 
+  \code{\link[graphics]{axis}} and
+  \code{\link[grDevices]{axisTicks}}.
+  To plot the colour ribbon without the axis and
   tick-marks, use \code{ribargs=list(axes=FALSE)}.
+  To ensure that the numerals or symbols printed next to the colour map
+  are oriented horizontally, use \code{ribargs=list(las=1)}.
+  To double the size of the numerals or symbols, 
+  use \code{ribargs=list(cex.axis=2)}.
+  To control the number of tick-marks, use \code{ribargs=list(nint=N)}
+  where \code{N} is the desired number of intervals (so there will
+  be \code{N+1} tickmarks, subject to the vagaries of \R internal code). 
+
+  The argument \code{riblab} contains text that will be displayed
+  in the margin next to the ribbon. 
+  
+  The argument \code{ribscale} is used
+  to rescale the numerical values printed next to the colour map,
+  for convenience. 
+  For example if the pixel values in \code{x} range between 1000 and
+  4000, it would be sensible to use \code{ribscale=1/1000} so that the
+  colour map tickmarks would be labelled 1 to 4. 
 
   Normally the pixel values are displayed using the colours given in the
   argument \code{col}. This may be either
@@ -242,9 +298,11 @@
   \itemize{
     \item a formal argument of \code{\link[graphics]{image.default}}
     that is operative when \code{add=TRUE}.
-    \item one of the
-    parameters \code{"main", "asp", "sub", "axes", "ann",
-      "cex", "font", "cex.axis", "cex.lab", "cex.main", "cex.sub",
+    \item one of the parameters
+    \code{"main", "asp", "sub", "axes", "xlab", "ylab"}
+    described in \code{\link[graphics]{plot.default}}.
+    \item one of the parameters
+    \code{"ann", "cex", "font", "cex.axis", "cex.lab", "cex.main", "cex.sub",
       "col.axis", "col.lab", "col.main", "col.sub",
       "font.axis", "font.lab", "font.main", "font.sub"}
     described in \code{\link[graphics]{par}}.
@@ -279,6 +337,12 @@
   and a ribbon will not be plotted.
 
 }
+\section{Complex-valued images}{
+  If the pixel values in \code{x} are complex numbers,
+  they will be converted into four images containing the real and
+  imaginary parts and the modulus and argument, 
+  and plotted side-by-side using \code{\link{plot.imlist}}.
+}
 \section{Monochrome colours}{
   If \code{spatstat.options("monochrome")} has been set to \code{TRUE},
   then \bold{the image will be plotted in greyscale}.
@@ -292,6 +356,15 @@
   when starting a new graphics device, or in a call to
   \code{\link{ps.options}} or \code{\link{pdf.options}}.
 }
+\section{Image Looks Like Noise}{
+  An image plot which looks like digital noise
+  can be produced when the pixel values are almost exactly equal
+  but include a tiny amount of numerical error.
+  To check this, look at the numerals plotted next to the colour ribbon,
+  or compute \code{diff(range(x))}, to determine whether the range
+  of pixel values is almost zero. The behaviour can be suppressed
+  by picking a larger value of the argument \code{zap}.
+}
 \section{Image Rendering Errors and Problems}{
   The help for \code{\link[graphics]{image.default}}
   and \code{\link[graphics]{rasterImage}} explains that
@@ -303,7 +376,7 @@
   try setting \code{useRaster=FALSE} in the call to \code{plot.im}.
   If the ribbon colours are not displayed, set
   \code{ribargs=list(useRaster=FALSE)}.
-  
+
   Errors may occur on some graphics devices if the image is very
   large. If this happens, try setting \code{useRaster=FALSE} in the
   call to \code{plot.im}.
@@ -316,11 +389,30 @@
   To repair the coordinates in an image \code{X}, type
   \code{X <- as.im(X)}.
 }
+\section{Image is Displayed in Wrong Spatial Orientation}{
+  If the image is displayed in the wrong spatial orientation,
+  and you created the image data directly, 
+  please check that you understand the \pkg{spatstat} convention for
+  the spatial orientation of pixel images. The row index of the matrix
+  of pixel values corresponds to the increasing \eqn{y} coordinate; the
+  column index of the matrix corresponds to the increasing \eqn{x} coordinate
+  (Baddeley, Rubak and Turner, 2015, section 3.6.3, pages 66--67).
+
+  Images can be displayed in the wrong spatial orientation
+  on some devices, due to a bug in the device driver. This occurs only
+  when the plot coordinates are \emph{reversed}, that is, when 
+  the plot was initialised with coordinate limits \code{xlim, ylim}
+  such that \code{xlim[1] > xlim[2]} or \code{ylim[1] > ylim[2]} or
+  both. This bug is reported to occur only when \code{useRaster=TRUE}.
+  To fix this, try setting \code{workaround=TRUE}, or if that is
+  unsuccessful, \code{useRaster=FALSE}.
+}
 \seealso{
   \code{\link{im.object}},
   \code{\link{colourmap}},
   \code{\link{contour.im}},
   \code{\link{persp.im}},
+  \code{\link{hist.im}},
   \code{\link[graphics]{image.default}},
   \code{\link{spatstat.options}}
 }
@@ -330,6 +422,7 @@
    plot(Z)
    plot(Z, ribside="bottom")
    # stretchable colour map
+   plot(Z, col=rainbow)
    plot(Z, col=terrain.colors(128), axes=FALSE)
    # fixed colour map
    tc <- colourmap(rainbow(128), breaks=seq(-1,2,length=129))
@@ -340,16 +433,24 @@
    plot(Z, main="La vie en bleu", col.main="blue", cex.main=1.5,
         box=FALSE,
         ribargs=list(col.axis="blue", col.ticks="blue", cex.axis=0.75))
+   # add axes and axis labels
+   plot(Z, axes=TRUE, ann=TRUE, xlab="Easting", ylab="Northing")
    # log scale
    V <- eval.im(exp(exp(Z+2))/1e4)
    plot(V, log=TRUE, main="Log scale")
+   # it's complex
+   Y <- exp(Z + V * 1i)
+   plot(Y)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\references{
+  Baddeley, A., Rubak, E. and Turner, R. (2015)
+  \emph{Spatial Point Patterns: Methodology and Applications with R}.
+  Chapman and Hall/CRC Press.
+}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
  
 \keyword{hplot}
+

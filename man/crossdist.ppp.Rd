@@ -1,4 +1,4 @@
-\name{crossdist.ppp} %DontDeclareMethods
+\name{crossdist.ppp} 
 \alias{crossdist.ppp}
 \title{Pairwise distances between two different point patterns}
 \description{
@@ -76,9 +76,9 @@
 \author{Pavel Grabarnik
   \email{pavel.grabar@issp.serpukhov.su}
   and
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
+  
+  
 }
 \keyword{spatial}
 \keyword{math}

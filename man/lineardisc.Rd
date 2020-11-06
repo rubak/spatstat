@@ -10,9 +10,9 @@
 }
 \usage{
   lineardisc(L, x = locator(1), r, plotit = TRUE,
-             cols=c("blue", "red","green"))
+             cols=c("blue", "red","green"), add=TRUE)
 
-  countends(L, x = locator(1), r, toler=NULL)
+  countends(L, x = locator(1), r, toler=NULL, internal=list())
 }
 \arguments{
   \item{L}{
@@ -29,6 +29,13 @@
   \item{plotit}{
     Logical. Whether to plot the disc.
   }
+  \item{add}{
+    Logical. If \code{add=TRUE} (the default),
+    the disc will be plotted on the current plot frame.
+    If \code{add=FALSE}, a new plot frame will be started,
+    the entire network will be displayed, and then
+    the disc will be plotted over this.
+  }
   \item{cols}{
     Colours for plotting the disc. A numeric or character vector of
     length 3 specifying the colours of the disc centre, disc lines and
@@ -38,6 +45,7 @@
     Optional. Distance threshold for \code{countends}. See Details.
     There is a sensible default.
   }
+  \item{internal}{Argument for internal use by the package.}
 }
 \details{
   The \sQuote{disc} \eqn{B(u,r)} of centre \eqn{x} and radius \eqn{r}
@@ -56,6 +64,11 @@
   The faster function \code{countends} simply counts the number of
   points in the relative boundary.
 
+  Note that \code{countends} requires the linear network \code{L}
+  to be given in the non-sparse matrix format (see the argument
+  \code{sparse} in \code{\link{linnet}} or \code{\link{as.linnet}})
+  while \code{lineardisc} accepts both sparse and non-sparse formats.
+
   The optional threshold \code{toler} is used to suppress numerical
   errors in \code{countends}.
   If the distance from \eqn{u} to a network vertex \eqn{v}
@@ -69,14 +82,13 @@
   \item{endpoints}{Point pattern (object of class \code{"ppp"})
     representing the relative boundary of the disc.
   }
+  
   The value of \code{countends} is an integer giving the number of
   points in the relative boundary.
 }
 \author{
   Ang Qi Wei \email{aqw07398@hotmail.com} and
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
 }
 \seealso{
   \code{\link{linnet}}
@@ -94,11 +106,18 @@ ecology and criminology.
   \emph{Scandinavian Journal of Statistics} \bold{39}, 591--617.
 }
 \examples{
-   example(linnet)
+    # letter 'A' 
+    v <- ppp(x=(-2):2, y=3*c(0,1,2,1,0), c(-3,3), c(-1,7))
+    edg <- cbind(1:4, 2:5)
+    edg <- rbind(edg, c(2,4))
+    letterA <- linnet(v, edges=edg)
+    plot(letterA)
+
    lineardisc(letterA, c(0,3), 1.6)
    # count the endpoints
    countends(letterA, c(0,3), 1.6)
    # cross-check (slower)
-   lineardisc(letterA, c(0,3), 1.6, plotit=FALSE)$endpoints$n
+   en <- lineardisc(letterA, c(0,3), 1.6, plotit=FALSE)$endpoints
+   npoints(en)
 }
 \keyword{spatial}

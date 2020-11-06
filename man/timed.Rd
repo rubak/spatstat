@@ -73,16 +73,17 @@ timed(x, ..., starttime = NULL, timetaken = NULL)
   An object inheriting the class \code{"timed"}.
 }
 \examples{
-  timed(envelope(cells, nsim=19))  
+  timed(clarkevans(cells))
+
+  timed(Kest(cells))
+
+  answer <- timed(42, timetaken=4.1e17)
+  answer
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\seealso{
+  \code{\link{timeTaken}} to extract the time taken.
 }
-\keyword{spatial}
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\author{
+  \spatstatAuthors.
+}
+\keyword{utilities}

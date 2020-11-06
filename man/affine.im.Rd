@@ -1,4 +1,4 @@
-\name{affine.im} %DontDeclareMethods
+\name{affine.im}
 \alias{affine.im} 
 \title{Apply Affine Transformation To Pixel Image}
 \description{
@@ -46,11 +46,11 @@
   shear <- matrix(c(1,0,0.6,1),ncol=2, nrow=2)
   Z <- affine(X, mat=shear)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

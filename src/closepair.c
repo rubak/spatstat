@@ -2,7 +2,10 @@
 
   closepair.c
 
-  $Revision: 1.32 $     $Date: 2015/02/21 02:39:35 $
+  $Revision: 1.34 $     $Date: 2018/12/18 02:43:11 $
+
+  Copyright (C) Adrian Baddeley, Ege Rubak and Rolf Turner 2001-2018
+  Licence: GNU Public Licence >= 2
 
   Assumes point pattern is sorted in increasing order of x coordinate
 
@@ -330,7 +333,7 @@ void Fclosepairs(nxy, x, y, r, noutmax,
 
       if(i > 0) {
 	/* scan backwards */
-	for(j = i - 1; j >= 0; j++) {
+	for(j = i - 1; j >= 0; j--) {
 	  dx = x[j] - xi;
 	  dx2 = dx * dx;
 	  if(dx2 > r2max)
@@ -483,6 +486,7 @@ void Fcrosspairs(nn1, x1, y1, nn2, x2, y2, rmaxi, noutmax,
 
 /* ........  versions that return variable-length vectors ......... */
 
+#define SINGLE
 
 /* return i, j only */
 #define CLOSEFUN VcloseIJpairs

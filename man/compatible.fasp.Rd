@@ -1,4 +1,4 @@
-\name{compatible.fasp}  %DontDeclareMethods
+\name{compatible.fasp}  
 \alias{compatible.fasp}
 \title{Test Whether Function Arrays Are Compatible}
 \description{
@@ -31,11 +31,11 @@
 \seealso{
   \code{\link{eval.fasp}}
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{manip}

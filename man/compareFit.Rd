@@ -93,11 +93,9 @@ compareFit(object, Fun, r = NULL, breaks = NULL, ...,
   Function value table (object of class \code{"fv"}).
 }
 \author{
-  Ege Rubak, 
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Jesper \ifelse{latex}{\out{M\o ller}}{Moller}.
+  \ege, 
+  \adrian
+  and Jesper \Moller.
 }
 \seealso{
   \code{\link{ppm}},

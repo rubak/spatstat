@@ -3,7 +3,7 @@
 #
 #  class of general point patterns in any dimension
 #
-#  $Revision: 1.51 $  $Date: 2015/10/15 07:45:40 $
+#  $Revision: 1.66 $  $Date: 2020/11/04 04:26:04 $
 #
 
 ppx <- local({
@@ -101,7 +101,7 @@ print.ppx <- function(x, ...) {
   invisible(NULL)
 }
 
-summary.ppx <- function(object, ...) { print(object, ...) }
+summary.ppx <- function(object, ...) { object }
 
 plot.ppx <- function(x, ...) {
   xname <- short.deparse(substitute(x))
@@ -112,7 +112,7 @@ plot.ppx <- function(x, ...) {
     coo <- coo[,1]
     ran <- diff(range(coo))
     ylim <- c(-1,1) * ran/20
-    do.call("plot.default",
+    do.call(plot.default,
             resolve.defaults(list(coo, numeric(length(coo))),
                              list(...),
                              list(asp=1, ylim=ylim,
@@ -122,7 +122,7 @@ plot.ppx <- function(x, ...) {
     if(is.null(dom)) {
       # plot x, y coordinates only
       nama <- names(coo)
-      do.call.matched("plot.default",
+      do.call.matched(plot.default,
                       resolve.defaults(list(x=coo[,1], y=coo[,2], asp=1),
                                        list(...),
                                        list(main=xname),
@@ -131,7 +131,7 @@ plot.ppx <- function(x, ...) {
       add <- resolve.defaults(list(...), list(add=FALSE))$add
       if(!add) {
         # plot domain, whatever it is
-        do.call("plot", resolve.defaults(list(dom),
+        do.call(plot, resolve.defaults(list(dom),
                                        list(...),
                                        list(main=xname)))
       }
@@ -139,7 +139,7 @@ plot.ppx <- function(x, ...) {
       x2 <- ppp(coo[,1], coo[,2], window=as.owin(dom),
                 marks=as.data.frame(marks(x)), check=FALSE)
       # invoke plot.ppp
-      return(do.call("plot", resolve.defaults(list(x2),
+      return(do.call(plot, resolve.defaults(list(x2),
                                               list(add=TRUE),
                                               list(...))))
     }
@@ -150,7 +150,7 @@ plot.ppx <- function(x, ...) {
     x3 <- pp3(coo[,1], coo[,2], coo[,3], dom)
     # invoke plot.pp3
     nama <- names(coo)
-    do.call("plot",
+    do.call(plot,
             resolve.defaults(list(x3),
                              list(...),
                              list(main=xname),
@@ -160,13 +160,90 @@ plot.ppx <- function(x, ...) {
   return(invisible(NULL))
 }
 
-"[.ppx" <- function (x, i, drop=FALSE, ...) {
+is.boxx <- function(x){
+  inherits(x, "boxx")
+}
+
+intersect.boxx <- function(..., fatal = FALSE){
+  argh <- list(...)
+  ## look for NULL arguments (empty boxx) and return NULL
+  if(any(sapply(argh, is.null))){
+    if(fatal) stop("There is a NULL boxx in the intersection.")
+    return(NULL)
+  }
+  ## look for boxx arguments
+  isboxx <- sapply(argh, is.boxx)
+  if(any(!isboxx))
+    warning("Some arguments were not boxx objects")
+  argh <- argh[isboxx]
+  nboxx <- length(argh)
+
+  if(nboxx == 0) {
+    warning("No non-NULL boxx objects were given")
+    if(fatal) stop("The intersection of boxx objects is NULL.")
+    return(NULL)
+  }
+
+  ## at least one boxx
+  A <- argh[[1L]]
+  if(nboxx == 1) return(A)
+
+  ## at least two non-empty boxx objects
+  B <- argh[[2L]]
+
+  if(nboxx > 2) {
+    ## handle union of more than two windows
+    windows <- argh[-c(1,2)]
+    ## absorb all windows into B
+    for(i in seq_along(windows)) {
+      B <- do.call(intersect.boxx, list(B, windows[[i]], fatal=fatal))
+      if(is.null(B)){
+        if(fatal) stop("The intersection of boxx objects is NULL.")
+        return(NULL)
+      }
+    }
+  }
+
+  ## There are now only two windows, which are not empty.
+  if(identical(A, B)){
+    return(A)
+  }
+
+  # check dim and units
+  if(spatdim(A)!=spatdim(B)){
+    stop("Not all boxx objects have same spatial dimension.")
+  }
+  if(!compatible(unitname(A), unitname(B)))
+    warning("The two windows have incompatible units of length")
+  uname <- harmonise(unitname(A), unitname(B), single=TRUE)
+
+  # determine intersection of ranges
+  rA <- A$ranges
+  rB <- B$ranges
+  r1 <- pmax(rA[1,], rB[1,])
+  r2 <- pmin(rA[2,], rB[2,])
+  if(any(r1>=r2)){
+    if(fatal) stop("The intersection of boxx objects is NULL.")
+    return(NULL)
+  }
+  return(boxx(rbind(r1,r2)))
+}
+
+"[.ppx" <- function (x, i, drop=FALSE, clip=FALSE, ...) {
   da <- x$data
   dom <- x$domain
   if(!missing(i)) {
     if(inherits(i, c("boxx", "box3"))) {
-      dom <- i
-      i <- inside.boxx(da, w=i)
+      if(clip){
+        dom <- intersect.boxx(dom, i)
+      } else{
+        dom <- i
+      }
+      if(is.null(dom)){
+        i <- rep(FALSE, nrow(da))
+      } else{
+        i <- inside.boxx(da, w=i)
+      }
     }
     da <- da[i, , drop=FALSE]
   }
@@ -211,7 +288,7 @@ coords.ppx <- function(x, ..., spatial=TRUE, temporal=TRUE, local=TRUE) {
   chosen <- (ctype == "spatial" & spatial) |
             (ctype == "temporal" & temporal) | 
             (ctype == "local" & local) 
-  as.data.frame(x$data[, chosen])
+  as.data.frame(x$data[, chosen, drop=FALSE])
 }
 
 coords.ppp <- function(x, ...) { data.frame(x=x$x,y=x$y) }
@@ -259,7 +336,7 @@ marks.ppx <- function(x, ..., drop=TRUE) {
 "marks<-.ppx" <- function(x, ..., value) {
   ctype <- x$ctype
   retain <- (ctype != "mark")
-  coorddata <- x$data[, retain, drop=TRUE]
+  coorddata <- x$data[, retain, drop=FALSE]
   if(is.null(value)) {
     newdata <- coorddata
     newctype <- ctype[retain]
@@ -278,6 +355,8 @@ marks.ppx <- function(x, ..., drop=TRUE) {
       newdata <- coorddata
       newctype <- ctype[retain]
     } else {
+      if(nrow(coorddata) == 0) 
+        value <- value[integer(0), , drop=FALSE]
       newdata <- cbind(coorddata, value)
       newctype <- factor(c(as.character(ctype[retain]),
                            rep.int("mark", ncol(value))),
@@ -285,7 +364,7 @@ marks.ppx <- function(x, ..., drop=TRUE) {
     }
   }
   out <- list(data=newdata, ctype=newctype, domain=x$domain)
-  class(out) <- "ppx"
+  class(out) <- class(x)
   return(out)
 }
 
@@ -312,7 +391,7 @@ boxx <- function(..., unitname=NULL) {
     stop("Data should be vectors of length 2")
   if(any(unlist(lapply(ranges, diff)) <= 0))
     stop("Illegal range: Second element <= first element")
-  out <- list(ranges=ranges, units=as.units(unitname))
+  out <- list(ranges=ranges, units=as.unitname(unitname))
   class(out) <- "boxx"
   return(out)
 }
@@ -327,11 +406,12 @@ as.boxx <- function(..., warn.owin = TRUE) {
     if (inherits(a, "boxx")) 
       return(a)
     if (inherits(a, "box3")) 
-      return(boxx(a$xrange, a$yrange, a$zrange, unitname = a$units))
+      return(boxx(a$xrange, a$yrange, a$zrange, 
+		  unitname = as.unitname(a$units)))
     if (inherits(a, "owin")) {
       if (!is.rectangle(a) && warn.owin) 
         warning("The owin object does not appear to be rectangular - the bounding box is used!")
-      return(boxx(a$xrange, a$yrange, unitname = a$units))
+      return(boxx(a$xrange, a$yrange, unitname = as.unitname(a$units)))
     }
     if (is.numeric(a)) {
       if ((length(a)%%2) == 0) 
@@ -341,7 +421,7 @@ as.boxx <- function(..., warn.owin = TRUE) {
     if (!is.list(a)) 
       stop("Don't know how to interpret data as a box")
   }
-  return(do.call("boxx", a))
+  return(do.call(boxx, a))
 }
 
 print.boxx <- function(x, ...) {
@@ -356,10 +436,10 @@ print.boxx <- function(x, ...) {
   invisible(NULL)
 }
 
-unitname.boxx <- function(x) { x$units }
+unitname.boxx <- function(x) { as.unitname(x$units) }
 
 "unitname<-.boxx" <- function(x, value) {
-  x$units <- as.units(value)
+  x$units <- as.unitname(value)
   return(x)
 }
 
@@ -399,41 +479,60 @@ shortside.boxx <- function(x) {
   return(min(sidelengths(x)))
 }
 
-eroded.volumes.boxx <- function(x, r) {
-  len <- sidelengths(x)
-  ero <- sapply(as.list(len), function(z, r) { pmax.int(0, z - 2 * r)}, r=r)
-  apply(ero, 1, prod)
+eroded.volumes.boxx <- local({
+
+  eroded.volumes.boxx <- function(x, r) {
+    len <- sidelengths(x)
+    ero <- sapply(as.list(len), erode1side, r=r)
+    apply(ero, 1, prod)
+  }
+
+  erode1side <- function(z, r) { pmax.int(0, z - 2 * r)}
+  
+  eroded.volumes.boxx
+})
+
+
+runifpointx <- function(n, domain, nsim=1, drop=TRUE) {
+  check.1.integer(n)
+  check.1.integer(nsim)
+  stopifnot(inherits(domain, "boxx"))
+  ra <- domain$ranges
+  d <- length(ra)
+  result <- vector(mode="list", length=nsim)
+  for(i in 1:nsim) {
+    if(n == 0) {
+      coo <- matrix(numeric(0), nrow=0, ncol=d)
+    } else {
+      coo <- mapply(runif,
+                    n=rep(n, d),
+                    min=ra[1,],
+                    max=ra[2,])
+      if(!is.matrix(coo)) coo <- matrix(coo, ncol=d)
+    }
+    colnames(coo) <- colnames(ra)
+    df <- as.data.frame(coo)
+    result[[i]] <- ppx(df, domain, coord.type=rep("s", d))
+  }
+  if(nsim == 1 && drop)
+    return(result[[1]])
+  result <- as.anylist(result)
+  names(result) <- paste("Simulation", 1:nsim)
+  return(result)
 }
 
-runifpointx <- function(n, domain, nsim=1) {
-  if(nsim > 1) {
-    result <- vector(mode="list", length=nsim)
-    for(i in 1:n) result[[i]] <- runifpointx(n, domain)
-    result <- as.solist(result)
-    names(result) <- paste("Simulation", 1:n)
-    return(result)
-  }
+rpoisppx <- function(lambda, domain, nsim=1, drop=TRUE) {
   stopifnot(inherits(domain, "boxx"))
-  coo <- lapply(domain$ranges,
-                function(ra, n) { runif(n, min=ra[1], max=ra[2]) },
-                n=n)
-  df <- do.call("data.frame", coo)
-  ppx(df, domain)
-}
-
-rpoisppx <- function(lambda, domain, nsim=1) {
-  if(nsim > 1) {
-    result <- vector(mode="list", length=nsim)
-    for(i in 1:n) result[[i]] <- rpoisppx(lambda, domain)
-    result <- as.solist(result)
-    names(result) <- paste("Simulation", 1:n)
-    return(result)
-  }
-  stopifnot(inherits(domain, "boxx"))
-  vol <- volume.boxx(domain)
   stopifnot(is.numeric(lambda) && length(lambda) == 1 && lambda >= 0)
-  n <- rpois(1, lambda * vol)
-  runifpointx(n, domain)
+  n <- rpois(nsim, lambda * volume.boxx(domain))
+  result <- vector(mode="list", length=nsim)
+  for(i in 1:nsim) 
+    result[[i]] <- runifpointx(n[i], domain)
+  if(nsim == 1 && drop)
+    return(result[[1]])
+  result <- as.anylist(result)
+  names(result) <- paste("Simulation", 1:nsim)
+  return(result)
 }
 
 unique.ppx <- function(x, ..., warn=FALSE) {
@@ -497,7 +596,7 @@ inside.boxx <- function(..., w = NULL){
     dat1 <- dat[[1]]
     if(inherits(dat1, "ppx"))
       dat <- coords(dat1)
-    if(inherits(dat1, "hyperframe"))
+    if(inherits(dat1, c("hyperframe", "data.frame", "matrix")))
       dat <- as.data.frame(dat1)
   }
   ra <- w$ranges
@@ -505,7 +604,7 @@ inside.boxx <- function(..., w = NULL){
     stop("Mismatch between dimension of boxx and number of coordinate vectors.")
   ## Check coord. vectors have equal length
   n <- length(dat[[1]])
-  if(any(sapply(dat, length)!=n))
+  if(any(lengths(dat)!=n))
     stop("Coordinate vectors have unequal length.")
   index <- rep(TRUE, n)
   for(i in seq_along(ra)){
@@ -515,7 +614,65 @@ inside.boxx <- function(..., w = NULL){
 }
 
 
-spatdim <- function(X) {
+spatdim <- function(X, intrinsic=FALSE) {
+  if(intrinsic) {
+    if(inherits(X, c("lpp", "linnet", "linim", "linfun", "lintess"))) return(1L)
+    if(inherits(X, c("s2pp", "s2", "s2region"))) return(2L)
+  }
   if(is.sob(X)) 2L else
+  if(inherits(X, "box3")) 3L else
+  if(inherits(X, "boxx")) length(X$ranges) else 
   if(is.ppx(X)) as.integer(sum(X$ctype == "spatial")) else NA_integer_
+}
+
+shift.boxx <- function(X, vec = 0, ...){
+  ra <- X$ranges
+  if(length(vec)==1){
+    vec <- rep(vec, ncol(ra))
+  }
+  stopifnot(length(vec)==ncol(ra))
+  X$ranges <- ra + matrix(vec, 2L, ncol(ra), byrow = TRUE)
+  attr(X, "lastshift") <- vec
+  return(X)
+}
+
+shift.ppx <- function(X, vec = 0,  ..., spatial = TRUE, temporal = TRUE, local = TRUE){
+  ctype <- X$ctype
+  chosen <- (ctype == "spatial" & spatial) | 
+    (ctype == "temporal" & temporal) | 
+    (ctype == "local" & local)
+  dat <- as.data.frame(X$data[, chosen, drop=FALSE])
+  if(length(vec)==1){
+    vec <- rep(vec, ncol(dat))
+  }
+  stopifnot(length(vec)==ncol(dat))
+  X$data[,chosen] <- dat + matrix(vec, nrow(dat), ncol(dat), byrow = TRUE)
+  X$domain <- shift(X$domain, vec = vec)
+  attr(X, "lastshift") <- vec
+  return(X)
+}
+
+# Scale a boxx and ppx like base::scale()
+scale.boxx <- function(x, center=TRUE, scale=TRUE){
+  newranges <- scale(x$ranges, center, scale)
+  x$ranges <- as.data.frame(newranges)
+  attr(x, "scaled:center") <- attr(newranges, "scaled:center")
+  attr(x, "scaled:scale")  <- attr(newranges, "scaled:scale")
+  return(x)
+}
+
+scale.ppx <- function(x, center=TRUE, scale=TRUE){
+  if(!is.null(domain(x))){
+    x$domain <- newdomain <- scale(domain(x), center, scale) 
+    newcenter <- attr(newdomain, "scaled:center")
+    newscale  <- attr(newdomain, "scaled:scale")
+    if(!is.null(newcenter) && !is.null(newscale)) {
+      center <- newcenter
+      scale <- newscale
+    }
+  }
+  coords(x) <- newcoords <- scale(coords(x), center, scale)
+  attr(x, "scaled:center") <- attr(newcoords, "scaled:center")
+  attr(x, "scaled:scale")  <- attr(newcoords, "scaled:scale")
+  return(x)
 }

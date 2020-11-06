@@ -1,8 +1,9 @@
-\name{connected.ppp}  %DontDeclareMethods
+\name{connected.ppp}  
 \Rdversion{1.1}
 \alias{connected.ppp}
+\alias{connected.pp3}
 \title{
-  Connected components of a point pattern
+  Connected Components of a Point Pattern
 }
 \description{
   Finds the topologically-connected components of a point pattern,
@@ -10,10 +11,12 @@
 }
 \usage{
 \method{connected}{ppp}(X, R, \dots)
+
+\method{connected}{pp3}(X, R, \dots)
 }
 \arguments{
   \item{X}{
-    A point pattern (object of class \code{"ppp"}).
+    A point pattern (object of class \code{"ppp"} or \code{"pp3"}).
   }
   \item{R}{
     Threshold distance. Pairs of points closer than \code{R} units apart
@@ -26,8 +29,9 @@
 \details{
   This function can be used to identify clumps of points in a point pattern.
 
-  The function \code{connected} is generic. This is the method for
-  point patterns (objects of class \code{"ppp"}).
+  The function \code{connected} is generic. This file documents the methods for
+  point patterns in dimension two or three (objects of class \code{"ppp"} or
+  \code{"pp3"}).
 
   The point pattern \code{X} is first converted into an abstract graph
   by joining every pair of points that lie closer than \code{R} units
@@ -56,13 +60,14 @@
     plot(Y, cols=1:length(levels(marks(Y))),
          main="connected(redwoodfull, 0.1)")
    }
+   X <- osteo$pts[[1]]
+   Z <- connected(X, 32)
+   if(interactive()) {
+    plot(Z, col=marks(Z), main="")
+   }
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{math}

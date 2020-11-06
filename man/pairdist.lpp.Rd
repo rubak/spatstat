@@ -27,27 +27,43 @@
 \details{
   Given a pattern of points on a linear network, this function computes the
   matrix of distances between all pairs of points, measuring
-  distance by the shortest path in the network.
+  distance by the shortest path in the network. 
   
-  If \code{method="C"} the distances are computed using
-  code in the C language. If \code{method="interpreted"} then the
-  computation is performed using interpreted \R code. The \R code is
-  much slower, but is provided for checking purposes.
+  If two points cannot be joined by a path,
+  the distance between them is infinite (\code{Inf}).
+
+  The argument \code{method} is not normally used. It is
+  retained only for developers to check the validity of the software.
+}
+\section{Algorithms and accuracy}{
+  Distances are accurate within the numerical tolerance of the
+  network, \code{summary(X)$toler}.
+
+  For network data stored in the non-sparse
+  representation described in \code{\link{linnet}},
+  then pairwise distances are computed using the matrix of path distances
+  between vertices of the network, using \R code if
+  \code{method = "interpreted"}, or using \proglang{C} code if 
+  \code{method="C"} (the default).
+  
+  For networks stored in the sparse representation,
+  the argument \code{method} has no effect, and the distances are
+  computed using an efficient \proglang{C} algorithm.
 }
 \value{
-  A symmetric matrix.
+  A symmetric matrix, whose values are nonnegative numbers or infinity
+  (\code{Inf}).
 }
 \author{
   Ang Qi Wei \email{aqw07398@hotmail.com} and
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian.
 }
 \seealso{
   \code{\link{lpp}}
 }
 \examples{
-   example(lpp)
-   pairdist(X)
+   X <- runiflpp(12, simplenet)
+   d <- pairdist(X)
+   d[1:3, 1:3]
 }
 \keyword{spatial}

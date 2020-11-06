@@ -58,6 +58,7 @@
     \code{"translate"}, \code{"translation"},
     \code{"none"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{renormalise}{
     Logical. Whether to renormalise the estimate. See Details.
@@ -170,7 +171,7 @@
 
   If \code{lambda} is omitted, then it will be estimated using
   a `leave-one-out' kernel smoother,
-  as described in Baddeley, \ifelse{latex}{\out{M\o ller}}{Moller}
+  as described in Baddeley, \Moller
   and Waagepetersen (2000).  The estimate \code{lambda[i]} for the
   point \code{X[i]} is computed by removing \code{X[i]} from the
   point pattern, applying kernel smoothing to the remaining points using
@@ -197,7 +198,7 @@
 }
 \references{
   Baddeley, A.,
-  \ifelse{latex}{\out{M\o ller}}{Moller}, J. and Waagepetersen, R. (2000)
+  \Moller, J. and Waagepetersen, R. (2000)
   Non- and semiparametric estimation of interaction in
   inhomogeneous point patterns.
   \emph{Statistica Neerlandica} \bold{54}, 329--350.
@@ -211,7 +212,7 @@
   Inhomogeneous spatial point processes by location-dependent scaling.
   \emph{Advances in Applied Probability} \bold{35}, 319--336.
 
-  \ifelse{latex}{\out{Proke\u{s}ov{\'{a}}}}{Prokesova}, M.,
+  \Prokesova, M.,
   Hahn, U. and Vedel Jensen, E.B. (2006)
   Statistics for locally scaled point patterns.
   In A. Baddeley, P. Gregori, J. Mateu, R. Stoica and D. Stoyan (eds.)
@@ -232,11 +233,11 @@
   K <- Kscaled(X, lam)
 }
 \author{Ute Hahn,
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+  \adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

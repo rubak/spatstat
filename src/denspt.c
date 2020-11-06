@@ -10,12 +10,15 @@
 
   Calculation of density estimate at data points
 
-  $Revision: 1.13 $     $Date: 2014/04/02 07:30:05 $
+  $Revision: 1.19 $     $Date: 2018/12/18 02:43:11 $
 
   Assumes point pattern is sorted in increasing order of x coordinate
 
   *denspt*     Density estimate at points
   *smoopt*     Smoothed mark values at points
+
+  Copyright (C) Adrian Baddeley, Ege Rubak and Rolf Turner 2001-2018
+  Licence: GNU Public Licence >= 2
 
 */
 
@@ -180,6 +183,7 @@ void smoopt(nxy, x, y, v, self, rmaxi, sig, result)
   if(n == 0) 
     return;
 
+  if(countself != 0) {
   PAIRLOOP({ numer = denom = 0.0; },
 	   { \
 	     wij = exp(-d2/twosig2);		\
@@ -187,12 +191,21 @@ void smoopt(nxy, x, y, v, self, rmaxi, sig, result)
 	     numer += wij * v[j];		\
 	   },					
 	   {					\
-	     if(countself != 0) {		\
-	       numer += 1;			\
-	       denom += v[i];			\
-	     }					\
+	     denom += 1;			\
+	     numer += v[i];			\
 	     result[i] = numer/denom;		\
 	   })
+    } else {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   { \
+	     wij = exp(-d2/twosig2);		\
+	     denom += wij;			\
+	     numer += wij * v[j];		\
+	   },					
+	   {					\
+	     result[i] = numer/denom;		\
+	   })
+    }
  }
 
 
@@ -221,6 +234,7 @@ void wtsmoopt(nxy, x, y, v, self, rmaxi, sig, weight, result)
   if(n == 0) 
     return;
 
+  if(countself != 0) {
   PAIRLOOP({ numer = denom = 0.0; },
 	   {						\
 	     wij = weight[j] * exp(-d2/twosig2);	\
@@ -228,12 +242,21 @@ void wtsmoopt(nxy, x, y, v, self, rmaxi, sig, weight, result)
 	     numer += wij * v[j];			\
 	   },						
 	   {						\
-	     if(countself != 0) {			\
-	       numer += weight[i];			\
-	       denom += weight[i] * v[i];		\
-	     }						\
+	     denom += weight[i];			\
+	     numer += weight[i] * v[i];		\
 	     result[i] = numer/denom;			\
 	   })
+  } else {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   {						\
+	     wij = weight[j] * exp(-d2/twosig2);	\
+	     denom += wij;				\
+	     numer += wij * v[j];			\
+	   },						
+	   {						\
+	     result[i] = numer/denom;			\
+	   })
+    }
 }
 
 /* ------------- anisotropic versions -------------------- */
@@ -264,6 +287,7 @@ void asmoopt(nxy, x, y, v, self, rmaxi, sinv, result)
   if(n == 0) 
     return;
 
+  if(countself != 0) {
   PAIRLOOP({ numer = denom = 0.0; },
 	   {							\
 	     wij = exp(-(dx * (dx * s11 + dy * s12)		\
@@ -272,12 +296,22 @@ void asmoopt(nxy, x, y, v, self, rmaxi, sinv, result)
 	     numer += wij * v[j];				\
 	   },
 	   {					\
-	     if(countself != 0) {		\
-	       numer += 1;			\
-	       denom += v[i];			\
-	     }					\
+	     denom += 1;			\
+	     numer += v[i];			\
 	     result[i] = numer/denom;		\
 	   })
+    } else {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   {							\
+	     wij = exp(-(dx * (dx * s11 + dy * s12)		\
+			 + dy * (dx * s21 + dy * s22))/2.0);	\
+	     denom += wij;					\
+	     numer += wij * v[j];				\
+	   },
+	   {					\
+	     result[i] = numer/denom;		\
+	   })
+    }
 }
 
 
@@ -309,6 +343,7 @@ void awtsmoopt(nxy, x, y, v, self, rmaxi, sinv, weight, result)
   if(n == 0) 
     return;
 
+  if(countself != 0) {
   PAIRLOOP({ numer = denom = 0.0; },
 	   {								\
 	     wij = weight[j] * exp(-(dx * (dx * s11 + dy * s12)		\
@@ -317,11 +352,164 @@ void awtsmoopt(nxy, x, y, v, self, rmaxi, sinv, weight, result)
 	     numer += wij * v[j];					\
 	   },
 	   {					\
-	     if(countself != 0) {		\
-	       numer += weight[i];		\
-	       denom += weight[i] * v[i];	\
-	     }					\
+	     denom += weight[i];		\
+	     numer += weight[i] * v[i];	\
 	     result[i] = numer/denom;		\
 	   })
+    } else {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   {								\
+	     wij = weight[j] * exp(-(dx * (dx * s11 + dy * s12)		\
+				     + dy * (dx * s21 + dy * s22))/2.0); \
+	     denom += wij;						\
+	     numer += wij * v[j];					\
+	   },
+	   {					\
+	     result[i] = numer/denom;		\
+	   })
+    }
 }
 
+/* ----------------- transformed coordinates -------------------- */
+/*
+
+   The following functions assume that x, y have been transformed
+   by the inverse of the variance matrix,
+   and subsequently scaled by 1/sqrt(2) so that
+   the Gaussian density is proportional to exp(-(x^2+y^2)). 
+
+   Constant factor in density is omitted.
+*/
+   
+void Gdenspt(nxy, x, y, rmaxi, result) 
+     /* inputs */
+     int *nxy;         /* number of (x,y) points */
+     double *x, *y;    /* (x,y) coordinates */
+     double *rmaxi;    /* maximum distance at which points contribute */
+     /* output */
+     double *result;   /* vector of computed density values */
+{
+  STD_DECLARATIONS;
+  double resulti;
+  STD_INITIALISE;
+
+  if(n == 0) 
+    return;
+
+  PAIRLOOP( { resulti = 0.0; },
+            { resulti += exp(-d2); } ,
+	    { result[i] = resulti; })
+}
+
+void Gwtdenspt(nxy, x, y, rmaxi, weight, result) 
+     /* inputs */
+     int *nxy;         /* number of (x,y) points */
+     double *x, *y;    /* (x,y) coordinates */
+     double *rmaxi;    /* maximum distance */
+     double *weight;      /* vector of weights */
+     /* output */
+     double *result;    /* vector of weighted density values */
+{
+  STD_DECLARATIONS;
+  double resulti;	
+  STD_INITIALISE;
+
+  if(n == 0) 
+    return;
+
+  PAIRLOOP( { resulti = 0.0; },
+	    { resulti += weight[j] * exp(-d2); },
+	    { result[i] = resulti; } )
+ }
+
+void Gsmoopt(nxy, x, y, v, self, rmaxi, result) 
+     /* inputs */
+     int *nxy;         /* number of (x,y) points */
+     double *x, *y;    /* (x,y) coordinates */
+     double *v;        /* vector of mark values to be smoothed */
+     int *self;       /* 0 if leave-one-out */
+     double *rmaxi;    /* maximum distance at which points contribute */
+     /* output */
+     double *result;   /* vector of computed smoothed values */
+{
+  STD_DECLARATIONS;
+  int countself;
+  double numer, denom, wij; 
+
+  STD_INITIALISE;
+  countself = *self;
+
+  if(n == 0) 
+    return;
+
+  if(countself != 0) {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   { \
+	     wij = exp(-d2);		\
+	     denom += wij;			\
+	     numer += wij * v[j];		\
+	   },					
+	   {					\
+	     denom += 1;			\
+	     numer += v[i];			\
+	     result[i] = numer/denom;		\
+	   })
+    } else {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   { \
+	     wij = exp(-d2);		\
+	     denom += wij;			\
+	     numer += wij * v[j];		\
+	   },					
+	   {					\
+	     result[i] = numer/denom;		\
+	   })
+    }
+ }
+
+
+void Gwtsmoopt(nxy, x, y, v, self, rmaxi, weight, result) 
+     /* inputs */
+     int *nxy;         /* number of (x,y) points */
+     double *x, *y;    /* (x,y) coordinates */
+     double *v;        /* vector of mark values to be smoothed */
+     int *self;       /* 0 if leave-one-out */
+     double *rmaxi;    /* maximum distance */
+     double *weight;      /* vector of weights */
+     /* output */
+     double *result;    /* vector of computed smoothed values */
+{
+  STD_DECLARATIONS;
+  int countself;
+  double numer, denom, wij; 
+
+  STD_INITIALISE;
+  countself = *self;
+
+  if(n == 0) 
+    return;
+
+  if(countself != 0) {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   {						\
+	     wij = weight[j] * exp(-d2);	\
+	     denom += wij;				\
+	     numer += wij * v[j];			\
+	   },						
+	   {						\
+	     denom += weight[i];			\
+	     numer += weight[i] * v[i];		\
+	     result[i] = numer/denom;			\
+	   })
+  } else {
+  PAIRLOOP({ numer = denom = 0.0; },
+	   {						\
+	     wij = weight[j] * exp(-d2);	\
+	     denom += wij;				\
+	     numer += wij * v[j];			\
+	   },						
+	   {						\
+	     result[i] = numer/denom;			\
+	   })
+    }
+}

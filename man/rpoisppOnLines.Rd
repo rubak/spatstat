@@ -6,7 +6,7 @@
   on the line segments.
 }
 \usage{
-rpoisppOnLines(lambda, L, lmax = NULL, ..., nsim=1)
+rpoisppOnLines(lambda, L, lmax = NULL, \dots, nsim=1, drop=TRUE)
 }
 \arguments{
   \item{lambda}{Intensity of the Poisson process.
@@ -17,13 +17,22 @@ rpoisppOnLines(lambda, L, lmax = NULL, ..., nsim=1)
   \item{L}{Line segment pattern (object of class \code{"psp"})
     on which the points should be generated.
   }
-  \item{lmax}{Maximum possible value of \code{lambda}
-    if it is a function or a pixel image.
+  \item{lmax}{
+    Optional upper bound (for increased computational efficiency).
+    A known upper bound for the values of \code{lambda},
+    if \code{lambda} is a function or a pixel image.
+    That is, \code{lmax} should be a number which is 
+    known to be greater than or equal to all values of \code{lambda}. 
   }
   \item{\dots}{Additional arguments passed to \code{lambda} if it is a
     function.
   }
   \item{nsim}{Number of simulated realisations to be generated.}
+  \item{drop}{
+    Logical. If \code{nsim=1} and \code{drop=TRUE} (the default), the
+    result will be a point pattern, rather than a list 
+    containing a point pattern.
+  }
 }
 \details{
   This command generates a Poisson point process on the one-dimensional
@@ -54,7 +63,11 @@ rpoisppOnLines(lambda, L, lmax = NULL, ..., nsim=1)
   a single number, or a numeric vector of the same length as
   \code{lambda}. If \code{lmax} is not
   given, it will be computed approximately, by sampling many values of
-  \code{lambda}. 
+  \code{lambda}.
+
+  If \code{lmax} is given, then it \bold{must} be larger than
+  any possible value of \code{lambda}, otherwise the results of the
+  algorithm will be incorrect.
 }
 \value{
   If \code{nsim = 1}, a point pattern
@@ -98,11 +111,11 @@ rpoisppOnLines(lambda, L, lmax = NULL, ..., nsim=1)
    plot(Y, add=TRUE, pch="+")
   }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{datagen}

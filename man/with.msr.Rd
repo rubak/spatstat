@@ -62,16 +62,12 @@
   an object of any kind.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \seealso{
-  \code{\link{msr}}
+  \code{\link{msr}},
+  \code{\link{split.msr}},
+  \code{\link{measureContinuous}}, \code{\link{measurePositive}}
 }
 \examples{
    X <- rpoispp(function(x,y) { exp(3+3*x) })

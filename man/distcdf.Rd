@@ -49,7 +49,7 @@
   \eqn{
     CDF(r) = Prob(T \le r)
   }{
-    CDF(r) = Prob(T <= r)
+    CDF(r) = Prob(T \le r)
   }
   of the Euclidean distance \eqn{T = \|X_1 - X_2\|}{T = |X1-X2|}
   between two independent random points \eqn{X_1}{X1} and \eqn{X_2}{X2}.
@@ -65,7 +65,8 @@
   in the window \code{W} with a probability density proportional to
   \code{dW}, and the second point \eqn{X_2}{X2} is random in
   a different window \code{V} with probability density proportional
-  to \code{dV}.
+  to \code{dV}. The values of \code{dW} and \code{dV} must be
+  finite and nonnegative.
 
   The calculation is performed by numerical integration of the set covariance
   function \code{\link{setcov}} for uniformly distributed points, and
@@ -95,11 +96,11 @@
  B <- disc()
  plot(distcdf(B))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

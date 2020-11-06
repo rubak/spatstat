@@ -1,4 +1,4 @@
-\name{closing} %DontDeclareMethods
+\name{closing} 
 \alias{closing}
 \alias{closing.owin}
 \alias{closing.ppp}
@@ -68,17 +68,17 @@
   v <- closing(letterR, 0.25)
   plot(v, main="closing")
   plot(letterR, add=TRUE)
+
+  plot(closing(cells, 0.1))
+  points(cells)
 }
 \references{
   Serra, J. (1982)
   Image analysis and mathematical morphology.
   Academic Press.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{math}

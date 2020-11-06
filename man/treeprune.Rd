@@ -34,21 +34,29 @@ treeprune(X, root = 1, level = 0)
   Object of the same kind as \code{X}.
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+\spatstatAuthors
 }
 \seealso{
-  \code{\link{linnet}}
+  \code{\link{treebranchlabels}} for calculating the branch labels.
+  
+  \code{\link{deletebranch}} for removing entire branches.
+  \code{\link{extractbranch}} for extracting entire branches.
+
+  \code{\link{linnet}} for creating networks.
 }
 \examples{
-  example(treebranchlabels)
-  tp <- treeprune(L, 1)
-  plot(tp, add=TRUE, col="blue")
+  # make a simple tree
+  m <- simplenet$m
+  m[8,10] <- m[10,8] <- FALSE
+  L <- linnet(vertices(simplenet), m)
+  plot(L, main="")
+  # compute branch labels 
+  tb <- treebranchlabels(L, 1)
+  tbc <- paste0("[", tb, "]")
+  text(vertices(L), labels=tbc, cex=2)
+  # prune tree 
+  tp <- treeprune(L, root=1, 1)
+  plot(tp, add=TRUE, col="blue", lwd=3)
 }
 \keyword{spatial}
 \keyword{manip}

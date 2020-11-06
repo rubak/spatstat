@@ -30,7 +30,7 @@
   \item{\dots}{
     extra arguments that will be passed to the plotting functions
     \code{\link{plot.default}}, \code{\link{points}} and/or
-    \code{\link{symbols}}.
+    \code{\link{symbols}}. Not all arguments will be recognised.
   }
   \item{clipwin}{
     Optional. A window (object of class \code{"owin"}).
@@ -148,7 +148,7 @@
   This is the \code{plot} method for 
   point pattern datasets (of class \code{"ppp"}, see \code{\link{ppp.object}}).
 
-  First the observation window \code{x$window} is plotted
+  First the observation window \code{Window(x)} is plotted
   (if \code{show.window=TRUE}).
   Then the points themselves are plotted,
   in a fashion that depends on their marks,
@@ -224,18 +224,22 @@
   all points.
   
   The argument \code{cols} determines the colour or colours used to
-  display the points. For an unmarked point pattern, or a
-  marked point pattern with continuous marks, this should be a character string
+  display the points. For an unmarked point pattern,
+  \code{cols} should be a character string
   determining a colour. For a multitype point pattern, \code{cols}
   should be a character vector, of the same length
-  as \code{levels(x$marks)}. The \eqn{i}th level or type will
-  be plotted using colour \code{cols[i]}.
+  as \code{levels(marks(x))}: that is, there is one colour for each
+  possible mark value. The \eqn{i}th level or type will
+  be plotted using colour \code{cols[i]}. For a point pattern with
+  continuous marks, \code{cols} can be either a character string
+  or a character vector specifying colour values: the range of mark
+  values will be mapped to the specified colours.
 
-  If \code{cols} is absent, the colour used to plot \emph{all} the
+  If \code{cols} is absent, the colours used to plot the
   points may be determined by the extra argument \code{fg}
   (for multitype point patterns) or the extra argument \code{col}
-  (for all other cases). Note that \code{col} will also reset the
-  colour of the window.
+  (for all other cases). Note that specifying \code{col} will also
+  apply this colour to the window itself.
 
   The default colour for the points is a semi-transparent grey,
   if this is supported by the plot device. This behaviour can be
@@ -278,14 +282,26 @@
   parameter \code{mar}. Typically, \code{par(mar=rep(0.5, 4))} is
   adequate, if there are no annotations or titles outside the window.
 }
+\section{Drawing coordinate axes and axis labels}{
+  Coordinate axes and axis labels are not drawn, by default.
+  To draw coordinate axes, set \code{axes=TRUE}.
+  To draw axis labels, set \code{ann=TRUE} and give values to the
+  arguments \code{xlab} and \code{ylab}. See the Examples.
+  Only the default style of axis is supported;
+  for more control over the placement and style of axes,
+  use the graphics commands
+  \code{\link[graphics]{axis}} and \code{\link[graphics]{mtext}}.
+}
 \seealso{
-  \code{\link{iplot}},
   \code{\link{ppp.object}},
   \code{\link{plot}},
   \code{\link{par}},
   \code{\link{points}},
+  \code{\link{text.ppp}},
   \code{\link{plot.owin}},
-  \code{\link{symbols}}
+  \code{\link{symbols}}.
+
+  See also the command \code{iplot} in the \pkg{spatstat.gui} package.
 }
 \examples{
    plot(cells)
@@ -326,11 +342,18 @@
    plot(lansing, border="purple", cols="purple", col.main="purple",
                  leg.args=list(col.axis="purple"))
  
-   # controlling PLOT CHARACTERS
+   # controlling PLOT CHARACTERS for multitype pattern
    plot(lansing, chars = 11:16)
    plot(lansing, chars = c("o","h","m",".","o","o"))
 
-   # controlling MARK SCALE
+   ## multitype pattern mapped to symbols
+   plot(amacrine, shape=c("circles", "squares"), size=0.04)
+   plot(amacrine, shape="arrows", direction=c(0,90), size=0.07)
+
+   ## plot trees as trees!
+   plot(lansing, shape="arrows", direction=90, cols=1:6)
+
+   # controlling MARK SCALE for pattern with numeric marks
    plot(longleaf, markscale=0.1)
    plot(longleaf, maxsize=5)
    plot(longleaf, meansize=2)
@@ -358,13 +381,23 @@
    sy <- symbolmap(pch=21, bg=colmap, range=ra)
    plot(longleaf, symap=sy)
 
+   ## or more compactly..
+   plot(longleaf, bg=terrain.colors(20), pch=21, cex=1)
+
+   ## clipping
+   plot(humberside)
+   B <- owin(c(4810, 5190), c(4180, 4430))
+   plot(B, add=TRUE, border="red")
+   plot(humberside, clipwin=B, main="Humberside (clipped)")
+
+   ## coordinate axes and labels
+   plot(humberside, axes=TRUE)
+   plot(humberside,            ann=TRUE, xlab="Easting", ylab="Northing")
+   plot(humberside, axes=TRUE, ann=TRUE, xlab="Easting", ylab="Northing")
 }
 
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{hplot}

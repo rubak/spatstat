@@ -28,18 +28,22 @@
 
   The spatial coordinates in the dataset \code{X} will be re-expressed
   in terms of a new unit of length that is \code{s} times the current
-  unit of length given in \code{X}.
+  unit of length given in \code{X}. The name of the unit of length
+  will also be adjusted. The result is an object of the same type,
+  representing the same data, but expressed in the new units.
+
+  For example if \code{X} is a dataset giving coordinates in metres,
+  then \code{rescale(X,1000)} will take the new unit of length
+  to be 1000 metres.
+  To do this, it will divide the old coordinate values by 1000
+  to obtain coordinates expressed in kilometres, and change the
+  name of the unit of length from \code{"metres"} to \code{"1000 metres"}.
 
   If \code{unitname} is given, it will be taken as the new name of the unit
   of length. It should be a valid name for the
   unit of length, as described in the help for \code{\link{unitname}}.
-
   For example if \code{X} is a dataset giving coordinates in metres,
-  then \code{rescale(X,1000)}
-  will divide the coordinate values by 1000 to obtain coordinates in
-  kilometres, and the unit name will be changed from \code{"metres"}
-  to \code{"1000 metres"}.
-  Similarly \code{rescale(X, 1000, "km")} will divide the coordinate
+  \code{rescale(X, 1000, "km")} will divide the coordinate
   values by 1000 to obtain coordinates in
   kilometres, and the unit name will be changed to \code{"km"}.
 }
@@ -58,7 +62,7 @@ Available methods:
 \code{\link{rescale.owin}},
 \code{\link{rescale.ppp}},
 \code{\link{rescale.psp}}
-and \code{\link{rescale.units}}.
+and \code{\link{rescale.unitname}}.
 
 Other generics: 
 \code{\link{unitname}},
@@ -66,11 +70,8 @@ Other generics:
   \code{\link{rotate}},
   \code{\link{shift}}.
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{math}

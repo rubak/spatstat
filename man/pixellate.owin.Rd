@@ -1,4 +1,4 @@
-\name{pixellate.owin}  %DontDeclareMethods
+\name{pixellate.owin}  
 \Rdversion{1.1}
 \alias{pixellate.owin}
 \title{
@@ -10,7 +10,7 @@
   between the window and each pixel in a raster.
 }
 \usage{
-\method{pixellate}{owin}(x, W = NULL, ...)
+\method{pixellate}{owin}(x, W = NULL, ..., DivideByPixelArea=FALSE)
 }
 \arguments{
   \item{x}{
@@ -23,6 +23,10 @@
   \item{\dots}{
     Optional. Extra arguments passed to \code{\link{as.mask}}
     to determine the pixel raster.
+  }
+  \item{DivideByPixelArea}{
+    Logical value, indicating whether the resulting pixel values
+    should be divided by the pixel area.
   }
 }
 \details{
@@ -74,11 +78,8 @@
    W <- grow.rectangle(as.rectangle(letterR), 0.2)
    plot(pixellate(letterR, W, dimyx=15))
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{manip}

@@ -57,8 +57,15 @@
   objects of class \code{"fii"}).
 }
 \examples{
-fit <- mppm(Wat~x, data=hyperframe(Wat=waterstriders))
-subfits(fit)
+  H <- hyperframe(Wat=waterstriders)
+  fit <- mppm(Wat~x, data=H)
+  subfits(fit)
+
+  H$Wat[[3]] <- rthin(H$Wat[[3]], 0.1)
+  fit2 <- mppm(Wat~x, data=H, random=~1|id)
+  subfits(fit2)
+
+  \testonly{a <- subfits.new(fit)}
 }
 \references{
   Baddeley, A., Rubak, E. and Turner, R. (2015)
@@ -67,16 +74,11 @@ subfits(fit)
 }
 \author{
   Adrian Baddeley, Ida-Maria Sintorn and Leanne Bischoff.
-  Implemented by 
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  Implemented in \pkg{spatstat} by
+  \spatstatAuthors.
 }
 \seealso{
+  \code{\link{mppm}},
   \code{\link{ppm}}
 }
 \keyword{spatial}

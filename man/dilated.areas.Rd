@@ -24,7 +24,10 @@
     Window (object of class \code{"owin"}) inside which the areas
     will be computed, if \code{constrained=TRUE}.
   }
-  \item{\dots}{Ignored.}
+  \item{\dots}{
+    Arguments passed to \code{\link{distmap}} to control the
+    pixel resolution, if \code{exact=FALSE}.
+  }
   \item{constrained}{
     Logical flag indicating whether areas should be restricted
     to the window \code{W}.
@@ -69,11 +72,11 @@
   X <- runifpoint(10)
   a <- dilated.areas(X, c(0.1,0.2), W=square(1), exact=TRUE)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

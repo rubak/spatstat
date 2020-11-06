@@ -41,18 +41,21 @@
 
   It would be wise to check the result by plotting the degree
   of each vertex, as shown in the Examples.
+
+  If \code{X} has marks, then these are stored in
+  the resulting linear network \code{Y <- as.linnet(X)},
+  and can be extracted as \code{marks(as.psp(Y))} or \code{marks(Y$lines)}.
 }
 \value{
 A linear network (object of class \code{"linnet"}).
+
+The result also has an attribute \code{"camefrom"} indicating
+the provenance of each line in the resulting network.
+For example \code{camefrom[3]=2} means that the third line segment
+in the result is a piece of the second segment of \code{X}.
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{linnet}}, \code{\link{selfcut.psp}},
@@ -64,12 +67,18 @@ and Ege Rubak
   B <- superimpose(A, as.psp(simplenet))
 
   # convert to a linear network
-  D <- as.linnet(B)
+  L <- as.linnet(B)
 
   # check validity
-  D
-  plot(D)
-  text(vertices(D), labels=vertexdegree(D))
+  L
+  plot(L)
+  text(vertices(L), labels=vertexdegree(L))
+
+  # show the pieces that came from original segment number 1
+  S <- as.psp(L)
+  (camefrom <- attr(L, "camefrom"))
+  parts <- which(camefrom == 1)
+  plot(S[parts], add=TRUE, col="green", lwd=2)
 }
 \keyword{spatial}
 \keyword{manip}

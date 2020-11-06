@@ -68,20 +68,54 @@ extension \texttt{shp}, for example \texttt{mydata.shp}.
 \section{Helper packages}
 \label{S:helpers}
 
-We'll use two other packages%
-\footnote{In previous versions of \pkg{spatstat},
-  the package \pkg{gpclib} was also needed for some tasks.
-  This is no longer required.}
- to handle shapefile data.
+We'll use two other packages to handle shapefile data.
 
 The \pkg{maptools} package is designed specifically for handling
 file formats for spatial data. It contains 
-facilities for reading and writing files in shapefile format.
+facilities for reading and writing files in shapefile format.%
+\footnote{
+  Some code in \pkg{maptools} is no longer maintained, 
+  and may give you a message recommending that you use the packages 
+  \pkg{rgdal} and \pkg{sf}. However these packages are more difficult
+  to install than \pkg{maptools} because of their software requirements. 
+  So we recommend that you try \pkg{maptools} first. 
+}
 
 The \pkg{sp} package supports a standard set of spatial data types
 in \R. These standard data types can be handled by many other packages,
 so it is useful to convert your spatial data into one of the 
 data types supported by \pkg{sp}.
+
+\section{Caveat about longitude-latitude coordinates}
+
+The shapefile format supports geographical coordinates, usually 
+longitude-latitude coordinates, which specify locations on the curved surface of
+the Earth. 
+However, \texttt{spatstat} deals only with spatial data on 
+a flat two-dimensional plane. 
+
+When shapefile data are converted into \texttt{spatstat} objects,
+longitude and latitude coordinates are (currently)
+treated as $x$ and $y$ coordinates,
+so that the Earth's surface is effectively mapped to a rectangle.
+This mapping distorts distances and areas. 
+
+If your study region is a \emph{small} region of the Earth's surface 
+(about 3 degrees, 180 nautical miles, 200 statute miles, 320 km across) then
+a reasonable approach is to use the latitude and longitude as 
+$x$ and $y$ coordinates, after multiplying the longitude coordinates by the 
+cosine of the latitude of the centre of the region. This will
+approximately preserve areas and distances. 
+This calculation is a simple example of 
+a \emph{geographical projection} and there are some much better 
+projections available. It may be wise to use another package
+to perform the appropriate projection for you, and then to convert
+the projected data into \texttt{spatstat} objects.
+
+If your study region is a large part of the sphere, then your data 
+may not be amenable to the techniques provided by \texttt{spatstat}
+because the geometry is fundamentally different.
+Please consider the extension package \texttt{spatstat.sphere}.
 
 \section{How to read shapefiles into \pkg{spatstat}} 
 
@@ -90,7 +124,7 @@ To read shapefile data into \pkg{spatstat}, you follow two steps:
 \item 
   using the facilities of \pkg{maptools}, read the shapefiles
   and store the data in one of the standard formats supported by \pkg{sp}.
-\item 
+\item
   convert the \pkg{sp} data type into one of the data types
   supported by \pkg{spatstat}.
 \end{enumerate}
@@ -111,6 +145,11 @@ using \texttt{readShapeSpatial}, for example
 <<eval=FALSE>>=
 x <- readShapeSpatial("mydata.shp")
 @ 
+In recent versions of \pkg{maptools} you may get a warning, 
+saying that this code is no longer supported,
+and recommending the packages \pkg{rgdal} and \pkg{sf}. 
+As far as we know, this warning is premature, as the code still 
+works fine!
 \item 
 To find out what kind of spatial objects are represented by the dataset,
 inspect its class:
@@ -156,12 +195,18 @@ To convert the dataset to an object in the
 \pkg{spatstat} package, the procedure depends on the 
 type of data, as explained below. 
 
+Both packages \pkg{maptools} and \pkg{spatstat} must be \textbf{loaded}
+in order to convert the data.
+
 \subsubsection{Objects of class \texttt{SpatialPoints}}
 
 An object \texttt{x} of class \texttt{SpatialPoints}
 represents a spatial point pattern.
 Use \verb!as(x, "ppp")! or \texttt{as.ppp(x)} to convert it to a 
 spatial point pattern in \pkg{spatstat}.
+
+(The conversion is performed by \texttt{as.ppp.SpatialPoints},
+a function in \pkg{maptools}.)
 
 The window for the point pattern will be taken from
 the bounding box of the points. You will probably wish to change this window,
@@ -190,6 +235,10 @@ become the \texttt{marks} of the point pattern \texttt{z}.
 <<eval=FALSE>>=
 y <- as(x, "ppp")
 @ 
+
+(The conversion is performed by \texttt{as.ppp.SpatialPointsDataFrame},
+a function in \pkg{maptools}. So the \pkg{maptools} and \pkg{spatstat}
+packages must be loaded in order for this to work.)
 
 Before the conversion you can extract the
 data frame of auxiliary data by 
@@ -253,6 +302,10 @@ there are several things that you might want to do:
 out <- lapply(x@lines, function(z) { lapply(z@Lines, as.psp) })
 @ 
 
+(The conversion is performed by \texttt{as.psp.SpatialLines},
+a function in \pkg{maptools}. So the \pkg{maptools} and \pkg{spatstat}
+packages must be loaded in order for this to work.)
+
 The result will be a \textbf{list of lists} of objects of class \texttt{psp}.
 Each one of these objects represents a connected curve,
 although the \pkg{spatstat} package does not know that.
@@ -260,7 +313,7 @@ The list structure will reflect the list structure of the original
 \texttt{SpatialLines} object \texttt{x}. If that's not what you want,
 then use \verb!curvelist <- do.call("c", out)! or
 <<eval=FALSE>>=
-curvegroup <- lapply(out, function(z) { do.call("superimposePSP", z)})
+curvegroup <- lapply(out, function(z) { do.call("superimpose", z)})
 @ 
 to collapse the list-of-lists-of-\texttt{psp}'s 
 into a list-of-\texttt{psp}'s. In the first case, \texttt{curvelist[[i]]}
@@ -273,6 +326,9 @@ the \texttt{i}-th group of connected curves (for example the
 
 The window for the spatial line segment pattern can be specified
 as an argument \texttt{window} to the function \texttt{as.psp}.
+
+(The conversion is performed by \texttt{as.psp.SpatialLines}
+or \texttt{as.psp.Lines}, which are functions in \pkg{maptools}.)
 
 \subsubsection{Objects of class \texttt{SpatialLinesDataFrame}}
 
@@ -310,6 +366,10 @@ The result is a list-of-lists-of-\texttt{psp}'s.
 See the previous subsection for explanation on how to 
 change this using \texttt{c()} or \texttt{superimposePSP}.
 \end{enumerate}
+
+(The conversion is performed by \texttt{as.psp.SpatialLines},
+a function in \pkg{maptools}. So the \pkg{maptools} and \pkg{spatstat}
+packages must be loaded in order for this to work.)
 
 In either case, 
 the mark variables attached to a particular \emph{group of connected lines}
@@ -390,6 +450,10 @@ windows <- lapply(regions, as.owin)
 te <- tess(tiles=windows)
 @ 
 \end{enumerate}
+
+(The conversion is performed by \texttt{as.owin.SpatialPolygons},
+a function in \pkg{maptools}. So the \pkg{maptools} and \pkg{spatstat}
+packages must be loaded in order for this to work.)
 
 {\bf The following is different from what happened in
   previous versions of \pkg{spatstat}} (prior to version \texttt{1.36-0}.)

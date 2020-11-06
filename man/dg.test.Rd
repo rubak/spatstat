@@ -11,7 +11,7 @@
 dg.test(X, \dots,
         exponent = 2, nsim=19, nsimsub=nsim-1,
         alternative=c("two.sided", "less", "greater"),
-        interpolate = FALSE,
+        reuse = TRUE, leaveout=1, interpolate = FALSE,
         savefuns=FALSE, savepatterns=FALSE,
         verbose = TRUE)
 }
@@ -19,7 +19,8 @@ dg.test(X, \dots,
   \item{X}{
     Either a point pattern dataset (object of class \code{"ppp"},
     \code{"lpp"} or \code{"pp3"}) or a fitted point process model
-    (object of class \code{"ppm"}, \code{"kppm"} or \code{"slrm"}).
+    (object of class \code{"ppm"}, \code{"kppm"}, \code{"lppm"}
+    or \code{"slrm"}).
   }
   \item{\dots}{
     Arguments passed to \code{\link{dclf.test}} or
@@ -27,8 +28,8 @@ dg.test(X, \dots,
     control the conduct of the test.
     Useful arguments include \code{fun} to determine the summary
     function, \code{rinterval} to determine the range of
-    \eqn{r} values used in the test, and
-    \code{verbose=FALSE} to turn off the messages.
+    \eqn{r} values used in the test, 
+    and \code{use.theory} described under Details. 
   }
   \item{exponent}{
     Exponent used in the test statistic. Use \code{exponent=2}
@@ -52,6 +53,16 @@ dg.test(X, \dots,
     If \code{alternative="less"} the alternative hypothesis is that the
     true value of the summary function is lower than the theoretical value.
   }
+  \item{reuse}{
+    Logical value indicating whether to re-use the first stage
+    simulations at the second stage, as described by Dao and Genton (2014).
+  }
+  \item{leaveout}{
+    Optional integer 0, 1 or 2 indicating how to calculate the
+    deviation between the observed summary function and the
+    nominal reference value, when the reference value must be estimated
+    by simulation. See Details.
+  }
   \item{interpolate}{
     Logical value indicating whether to interpolate the distribution of
     the test statistic by kernel smoothing, as described in
@@ -71,11 +82,31 @@ dg.test(X, \dots,
 }
 \details{
   Performs the Dao-Genton (2014) adjusted Monte Carlo goodness-of-fit
-  test, in the modified form described by Baddeley et al (2015).
+  test, in the equivalent form described by Baddeley et al (2014).
   
   If \code{X} is a point pattern, the null hypothesis is CSR.
 
   If \code{X} is a fitted model, the null hypothesis is that model.
+
+  The argument \code{use.theory} passed to \code{\link{envelope}}
+  determines whether to compare the summary function for the data
+  to its theoretical value for CSR (\code{use.theory=TRUE})
+  or to the sample mean of simulations from CSR
+  (\code{use.theory=FALSE}).
+
+  The argument \code{leaveout} specifies how to calculate the
+  discrepancy between the summary function for the data and the
+  nominal reference value, when the reference value must be estimated
+  by simulation. The values \code{leaveout=0} and
+  \code{leaveout=1} are both algebraically equivalent (Baddeley et al, 2014,
+  Appendix) to computing the difference \code{observed - reference}
+  where the \code{reference} is the mean of simulated values.
+  The value \code{leaveout=2} gives the leave-two-out discrepancy
+  proposed by Dao and Genton (2014).
+
+  The Dao-Genton test is biased when the significance level is very small
+  (small \eqn{p}-values are not reliable) and
+  we recommend \code{\link{bits.test}} in this case.
 }
 \value{
   A hypothesis test (object of class \code{"htest"}
@@ -88,24 +119,22 @@ dg.test(X, \dots,
   \emph{Journal of Graphical and Computational Statistics}
   \bold{23}, 497--517.
 
+  Baddeley, A., Diggle, P.J., Hardegen, A., Lawrence, T., Milne,
+  R.K. and Nair, G. (2014) On tests of spatial pattern based on
+  simulation envelopes. \emph{Ecological Monographs} \bold{84} (3) 477--489.
+  
   Baddeley, A., Hardegen, A., Lawrence, L., 
-  Milne, R.K., Nair, G.M. and Rakshit, S. (2015)
-  Pushing the envelope: extensions of graphical
-  Monte Carlo tests. Submitted for publication.
+  Milne, R.K., Nair, G.M. and Rakshit, S. (2017)
+  On two-stage Monte Carlo tests of composite hypotheses.
+  \emph{Computational Statistics and Data Analysis}, in press.
 }
 \author{
   Adrian Baddeley, Andrew Hardegen, Tom Lawrence,
   Robin Milne, Gopalan Nair and Suman Rakshit.
-  Implemented by
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+  Implemented by \spatstatAuthors.
 }
 \seealso{
+  \code{\link{bits.test}},
   \code{\link{dclf.test}},
   \code{\link{mad.test}}
 }

@@ -2,6 +2,9 @@
 \alias{auc}
 \alias{auc.ppp}
 \alias{auc.ppm}
+\alias{auc.kppm}
+\alias{auc.lpp}
+\alias{auc.lppm}
 \title{
   Area Under ROC Curve
 }
@@ -15,11 +18,18 @@ auc(X, \dots)
 \method{auc}{ppp}(X, covariate, \dots, high = TRUE)
 
 \method{auc}{ppm}(X, \dots)
+
+\method{auc}{kppm}(X, \dots)
+
+\method{auc}{lpp}(X, covariate, \dots, high = TRUE)
+
+\method{auc}{lppm}(X, \dots)
 }
 \arguments{
   \item{X}{
-    Point pattern (object of class \code{"ppp"})
-    or fitted point process model (object of class \code{"ppm"}).
+    Point pattern (object of class \code{"ppp"} or \code{"lpp"})
+    or fitted point process model (object of class \code{"ppm"}
+    or \code{"kppm"} or \code{"lppm"}).
   }
   \item{covariate}{
     Spatial covariate. Either a \code{function(x,y)},
@@ -60,7 +70,7 @@ auc(X, \dots)
   into areas of high and low density of points.
   Suppose \eqn{\lambda(u)}{\lambda(u)} is the intensity function of the model.
   The AUC is the probability that
-  \eqn{\lambda(x_i) > \lambda(U)}{lambda(x[i]) > lambda(U)}.
+  \eqn{\lambda(x_i) > \lambda(U)}{\lambda(x[i]) > \lambda(U)}.
   That is, AUC is the probability that a randomly-selected data point
   has higher predicted intensity than does a randomly-selected spatial
   location.
@@ -68,7 +78,11 @@ auc(X, \dots)
   (Lobo et al, 2007).
 }
 \value{
-  A numeric vector of length 2 giving the AUC value 
+  Numeric.
+  For \code{auc.ppp} and \code{auc.lpp}, the result is a single number
+  giving the AUC value.
+  For \code{auc.ppm}, \code{auc.kppm} and \code{auc.lppm}, the result is a 
+  numeric vector of length 2 giving the AUC value 
   and the theoretically expected AUC value for this model.
 }
 \references{
@@ -87,13 +101,7 @@ auc(X, \dots)
   \ifelse{latex}{\out{Birkh{\"a}user}}{Birkhauser}, Basel.
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{roc}}

@@ -50,14 +50,17 @@ which can then be fitted to point pattern data.
 
   The interaction parameter \eqn{\gamma}{gamma} may take any
   positive value (unlike the case for the Strauss process).
-  If \eqn{\gamma = 1}{gamma = 1}, the process reduces to a classical
-  hard core process.
   If \eqn{\gamma < 1}{gamma < 1},
   the model describes an ``ordered'' or ``inhibitive'' pattern.
   If \eqn{\gamma > 1}{gamma > 1},
   the model is ``ordered'' or ``inhibitive'' up to the distance
   \eqn{h}, but has an ``attraction'' between points lying at
   distances in the range between \eqn{h} and \eqn{r}.
+
+  If \eqn{\gamma = 1}{gamma = 1}, the process reduces to a classical
+  hard core process with hard core distance \eqn{h}.
+  If \eqn{\gamma = 0}{gamma = 0}, the process reduces to a classical
+  hard core process with hard core distance \eqn{r}.
   
   The function \code{\link{ppm}()}, which fits point process models to 
   point pattern data, requires an argument 
@@ -94,7 +97,7 @@ which can then be fitted to point pattern data.
 
   Strauss, D.J. (1975)
   A model for clustering.
-  \emph{Biometrika} \bold{63}, 467--475.
+  \emph{Biometrika} \bold{62}, 467--475.
 }
 \examples{
    StraussHard(r=1,hc=0.02)
@@ -111,11 +114,11 @@ which can then be fitted to point pattern data.
    # fit a nonstationary Strauss/hard core process
    # with log-cubic polynomial trend
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{models}

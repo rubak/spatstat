@@ -4,7 +4,7 @@
 #	A class 'ppp' to define point patterns
 #	observed in arbitrary windows in two dimensions.
 #
-#	$Revision: 4.106 $	$Date: 2015/08/17 07:07:37 $
+#	$Revision: 4.113 $	$Date: 2020/05/03 03:10:05 $
 #
 #	A point pattern contains the following entries:	
 #
@@ -24,7 +24,8 @@
 #			'marks' attached to the corresponding points.	
 #	
 #--------------------------------------------------------------------------
-ppp <- function(x, y, ..., window, marks, check=TRUE, drop=TRUE) {
+ppp <- function(x, y, ..., window, marks,
+                check=TRUE, checkdup=check, drop=TRUE) {
   # Constructs an object of class 'ppp'
   #
   if(!missing(window))
@@ -42,15 +43,24 @@ ppp <- function(x, y, ..., window, marks, check=TRUE, drop=TRUE) {
   # validate x, y coordinates
   stopifnot(is.numeric(x))
   stopifnot(is.numeric(y))
-  ok <- is.finite(x) & is.finite(y)
-  if(any(!ok)) {
-    nbg <- is.na(x) | is.na(y)
-    if(any(nbg)) {
-      howmany <- if(all(nbg)) "all" else paste(sum(nbg),  "out of", length(nbg))
-      stop(paste(howmany, "coordinate values are NA or NaN"))
-    }
-    howmany <- if(!any(ok)) "all" else paste(sum(!ok),  "out of", length(ok))
-    stop(paste(howmany, "coordinate values are infinite"))
+  good <- is.finite(x) & is.finite(y)
+  if(naughty <- !all(good)) {
+    #' bad values will be discarded
+    nbad <- sum(!good)
+    nna <- sum(is.na(x) | is.na(y))
+    ninf <- nbad - nna
+    if(nna > 0) 
+      warning(paste(nna,  "out of", n, ngettext(n, "point", "points"),
+                    "had NA or NaN coordinate values, and",
+                    ngettext(nna, "was", "were"), "discarded"))
+    if(ninf > 0) 
+      warning(paste(ninf,  "out of", n, ngettext(n, "point", "points"),
+                    "had infinite coordinate values, and",
+                    ngettext(ninf, "was", "were"), "discarded"))
+    #' chuck out
+    x <- x[good]
+    y <- y[good]
+    n <- sum(good)
   }
 
   names(x) <- NULL
@@ -63,7 +73,8 @@ ppp <- function(x, y, ..., window, marks, check=TRUE, drop=TRUE) {
     if(nout > 0) {
       warning(paste(nout,
                     ngettext(nout, "point was", "points were"),
-                    "rejected as lying outside the specified window"))
+                    "rejected as lying outside the specified window"),
+              call.=FALSE)
       rr <- ripras(x,y)
       bb <- boundingbox(x,y)
       bb <- boundingbox(rr, bb, window)
@@ -100,9 +111,14 @@ ppp <- function(x, y, ..., window, marks, check=TRUE, drop=TRUE) {
   } else if(is.data.frame(marks)) {
     # data frame of marks
     pp$markformat <- "dataframe"
+    if(naughty) {
+      #' remove marks attached to discarded points with non-finite coordinates
+      marks <- marks[good, ]
+    }
     if(nout > 0) {
-      marks <- marks[ok, ]
+      #' sequester marks of points falling outside window
       marks(rejects) <- marks[!ok,]
+      marks <- marks[ok, ]
     }
     if(nrow(marks) != n)
       stop("number of rows of marks != length of x and y")
@@ -118,7 +134,12 @@ ppp <- function(x, y, ..., window, marks, check=TRUE, drop=TRUE) {
       stop("Format of marks not understood")
     # OK, it's a vector or factor
     pp$markformat <- "vector"
+    if(naughty) {
+      #' remove marks attached to discarded points with non-finite coordinates
+      marks <- marks[good]
+    }
     if(nout > 0) {
+      #' sequester marks of points falling outside window
       marks(rejects) <- marks[!ok]
       marks <- marks[ok]
     }
@@ -128,8 +149,8 @@ ppp <- function(x, y, ..., window, marks, check=TRUE, drop=TRUE) {
     pp$marks <- marks
   }
   class(pp) <- "ppp"
-  if(check && anyDuplicated(pp))
-    warning("data contain duplicated points")
+  if(checkdup && anyDuplicated(pp))
+    warning("data contain duplicated points", call.=FALSE)
   if(nout > 0) 
     attr(pp, "rejects") <- rejects
   pp
@@ -159,6 +180,7 @@ as.ppp.quad <- function(X, ..., fatal=TRUE) {
 }
 
 as.ppp.data.frame <- function(X, W = NULL, ..., fatal=TRUE) {
+  X <- as.data.frame(X) #' swim against the tidyverse
   check <- resolve.defaults(list(...), list(check=TRUE))$check
   if(ncol(X) < 2) 
     return(complaining("X must have at least two columns",
@@ -298,6 +320,8 @@ cobble.xy <- function(x, y, f=ripras, fatal=TRUE, ...) {
             # i is a window
             window <- i
             if(clip) window <- intersect.owin(window, x$window)
+            if(is.vanilla(unitname(window)))
+              unitname(window) <- unitname(x)
             ok <- inside.owin(x$x, x$y, window)
             x <- ppp(x$x[ok], x$y[ok], window=window, #SIC
                      marks=marksubset(x$marks, ok),
@@ -322,7 +346,7 @@ cobble.xy <- function(x, y, f=ripras, fatal=TRUE, ...) {
             if(nx == 0)
               return(x)
             subset <- seq_len(nx)[i]
-            if(any(is.na(subset)))
+            if(anyNA(subset))
               stop("Index out of bounds in [.ppp", call.=FALSE)
             x <- ppp(x$x[subset], x$y[subset], window=x$window,
                      marks=marksubset(x$marks, subset),
@@ -334,17 +358,22 @@ cobble.xy <- function(x, y, f=ripras, fatal=TRUE, ...) {
           x <- x[j]   # invokes code above
 
         if(drop) {
+          #' drop unused factor levels
           mx <- x$marks
           switch(markformat(mx),
                  none = { },
                  vector = {
                    if(is.factor(mx))
-                     marks(x) <- factor(mx)
+                     marks(x) <- factor(mx) # this preserves order of levels
                  },
                  dataframe = {
-                   isfac <- sapply(mx, is.factor)
-                   if(any(isfac))
-                     mx[, isfac] <- lapply(mx[, isfac], factor)
+                   #' must be an actual data frame, not a matrix
+                   if(is.data.frame(mx)) {
+                     ml <- as.list(mx)
+                     isfac <- sapply(ml, is.factor)
+                     if(any(isfac))
+                       mx[, isfac] <- as.data.frame(lapply(ml[isfac], factor))
+                   }
                  },
                  hyperframe = { })
         }
@@ -471,7 +500,9 @@ print.ppp <- function(x, ...) {
   }
   if(waxlyrical('extras', terselevel) &&
      !is.null(info <- attr(x, "info")) && inherits(info, "rmhInfoList"))
-    splat("Pattern was generated by Metropolis-Hastings simulation.")
+    splat("Pattern was generated by",
+          if(is.poisson(info$model)) "Poisson" else "Metropolis-Hastings",
+	  "simulation.")
   return(invisible(NULL))
 }
 
@@ -660,3 +691,44 @@ domain.ppp <- Window.ppp <- function(X, ...) { as.owin(X) }
   return(X)
 }
 
+#' convert any appropriate subset index for any kind of point pattern
+#' to a logical vector
+
+ppsubset <- function(X, I, Iname, fatal=FALSE) {
+  if(missing(Iname))
+    Iname <- deparse(substitute(I))
+  # I could be a window or logical image
+  if(is.im(I))
+    I <- solutionset(I)
+  if((is.ppp(X) || is.lpp(X)) && is.owin(I)) {
+    I <- inside.owin(X, w=I)
+    return(I)
+  }
+  if((is.pp3(X) && inherits(I, "box3")) ||
+     (is.ppx(X) && inherits(I, "boxx"))) {
+    I <- inside.boxx(X, w=I)
+    return(I)
+  }
+  # I could be a function to be applied to X
+  if(is.function(I)) {
+    I <- I(X)
+    if(!is.vector(I)) {
+      whinge <- paste("Function", sQuote(Iname), "did not return a vector")
+      if(fatal) stop(whinge, call.=FALSE)
+      warning(whinge, call.=FALSE)
+      return(NULL)
+    }
+  }      
+  # I is now a subset index: convert to logical
+  I <- grokIndexVector(I, npoints(X))$strict$lo
+
+  if(anyNA(I)) {
+    #' illegal entries
+    whinge <- paste("Indices in", sQuote(Iname), "exceed array limits")
+    if(fatal) stop(whinge, call.=FALSE)
+    warning(whinge, call.=FALSE)
+    return(NULL)
+  }
+
+  return(I)
+}

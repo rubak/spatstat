@@ -1,0 +1,578 @@
+Change log from 1.54-0 to 1.55-0
+================================
+
+23 nov 2017
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Initialised as version 1.54-0.001
+	Nicknamed 'Post-truth'
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 nov 2017
+
+   leverage.R
+	Buglet fix in plot.leverage.ppm
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.002
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+04 dec 2017
+
+   lurking.R
+   spatstat-internal.Rd
+	New method print.lurk
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.003
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+05 dec 2017
+
+   lurking.R
+   lurking.Rd
+	lurking() is now generic, with methods for ppm and ppp
+	
+   DESCRIPTION
+   NEWS
+	version 1.54-0.004
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+06 dec 2017
+
+   lurking.R
+   lurking.Rd
+	New internal argument 'saveworking'.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.005
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+07 dec 2017
+
+   lurking.R
+   residppm.R
+	Tweaks and minor fixes
+
+   ppmclass.R
+	Bug fix in model.frame.ppm and model.matrix.ppm
+	in handling the result of subfits().
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname: 'The Dog That Ate My Homework'
+	version 1.54-0.006
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   ppmclass.R
+	Further bug fix
+	
+   DESCRIPTION
+   NEWS
+	version 1.54-0.007
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   ppmclass.R
+   spatstat-internal.Rd
+	Yet another bug fix and some improvements
+
+   subfits.R
+	subfit objects now have an internal value 'scrambled'
+	and also save the scrambled version of glmdata
+	
+   ppmclass.R
+	model.matrix.ppm handles the 'scrambled' and 'unscrambled' data
+
+   lurkmppm.R [New file]
+   lurking.mppm.Rd [New file]
+   	Lurking variable plot for mppm objects.
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Cigarettes and Whisky and Bugs in Software'
+	version 1.54-0.008
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 dec 2017
+
+   lurking.R
+   lurking.Rd
+	Rearranged argument list.
+	More internal/secret arguments.
+	
+   lurkmppm.R
+   lurking.mppm.Rd
+	New argument 'separate'.
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Holy Hand Grenade'.
+	version 1.54-0.009
+
+------------- passed R-3.4.2 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+09 dec 2017
+
+   lurkmppm.R
+	buglet fix in plot parameters
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.010
+
++++++++++++++ installed R-3.4.3 ++++++++++++++++++++++
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+10 dec 2017
+
+   vcov.ppm.R
+	New secret argument 'modmat' = model matrix
+	(coding not finished - has conflict with deltasuffstat)
+	
+   mppm.R
+   model.matrix.mppm.Rd [New file]
+   	New method
+
+11 dec 2017
+
+   vcov.mppm.R
+	Completely revised algorithm
+
+   mppm.R
+	Fixed scoping problem
+
+   subfits.R
+	Bug fixes
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Plucky Comic Relief'.
+	version 1.54-0.011
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+12 dec 2017
+
+   leverage.R
+   spatstat-internal.Rd
+	Result of ppmInfluence is now of class 'ppmInfluence'
+	New methods for this class for 'influence', 'leverage', 'dfbetas'
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.012
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   leverage.R
+   spatstat-internal.Rd
+   leverage.ppm.Rd
+   dfbetas.ppm.Rd
+	Increased default resolution of image components.
+	ppmInfluenceEngine now has arguments 'dimyx' and 'eps'
+	to control resolution.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.013
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 dec 2017
+
+   simulate.detPPF.R
+   simulate.dppm.Rd
+	Bug fix when nsim > 1 and dimension > 2
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.014
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+14 dec 2017
+
+   simulate.detPPF.R
+	Bug fix (Ege)
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.015
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+18 dec 2017
+
+   lintess.R
+	Nitpick in print.lintess
+
+29 dec 2017
+
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.016
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+30 dec 2017
+
+  plot.ppp.R
+	Removed old warning about mark scale.
+
+  mpl.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'mpl'
+
+  density.ppp.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'ksmooth.ppp'
+
+  plot.fv.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'conspire'
+
+  superimpose.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'superimposePSP'
+	
+  boundingbox.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'bounding.box'
+
+  dclftest.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'clf.test'
+
+  hyperframe.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'eval.hyper'
+
+  smoothfv.R
+  smooth.ppp.R
+  spatstat-deprecated.Rd
+        Deleted deprecated functions 'smooth.fv', 'smooth.ppp'
+
+  measures.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'smooth.msr'
+
+  rshift.R
+  spatstat-deprecated.Rd
+        Deleted deprecated function 'rtoro'
+
+  plot.ssf.Rd
+	Corrected cross-reference.
+  
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	nickname: "Auld Lang Cosyne"
+	version 1.54-0.017
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+31 dec 2017
+
+   leverage.R
+   plot.leverage.ppm.Rd
+	persp.leverage.ppm has new argument 'zlab'.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.018
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+08 jan 2018
+
+   funxy.R
+   spatstat-internal.Rd
+	summary.funxy now returns an object of class summary.funxy
+	New method print.summary.funxy
+
+   distfun.R
+   spatstat-internal.Rd
+	New methods summary.distfun and print.summary.distfun
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nicknamed 'Stable Genius Software'
+	version 1.54-0.019
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   leverage.R
+	Leverage calculation now includes the result of 'nnmark'.
+
+   leverage.R
+   plot.leverage.ppm.Rd
+   as.im.Rd
+	New argument 'what' added to plot.leverage.ppm,
+	persp.leverage.ppm and as.im.leverage.ppm
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	version 1.54-0.020
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+13 jan 2018
+
+   predict.ppm.R
+   predict.ppm.Rd
+	New arguments 'dimyx' and 'eps'
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	version 1.54-0.021
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   auc.Rd
+	Minor correction.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.022
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+15 jan 2018
+
+   cdftest.R
+   bermantest.R
+   moribund.Rd [Deleted file]
+   spatstat-deprecated.Rd
+   	Removed deprecated functions.
+
+   leverage.R
+	Trying a better choice of 'smallsigma'.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.023
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+16 jan 2018
+
+   demo/spatstat.R
+	Removed calls to deprecated functions.
+	Added more examples on linear networks.
+	
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Throttling State'
+	version 1.54-0.024
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+17 jan 2018
+
+   bermantest.R
+   spatstat-internal.Rd
+	New internal function 'bermantestCalc'
+
+   cdftest.R
+	Removed another deprecated function.
+	
+   DESCRIPTION
+   NEWS
+	version 1.54-0.025
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+18 jan 2018
+
+   nnmap.R
+	Bug fix.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.026
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   smooth.ppp.R
+	Bug fix.
+
+   Smooth.ppp.Rd
+	Added example
+	
+   tests/density.R
+	Added test for bug.
+	
+   DESCRIPTION
+   NEWS
+	version 1.54-0.027
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+   leverage.R
+   plot.leverage.ppm.Rd
+	New method 'contour.leverage.ppm'.
+	Harmonised with arguments of plot method.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.028
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+22 jan 2018
+
+   leverage.R
+	Buglet fix in plot.leverage.ppm
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.029
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+23 jan 2018
+
+   clip.psp.R
+	Accelerated clippoly.psp
+
+   test.crossing.psp.Rd [New file]
+   spatstat-internal.Rd
+	Documented test.crossing.psp and test.selfcrossing.psp
+	
+   DESCRIPTION
+   NEWS
+	version 1.54-0.030
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+24 jan 2018
+
+   ppmclass.R
+   spatstat-internal.Rd
+	New internal function 'hasglmfit'
+	
+   leverage.R
+	Tweak to avoid ugly warning
+
+   measures.R
+   spatstat-internal.Rd
+	New method 'summary.msr', currently equivalent to print.msr
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.031
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
+25 jan 2018
+
+   updates.Rnw
+	Updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+	version 1.54-0.032
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------
+
++++++++++++++ passed 'make bookcheck'  +++++++++++++++
++++++++++++++ passed R-devel CMD check +++++++++++++++
+                 (2018-01-24 r74157)
+
+29 jan 2018
+
+  DESCRIPTION
+  NEWS
+  Nickname.txt
+        version 1.55-0 for release
+        nickname: "Stunned Mullet"
+
+------------- passed R-3.4.3 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- committed to GitHub      ---------------

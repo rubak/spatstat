@@ -1,6 +1,6 @@
 #' Dominic Schuhmacher's idea
 #'
-#' $Revision: 1.12 $ $Date: 2015/01/19 11:23:04 $
+#' $Revision: 1.17 $ $Date: 2019/11/15 07:12:52 $
 #'
 
 clickppp <- local({
@@ -14,12 +14,14 @@ clickppp <- local({
             "exit: press ESC or another mouse button")
     if(is.null(main))
       main <- instructions
-  
+    
+
     ####  single type #########################
     if(is.null(types)) {
       plot(win, add=add, main=main, invert=TRUE)
       if(!is.null(hook))
         plot(hook, add=TRUE)
+      splat("Ready to click..")
       if(!is.null(n))
         xy <- spatstatLocator(n=n, ...)
       else
@@ -39,8 +41,8 @@ clickppp <- local({
     
     ftypes <- factor(types, levels=types)
     #' input points of type 1 
-    X <- getem(ftypes[1], instructions, n=n, win=win, add=add, ..., pch=1)
-    X <- X %mark% ftypes[1]
+    X <- getem(ftypes[1L], instructions, n=n, win=win, add=add, ..., pch=1)
+    X <- X %mark% ftypes[1L]
     #' input points of types 2, 3, ... in turn
     naughty <- FALSE
     for(i in 2:length(types)) {
@@ -72,32 +74,14 @@ clickppp <- local({
 
   getem <- function(i, instr, ...) {
     main <- paste("Points of type", sQuote(i), "\n", instr)
-    do.call("clickppp", resolve.defaults(list(...), list(main=main)))
+    do.call(clickppp, resolve.defaults(list(...), list(main=main)))
   }
 
   clickppp
 })
 
 
-spatstatLocator <- function(n, ...) {
-  #' remedy for failure of locator(type="p") in RStudio
-  if(!identical(TRUE, dev.capabilities()$locator))
-    stop("Sorry, this graphics device does not support the locator() function")
-  res <- list(x=numeric(0), y = numeric(0))
-  i <- 1
-  if(missing(n)) n <- Inf
-  while(i<=n){
-    tmp <- locator(n=1)
-    if(is.null(tmp)) return(res)
-    points(tmp, ...)
-    res$x <- c(res$x,tmp$x)
-    res$y <- c(res$y,tmp$y)
-    i <- i+1
-  }
-  return(res)
-}
-  
 clickdist <- function() {
   a <- spatstatLocator(2)
-  return(pairdist(a)[1,2])
+  return(pairdist(a)[1L,2L])
 }

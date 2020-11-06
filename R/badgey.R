@@ -2,7 +2,7 @@
 #
 #    badgey.S
 #
-#    $Revision: 1.13 $	$Date: 2014/02/07 04:44:47 $
+#    $Revision: 1.17 $	$Date: 2018/03/15 07:37:41 $
 #
 #    Hybrid Geyer process
 #
@@ -47,6 +47,7 @@ BadGey <- local({
                     },
          par      = list(r = NULL, sat=NULL), # to fill in later
          parnames = c("interaction radii", "saturation parameters"),
+         hasInf   = FALSE,
          init     = function(self) {
                       r <- self$par$r
                       sat <- self$par$sat
@@ -81,7 +82,7 @@ BadGey <- local({
            #   less than 1, if sat = Inf
            gamma <- (self$interpret)(coeffs, self)$param$gammas
            sat <- self$par$sat
-           if(any(is.na(gamma)))
+           if(anyNA(gamma))
              return(FALSE)
            return(all((is.finite(gamma) | sat == 0)
                       & (gamma <= 1 | sat != Inf)))
@@ -138,7 +139,7 @@ BadGey <- local({
              r <- rep.int(r, length(sat))
            else if(length(sat) == 1)
              sat <- rep.int(sat, length(r))
-           else stop("lengths or r and sat do not match")
+           else stop("lengths of r and sat do not match")
          }
          # first ensure all data points are in U
          nX <- npoints(X)
@@ -148,7 +149,7 @@ BadGey <- local({
            # no data points currently included 
            missingdata <- rep.int(TRUE, nX)
          } else {
-           Xused <- EqualPairs[,1]
+           Xused <- EqualPairs[,1L]
            missingdata <- !(Xseq %in% Xused)
          }
          somemissing <- any(missingdata)
@@ -176,8 +177,8 @@ BadGey <- local({
              answer[,k] <- 2 * satcounts
            else {
              # extract counts for data points
-             Uindex <- EqualPairs[,2]
-             Xindex <- EqualPairs[,1]
+             Uindex <- EqualPairs[,2L]
+             Xindex <- EqualPairs[,1L]
              Xcounts <- integer(npoints(X))
              Xcounts[Xindex] <- counts[Uindex]
              # evaluate change in saturated counts of other data points

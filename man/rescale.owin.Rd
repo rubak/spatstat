@@ -52,7 +52,7 @@
 }
 \examples{
   data(swedishpines)
-  W <- swedishpines$window
+  W <- Window(swedishpines)
   W
 # coordinates are in decimetres (0.1 metre)
 # convert to metres:
@@ -60,11 +60,11 @@
 # or equivalently
   rescale(W)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{math}

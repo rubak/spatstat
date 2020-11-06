@@ -44,6 +44,7 @@ Ksector(X, begin = 0, end = 360, \dots,
     \code{"isotropic"}, \code{"Ripley"}, \code{"translate"},
     \code{"translation"}, \code{"none"}, \code{"good"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{domain}{
     Optional window. The first point \eqn{x_i}{x[i]} of each pair of points
@@ -82,13 +83,13 @@ Ksector(X, begin = 0, end = 360, \dots,
  K <- Ksector(swedishpines, 0, 90)
  plot(K)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{\adrian
+  
+  
+  \rolf
+  
+  and \ege
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

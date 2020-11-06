@@ -2,7 +2,7 @@
 #
 #   rmhmodel.R
 #
-#   $Revision: 1.68 $  $Date: 2015/08/29 04:36:43 $
+#   $Revision: 1.77 $  $Date: 2020/01/08 01:21:59 $
 #
 #
 
@@ -24,7 +24,7 @@ rmhmodel.rmhmodel <- function(model, ...) {
 rmhmodel.list <- function(model, ...) {
   argnames <- c("cif","par","w","trend","types")
   ok <- argnames %in% names(model)
-  do.call("rmhmodel.default",
+  do.call(rmhmodel.default,
           resolve.defaults(list(...), model[argnames[ok]]))
 }
 
@@ -72,7 +72,7 @@ rmhmodel.default <- local({
                                       w=w, trend=NULL, types=types,
                                       stopinvalid=FALSE)
         ## consolidate Poisson intensity parameters
-        poisbetalist <- lapply(poismodels, function(x){x$C.beta})
+        poisbetalist <- lapply(poismodels, getElement, name="C.beta")
         poisbeta <- Reduce("*", poisbetalist)
         if(all(ispois)) {
           ## model collapses to a Poisson process
@@ -109,7 +109,7 @@ rmhmodel.default <- local({
       ## concatenate for use in C
       C.beta     <- unlist(C.betalist)
       C.ipar     <- unlist(C.iparlist)
-      check <- lapply(models, function(x){x$check})
+      check <- lapply(models, getElement, name="check")
       maxr <- max(unlist(lapply(models, getElement, name="reach")))
       ismulti <- unlist(lapply(models, getElement, name="multitype.interact"))
       multi <- any(ismulti)
@@ -200,7 +200,8 @@ rmhmodel.default <- local({
     if(!is.na(C.id)) {
       z <- .C("knownCif",
               cifname=as.character(C.id),
-              answer=as.integer(0))
+              answer=as.integer(0),
+              PACKAGE = "spatstat")
       ok <- as.logical(z$answer)
       if(!ok)
         stop(paste("Internal error: the cif", sQuote(C.id),
@@ -272,36 +273,51 @@ rmhmodel.default <- local({
 print.rmhmodel <- function(x, ...) {
   verifyclass(x, "rmhmodel")
 
-  cat("Metropolis-Hastings algorithm, model parameters\n")
+  splat("Metropolis-Hastings algorithm, model parameters\n")
 
   Ncif <- length(x$cif)
-  cat(paste("Conditional intensity:",
-            if(Ncif == 1) "cif=" else "hybrid of cifs",
-            commasep(sQuote(x$cif)), "\n"))
+  splat("Conditional intensity:",
+        if(Ncif == 1) "cif=" else "hybrid of cifs",
+        commasep(sQuote(x$cif)))
   
   if(!is.null(x$types)) {
     if(length(x$types) == 1)
-      cat("Univariate process.\n")
+      splat("Univariate process.")
     else {
       cat("Multitype process with types =\n")
       print(x$types)
       if(!x$multitype.interact)
-        cat("Interaction does not depend on type\n")
+        splat("Interaction does not depend on type")
     }
-  } else if(x$multitype.interact) 
-    cat("Multitype process, types not yet specified.\n")
+  } else if(x$multitype.interact) {
+      splat("Multitype process, types not yet specified.")
+  } else {
+    typ <- try(rmhResolveTypes(x, rmhstart(), rmhcontrol()))
+    if(!inherits(typ, "try-error")) {
+      ntyp <- length(typ)
+      if(ntyp > 1) {
+        splat("Data imply a multitype process with", ntyp, "types of points.")
+        splat("Interaction does not depend on type.")
+      }
+    }
+  }
   
-  cat("Numerical parameters: par =\n")
+  cat("\nNumerical parameters: par =\n")
   print(x$par)
   if(is.null(x$C.ipar))
-    cat("Parameters have not yet been checked for compatibility with types.\n")
-  if(is.owin(x$w)) print(x$w) else cat("Window: not specified.\n")
-  cat("Trend: ")
-  if(!is.null(x$trend)) print(x$trend) else cat("none.\n")
-  if(!is.null(x$integrable) && !x$integrable) {
-    cat("\n*Warning: model is not integrable and cannot be simulated*\n")
+    splat("Parameters have not yet been checked for compatibility with types.")
+  if(is.owin(x$w)) print(x$w) else splat("Window: not specified.")
+  cat("\nTrend: ")
+  tren <- x$trend
+  if(is.null(tren)) {
+    cat("none.\n")
+  } else {
+    if(is.list(tren)) cat(paste0("List of ", length(tren), ":\n"))
+    print(tren)
   }
-  invisible(NULL)
+  if(!is.null(x$integrable) && !x$integrable) 
+    cat("\n*Warning: model is not integrable and cannot be simulated*\n")
+  return(invisible(NULL))
 }
 
 reach.rmhmodel <- function(x, ...) {
@@ -347,11 +363,18 @@ as.owin.rmhmodel <- function(W, ..., fatal=FALSE) {
 
 domain.rmhmodel <- Window.rmhmodel <- function(X, ...) { as.owin(X) }
 
-is.expandable.rmhmodel <- function(x) {
-  tren <- x$tren
+is.expandable.rmhmodel <- local({
+
   ok <- function(z) { is.null(z) || is.numeric(z) || is.function(z) }
-  return(if(!is.list(tren)) ok(tren) else all(unlist(lapply(tren, ok))))
-}
+
+  is.expandable.rmhmodel <- function(x) {
+    tren <- x$tren
+    ans <- if(!is.list(tren)) ok(tren) else all(sapply(tren, ok))
+    return(ans)
+  }
+
+  is.expandable.rmhmodel
+})
 
   
 #####  Table of rules for handling rmh models ##################
@@ -863,7 +886,7 @@ spatstatRmhInfo <- function(cifname) {
 		h0    <- get("yleft",envir=environment(h.init))
 		h     <- h.init(r)
 		nlook <- length(r)
-		if(!identical(all.equal(h[nlook],1),TRUE))
+		if(!isTRUE(all.equal(h[nlook],1)))
                   stop(paste("The lookup interaction step function",
                              "must be equal to 1 for", dQuote("large"),
                              "distances."))
@@ -877,7 +900,7 @@ spatstatRmhInfo <- function(cifname) {
 		nlook <- length(r)
 		if(length(h) != nlook)
                   stop("Mismatch of lengths of h and r lookup vectors.")
-		if(any(is.na(r)))
+		if(anyNA(r))
                   stop("Missing values not allowed in r lookup vector.")
 		if(is.unsorted(r))
                   stop("The r lookup vector must be in increasing order.")
@@ -896,7 +919,7 @@ spatstatRmhInfo <- function(cifname) {
               r <- c(0,r)
               nlook <- nlook+1
               deltar <- mean(diff(r))
-              if(identical(all.equal(diff(r),rep.int(deltar,nlook-1)),TRUE)) {
+              if(isTRUE(all.equal(diff(r),rep.int(deltar,nlook-1)))) {
 		par <- list(beta=beta,nlook=nlook,
                             equisp=1,
                             deltar=deltar,rmax=rmax, h=h)
@@ -1275,6 +1298,55 @@ spatstatRmhInfo <- function(cifname) {
             temper = function(par, invtemp) {
               within(par, {
                 beta  <- beta^invtemp
+                gamma <- gamma^invtemp
+              })
+            }
+            ),
+#       
+# 17. Penttinen.
+#       
+       'penttinen'=
+       list(
+            C.id="penttinen",
+            multitype=FALSE,
+            parhandler=function(par, ...) {
+              ctxt <- "For the penttinen cif"
+              par <- check.named.list(par, c("beta", "gamma", "r"), ctxt)
+              # treat r=NA as absence of interaction
+              par <- within(par, if(is.na(r)) { r <- 0; gamma <- 1 })
+              with(par, check.finite(beta, ctxt))
+              with(par, check.finite(gamma, ctxt))
+              with(par, check.finite(r, ctxt))
+              with(par, check.1.real(gamma, ctxt))
+              with(par, check.1.real(r, ctxt))
+              with(par, explain.ifnot(all(beta >= 0), ctxt))
+              with(par, explain.ifnot(gamma >= 0, ctxt))
+              with(par, explain.ifnot(r > 0, ctxt))
+              return(par)
+            },
+            validity=function(par, kind) {
+              gamma <- par$gamma
+              switch(kind,
+                     integrable=(gamma <= 1),
+                     stabilising=(gamma == 0)
+                     )
+            },
+            explainvalid=list(
+              integrable="gamma <= 1",
+              stabilising="gamma == 0"),
+            reach = function(par, ...) {
+              r <- par[["r"]]
+              g <- par[["gamma"]]
+              return(if(g == 1) 0 else (2 * r))
+            },
+            hardcore = function(par, ..., epsilon=0) {
+              r <- par[["r"]]
+              g <- par[["gamma"]]
+              return(if(g <= epsilon) (2 * r) else 0)
+            },
+            temper = function(par, invtemp) {
+              within(par, {
+                beta <- beta^invtemp
                 gamma <- gamma^invtemp
               })
             }

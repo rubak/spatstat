@@ -31,12 +31,12 @@
 
   This function extracts the vector of coefficients of the fitted model.
   This is the estimate of the parameter vector
-  \eqn{\theta}{theta} such that the conditional intensity of the model
+  \eqn{\theta}{\theta} such that the conditional intensity of the model
   is of the form
   \deqn{
     \lambda(u,x) = \exp(\theta S(u,x))
   }{
-    lambda(u,x) = exp(theta . S(u,x))
+    \lambda(u,x) = exp(\theta . S(u,x))
   }
   where \eqn{S(u,x)} is a (vector-valued) statistic.
 
@@ -68,11 +68,11 @@
     # in the usual notation for Strauss(beta, gamma, r)
 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{models}

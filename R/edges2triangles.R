@@ -1,7 +1,7 @@
 #
 #   edges2triangles.R
 #
-#   $Revision: 1.11 $  $Date: 2014/10/24 00:22:30 $
+#   $Revision: 1.16 $  $Date: 2018/09/23 09:21:22 $
 #
 
 edges2triangles <- function(iedge, jedge, nvert=max(iedge, jedge),
@@ -22,32 +22,40 @@ edges2triangles <- function(iedge, jedge, nvert=max(iedge, jedge),
     }
   }
   # zero length data, or not enough to make triangles
-  if(length(iedge) < 3) return(matrix(, nrow=0, ncol=3))
+  if(length(iedge) < 3)
+    return(matrix(integer(0), nrow=0, ncol=3,
+                  dimnames=list(NULL, c("i", "j", "k"))))
   # sort in increasing order of 'iedge'
   oi <- fave.order(iedge)
   iedge <- iedge[oi]
   jedge <- jedge[oi]
   # call C
   storage.mode(nvert) <- storage.mode(iedge) <- storage.mode(jedge) <- "integer"
-  if(!usefriends) {
-    zz <- .Call("triograph",
-                nv=nvert, iedge=iedge, jedge=jedge)
-#                PACKAGE="spatstat")
-  } else {
+  if(usefriends) {
     fr <- as.logical(friendly)
     storage.mode(fr) <- "integer"
     zz <- .Call("trioxgraph",
-                nv=nvert, iedge=iedge, jedge=jedge, friendly=fr)
-#                PACKAGE="spatstat")
+                nv=nvert, iedge=iedge, jedge=jedge, friendly=fr,
+                PACKAGE="spatstat")
+  } else if(spatstat.options("fast.trigraph")) {
+    zz <- .Call("triograph",
+                nv=nvert, iedge=iedge, jedge=jedge,
+                PACKAGE="spatstat")
+  } else {
+    #' testing purposes only
+    zz <- .Call("trigraph",
+                nv=nvert, iedge=iedge, jedge=jedge,
+                PACKAGE="spatstat")
   }
-  mat <- as.matrix(as.data.frame(zz))
+  mat <- as.matrix(as.data.frame(zz, col.names=c("i", "j", "k")))
   return(mat)
 }
 
 # compute triangle diameters as well
 
 trianglediameters <- function(iedge, jedge, edgelength, ..., 
-                              nvert=max(iedge, jedge), check=TRUE) {
+                              nvert=max(iedge, jedge),
+                              dmax=Inf, check=TRUE) {
   if(check) {
     stopifnot(length(iedge) == length(jedge))
     stopifnot(length(iedge) == length(edgelength))
@@ -57,9 +65,10 @@ trianglediameters <- function(iedge, jedge, edgelength, ...,
       stopifnot(all(iedge <= nvert))
       stopifnot(all(jedge <= nvert))
     }
+    if(is.finite(dmax)) check.1.real(dmax)
   }
   # zero length data
-  if(length(iedge) == 0)
+  if(length(iedge) == 0 || dmax < 0)
     return(data.frame(i=integer(0),
                       j=integer(0),
                       k=integer(0),
@@ -68,12 +77,26 @@ trianglediameters <- function(iedge, jedge, edgelength, ...,
   # call C
   storage.mode(nvert) <- storage.mode(iedge) <- storage.mode(jedge) <- "integer"
   storage.mode(edgelength) <- "double"
-  zz <- .Call("triDgraph",
-              nv=nvert, iedge=iedge, jedge=jedge, edgelength=edgelength)
-#              PACKAGE="spatstat")
+  if(is.infinite(dmax)) {
+    zz <- .Call("triDgraph",
+                nv=nvert, iedge=iedge, jedge=jedge, edgelength=edgelength,
+                PACKAGE = "spatstat")
+  } else {
+    storage.mode(dmax) <- "double"
+    zz <- .Call("triDRgraph",
+                nv=nvert, iedge=iedge, jedge=jedge, edgelength=edgelength,
+                dmax=dmax,
+                PACKAGE = "spatstat")
+  }    
   df <- as.data.frame(zz)
   colnames(df) <- c("i", "j", "k", "diam")
   return(df)
+}
+
+closetriples <- function(X, rmax) {
+  a <- closepairs(X, rmax, what="ijd", twice=FALSE, neat=FALSE)
+  tri <- trianglediameters(a$i, a$j, a$d, nvert=npoints(X), dmax=rmax)
+  return(tri)
 }
 
 # extract 'vees', i.e. triples (i, j, k) where i ~ j and i ~ k
@@ -98,8 +121,8 @@ edges2vees <- function(iedge, jedge, nvert=max(iedge, jedge),
   vees <- .Call("graphVees",
                 nv = nvert,
                 iedge = iedge,
-                jedge = jedge)
-#                PACKAGE="spatstat")
+                jedge = jedge,
+                PACKAGE="spatstat")
   names(vees) <- c("i", "j", "k")
   vees <- as.data.frame(vees)
   return(vees)

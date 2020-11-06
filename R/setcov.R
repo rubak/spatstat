@@ -2,7 +2,7 @@
 #
 #     setcov.R
 #
-#     $Revision: 1.11 $ $Date: 2012/10/10 06:48:16 $
+#     $Revision: 1.16 $ $Date: 2018/08/07 11:44:46 $
 #
 #    Compute the set covariance function of a window
 #    or the (noncentred) spatial covariance function of an image
@@ -32,7 +32,9 @@ convolve.im <- function(X, Y=X, ..., reflectX=FALSE, reflectY=FALSE) {
   have.Y <- !missing(Y) && !is.null(Y)
   crosscov <- have.Y || reflectX || reflectY
   trap.extra.arguments(..., .Context="In convolve.im")
-  #
+  #' Check whether Fastest Fourier Transform in the West is available
+  west <- fftwAvailable()
+  #'
   if(have.Y) {
     # cross-covariance 
     stopifnot(is.im(Y))
@@ -62,20 +64,20 @@ convolve.im <- function(X, Y=X, ..., reflectX=FALSE, reflectY=FALSE) {
   Mpad <- matrix(0, ncol=2*nc, nrow=2*nr)
   Mpad[1:nr, 1:nc] <- M
   lengthMpad <- 4 * nc * nr
-  fM <- fft(Mpad)
+  fM <- fft2D(Mpad, west=west)
   if(!crosscov) {
     # compute convolution square
-    G <- fft(fM^2, inverse=TRUE)/lengthMpad
+    G <- fft2D(fM^2, inverse=TRUE, west=west)/lengthMpad
   } else {
-    # compute set cross-covariance or convolution by fft
+    # compute set cross-covariance or convolution by FFT
     N <- Y$v
     N[is.na(N)] <- 0
     Npad <- matrix(0, ncol=2*nc, nrow=2*nr)
     Npad[1:nr, 1:nc] <- N
-    fN <- fft(Npad)
+    fN <- fft2D(Npad, west=west)
     if(reflectY) fN <- Conj(fN)
     if(reflectX) fM <- Conj(fM)
-    G <- fft(fM * fN, inverse=TRUE)/lengthMpad
+    G <- fft2D(fM * fN, inverse=TRUE, west=west)/lengthMpad
   }
 #  cat(paste("maximum imaginary part=", max(Im(G)), "\n"))
   G <- Mod(G) * xstep * ystep
@@ -110,6 +112,7 @@ convolve.im <- function(X, Y=X, ..., reflectX=FALSE, reflectY=FALSE) {
     XYbox <- owin(xran, yran)
     out <- out[XYbox, rescue=TRUE]
   }
+  unitname(out) <- unitname(X)
   return(out)
 }
 

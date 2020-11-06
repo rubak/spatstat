@@ -1,7 +1,7 @@
 #
 #   plot.im.R
 #
-#  $Revision: 1.107 $   $Date: 2015/09/27 02:51:17 $
+#  $Revision: 1.137 $   $Date: 2020/02/21 08:45:54 $
 #
 #  Plotting code for pixel images
 #
@@ -16,10 +16,14 @@ plot.im <- local({
   ## auxiliary functions
 
   image.doit <- function(imagedata, ...,
-                         extrargs=graphicsPars("image"), W) {
+                         extrargs=graphicsPars("image"), W,
+                         workaround=FALSE) {
     aarg <- resolve.defaults(...)
     add      <- resolve.1.default(list(add=FALSE),     aarg)
     show.all <- resolve.1.default(list(show.all=!add), aarg)
+    addcontour <- resolve.1.default(list(addcontour=FALSE), aarg)
+    args.contour <- resolve.1.default(list(args.contour=list()), aarg)
+    ##
     if(add && show.all) {
       ## set up the window space *with* the main title
       ## using the same code as plot.owin, for consistency
@@ -27,36 +31,103 @@ plot.im <- local({
                       resolve.defaults(list(x=W, type="n"), aarg), 
                       extrargs=graphicsPars("owin"))
     }
+    if(workaround && identical(aarg$useRaster, TRUE)) {
+      #' workaround for bug 16035
+      #' detect reversed coordinates
+      usr <- par('usr')
+      xrev <- (diff(usr[1:2]) < 0) 
+      yrev <- (diff(usr[3:4]) < 0)
+      if(xrev || yrev) {
+        #' flip matrix of pixel values, because the device driver does not
+        z <- imagedata$z
+        d <- dim(z) # z is in the orientation expected for image.default
+        if(xrev) z <- z[d[1]:1,       , drop=FALSE]
+        if(yrev) z <- z[      , d[2]:1, drop=FALSE]
+        imagedata$z <- z
+      }
+    }
     extrargs <- setdiff(extrargs, c("claim.title.space", "box"))
-    do.call.matched(image.default,
-                    append(imagedata, aarg),
-                    extrargs=extrargs)
+    z <- do.call.matched(image.default,
+                         append(imagedata, aarg),
+                         extrargs=extrargs)
+    if(addcontour)
+      do.call(do.contour,
+              resolve.defaults(imagedata,
+                               list(add=TRUE),
+                               args.contour,
+                               list(col=par('fg')),
+                               aarg,
+                               .StripNull=TRUE))
+    return(z)
   }
 
-  do.box.etc <- function(bb, add, argh)
+  do.contour <- function(x, y, z, ..., drawlabels=TRUE) {
+    nx <- length(x)
+    ny <- length(y)
+    nz <- dim(z)
+    if(nx > nz[1]) {
+      if(nz[1] == 1) {
+        z <- rbind(z, z)
+        nz <- dim(z)
+        drawlabels <- FALSE
+      } else {
+        x <- (x[-1] + x[-nx])/2
+        nx <- nx-1
+      }
+    }
+    if(ny > nz[2]) {
+      if(nz[2] == 1) {
+        z <- cbind(z, z)
+        nz <- dim(z)
+        drawlabels <- FALSE
+      } else {
+        y <- (y[-1] + y[-ny])/2
+        ny <- ny-1
+      }
+    }
+    do.call.matched(contour.default,
+                    list(x=x, y=y, z=z, ..., drawlabels=drawlabels))
+  }
+                 
+  do.box.etc <- function(bb, add, argh) {
     do.call(box.etc, append(list(bb=bb, add=add), argh))
+  }
   
-  box.etc <- function(bb, ..., add=FALSE, axes=FALSE, box=!add) {
+  box.etc <- function(bb, ..., add=FALSE, box=!add,
+                      axes=FALSE, ann=FALSE, xlab="", ylab="") {
     # axes for image
     xr <- bb$xrange
     yr <- bb$yrange
     if(box)
       rect(xr[1], yr[1], xr[2], yr[2])
     if(axes) {
-      px <- pretty(xr)
-      py <- pretty(yr)
-      do.call.plotfun(axis,
+      px <- prettyinside(xr)
+      py <- prettyinside(yr)
+      do.call.plotfun(graphics::axis,
                       resolve.defaults(
                                        list(side=1, at=px), 
                                        list(...),
                                        list(pos=yr[1])),
                       extrargs=graphicsPars("axis"))
-      do.call.plotfun(axis,
+      do.call.plotfun(graphics::axis,
                       resolve.defaults(
                                        list(side=2, at=py), 
                                        list(...),
                                        list(pos=xr[1])),
                       extrargs=graphicsPars("axis"))
+    }
+    ## axis labels xlab, ylab
+    if(ann) {
+      dox <- any(nzchar(xlab))
+      doy <- any(nzchar(ylab))
+      line0 <- if(axes) 1 else 0
+      if(dox || doy) {
+        mtargs <- resolve.defaults(list(...), list(line=line0))
+        if(dox)
+          do.call.matched(mtext, append(list(text=xlab, side=1), mtargs))
+        if(doy)
+          do.call.matched(mtext, append(list(text=ylab, side=2), mtargs))
+      }
     }
   }
   
@@ -77,26 +148,63 @@ plot.im <- local({
     y[ok] <- log10(x[ok])
     return(y)
   }
+
+  Ticks <- function(usr, log=FALSE, nint=NULL, ..., clip=TRUE) {
+    #' modification of grDevices::axisTicks
+    #'      constrains ticks to be inside the specified range if clip=TRUE
+    #'      accepts nint=NULL as if it were missing
+    z <- if(is.null(nint)) axisTicks(usr=usr, log=log, ...) else
+         axisTicks(usr=usr, log=log, nint=nint, ...) 
+    if(clip) {
+      zlimits <- if(log) 10^usr else usr
+      z <- z[inside.range(z, zlimits)]
+    }
+    return(z)
+  }
+
+  numericalRange <- function(x, zlim=NULL) {
+    xr <- suppressWarnings(range(x, finite=TRUE))
+    if(!all(is.finite(xr)))
+      warning("All pixel values are NA", call.=FALSE)
+    if(!is.null(zlim)) 
+      xr <- suppressWarnings(range(xr, zlim, finite=TRUE))
+    if(!all(is.finite(xr))) {
+      warning("Cannot determine range of values for colour map",
+              call.=FALSE)
+      xr <- c(0,0)
+    }
+    return(xr)
+  }
   
   # main function
   PlotIm <- function(x, ...,
                      main, 
                      add=FALSE, clipwin=NULL,
                      col=NULL, valuesAreColours=NULL, log=FALSE,
+                     ncolours=256, gamma=1, 
                      ribbon=show.all, show.all=!add,
                      ribside=c("right", "left", "bottom", "top"),
                      ribsep=0.15, ribwid=0.05, ribn=1024,
-                     ribscale=1, ribargs=list(), colargs=list(),
-                     useRaster=NULL,
+                     ribscale=1, ribargs=list(), riblab=NULL, colargs=list(),
+                     useRaster=NULL, workaround=FALSE, zap=1,
                      do.plot=TRUE) {
     if(missing(main)) main <- short.deparse(substitute(x))
     verifyclass(x, "im")
+    if(x$type == "complex") {
+      cl <- match.call()
+      cl$x <- solist(Re=Re(x), Im=Im(x), Mod=Mod(x), Arg=Arg(x))
+      cl[[1]] <- as.name('plot')
+      cl$main <- main
+      out <- eval(cl, parent.frame())
+      return(invisible(out))
+    }
     ribside <- match.arg(ribside)
     col.given <- !is.null(col)
     dotargs <- list(...)
 
     stopifnot(is.list(ribargs))
     user.ticks <- ribargs$at
+    user.nint <- ribargs$nint
     
     if(!is.null(clipwin)) {
       x <- x[as.rectangle(clipwin)]
@@ -120,20 +228,22 @@ plot.im <- local({
       # argument given - validate
       stopifnot(is.logical(valuesAreColours))
       if(valuesAreColours) {
-        # pixel values must be factor or character
+        ## pixel values must be factor or character
         if(!xtype %in% c("factor", "character")) {
-          warning(paste("Pixel values of type", sQuote(xtype),
-                        "are not interpretable as colours"))
+          if(do.plot)
+            warning(paste("Pixel values of type", sQuote(xtype),
+                          "are not interpretable as colours"))
           valuesAreColours <- FALSE
         } else if(col.given) {
-          # colour info provided: contradictory
-          warning(paste("Pixel values are taken to be colour values,",
-                        "because valuesAreColours=TRUE;", 
-                        "the colour map (argument col) is ignored"),
-                  call.=FALSE)
+          ## colour info provided: contradictory
+          if(do.plot)
+            warning(paste("Pixel values are taken to be colour values,",
+                          "because valuesAreColours=TRUE;", 
+                          "the colour map (argument col) is ignored"),
+                    call.=FALSE)
           col <- NULL
         }
-        if(do.log) 
+        if(do.log && do.plot) 
           warning(paste("Pixel values are taken to be colour values,",
                         "because valuesAreColours=TRUE;", 
                         "the argument log=TRUE is ignored"),
@@ -152,8 +262,9 @@ plot.im <- local({
                         { NULL })
       valuesAreColours <- is.character(strings) && 
       !inherits(try(col2rgb(strings), silent=TRUE), "try-error")
-      if(valuesAreColours)
-        cat("Interpreting pixel values as colours\n")
+      if(valuesAreColours && do.plot)
+        splat("Interpreting pixel values as colours",
+              "(valuesAreColours=TRUE)")
     }
     # 
     if(valuesAreColours) {
@@ -169,8 +280,9 @@ plot.im <- local({
                col <- levels(x)
              },
              {
-               warning(paste("Pixel values of type", sQuote(xtype),
-                             "are not interpretable as colours"))
+               if(do.plot)
+                 warning(paste("Pixel values of type", sQuote(xtype),
+                               "are not interpretable as colours"))
              })
       # colours not suitable for ribbon
       ribbon <- FALSE
@@ -182,12 +294,12 @@ plot.im <- local({
       if(all(rx > 0)) {
         x <- eval.im(log10(x))
       } else {
-        if(any(rx < 0)) 
+        if(do.plot && any(rx < 0)) 
           warning(paste("Negative pixel values",
                         "omitted from logarithmic colour map;",
                         "range of values =", prange(rx)),
                   call.=FALSE)
-        if(!all(rx < 0))
+        if(do.plot && !all(rx < 0))
           warning("Zero pixel values omitted from logarithmic colour map",
                   call.=FALSE)
         x <- eval.im(log10orNA(x))
@@ -229,8 +341,7 @@ plot.im <- local({
 
     switch(xtype,
            real    = {
-             vrange <- range(x, finite=TRUE)
-             vrange <- range(zlim, vrange)
+             vrange <- numericalRange(x, zlim)
              if(!is.null(colmap)) {
                # explicit colour map
                s <- summary(colmap)
@@ -240,30 +351,29 @@ plot.im <- local({
                vrange <- range(imagebreaks)
                col <- s$outputs
              } 
-             trivial <- (diff(vrange) <= .Machine$double.eps)
-             if(!trivial) {
-               # ribbonvalues: domain of colour map (pixel values)
-               # ribbonrange: (min, max) of pixel values in image
-               # nominalrange: range of values shown on ribbon 
-               # nominalmarks: values shown on ribbon at tick marks
-               # ribbonticks: pixel values of tick marks 
-               # ribbonlabels: text displayed at tick marks
-               ribbonvalues <- seq(from=vrange[1], to=vrange[2],
-                                   length.out=ribn)
-               ribbonrange <- vrange
-               nominalrange <- Log(ribscale * Exp(ribbonrange))
-               nominalmarks <-
-                 user.ticks %orifnull% axisTicks(nominalrange, log=do.log)
-               ribbonticks <- Log(nominalmarks/ribscale)
-               ribbonlabels <- paste(nominalmarks)
-             }
+             trivial <- (diff(vrange) <= zap * .Machine$double.eps)
+             #' ribbonvalues: domain of colour map (pixel values)
+             #' ribbonrange: (min, max) of pixel values in image
+             #' nominalrange: range of values shown on ribbon 
+             #' nominalmarks: values shown on ribbon at tick marks
+             #' ribbonticks: pixel values of tick marks 
+             #' ribbonlabels: text displayed at tick marks
+             ribbonvalues <- if(trivial) vrange[1] else
+                             seq(from=vrange[1], to=vrange[2], length.out=ribn)
+             ribbonrange <- vrange
+             nominalrange <- Log(ribscale * Exp(ribbonrange))
+             nominalmarks <- if(trivial) nominalrange[1] else
+                             (user.ticks %orifnull% Ticks(nominalrange,
+                                                         log=do.log,
+                                                         nint=user.nint))
+             ribbonticks <- Log(nominalmarks/ribscale)
+             ribbonlabels <- paste(nominalmarks)
            },
            integer = {
              values <- as.vector(x$v)
              values <- values[!is.na(values)]
              uv <- unique(values)
-             vrange <- range(uv, finite=TRUE)
-             vrange <- range(zlim, vrange)
+             vrange <- numericalRange(uv, zlim)
              nvalues <- length(uv)
              trivial <- (nvalues < 2)
              if(!trivial){
@@ -271,13 +381,15 @@ plot.im <- local({
                if(!is.null(user.ticks)) {
                  nominalmarks <- user.ticks
                } else {
-                 nominalmarks <- axisTicks(nominalrange, log=do.log)
+                 nominalmarks <- Ticks(nominalrange,
+                                       log=do.log,
+                                       nint = user.nint)
                  nominalmarks <- nominalmarks[nominalmarks %% 1 == 0]
                }
                ribbonticks <- Log(nominalmarks/ribscale)
                ribbonlabels <- paste(nominalmarks)
-               if(!do.log && identical(all.equal(ribbonticks,
-                                                 vrange[1]:vrange[2]), TRUE)) {
+               if(!do.log && isTRUE(all.equal(ribbonticks,
+                                              vrange[1]:vrange[2]))) {
                  # each possible pixel value will appear in ribbon
                  ribbonvalues <- vrange[1]:vrange[2]
                  imagebreaks <- c(ribbonvalues - 0.5, vrange[2] + 0.5)
@@ -360,8 +472,10 @@ plot.im <- local({
       colourinfo <- list(breaks=imagebreaks, col=col)
     } else if(!is.null(colfun)) {
       ## Function colfun(n)
-      colourinfo <- if(is.null(imagebreaks)) list(col=colfun(256)) else
-                    list(breaks=imagebreaks, col=colfun(length(imagebreaks)-1))
+      if(trivial) ncolours <- 1
+      colourinfo <-
+        if(is.null(imagebreaks)) list(col=colfun(ncolours)) else
+        list(breaks=imagebreaks, col=colfun(length(imagebreaks) - 1L))
     } else if(col.given) {
       ## Colour values
       if(inherits(try(col2rgb(col), silent=TRUE), "try-error"))
@@ -396,7 +510,7 @@ plot.im <- local({
              real= {
                if(!is.null(i.bks)) {
                  colourmap(col=i.col, breaks=i.bks)
-               } else colourmap(col=i.col, range=vrange)
+               } else colourmap(col=i.col, range=vrange, gamma=gamma)
              },
              logical={
                colourmap(col=i.col, inputs=c(FALSE,TRUE))
@@ -406,6 +520,11 @@ plot.im <- local({
                colourmap(col=i.col, inputs=lev)
              },
              NULL)
+
+    ## gamma correction
+    soc <- summary(output.colmap)
+    if(!is.null(gamma <- soc$gamma) && gamma != 1)
+      colourinfo$breaks <- soc$breaks
 
     ##  ........ decide whether to use rasterImage .........
     
@@ -418,7 +537,7 @@ plot.im <- local({
       switch(rasterable,
              yes=TRUE,
              no=FALSE,
-             "non-missing"=!any(is.na(x$v)),
+             "non-missing"=!anyNA(x$v),
              FALSE)
     if(is.null(useRaster)) {
       useRaster <- can.use.raster
@@ -443,11 +562,14 @@ plot.im <- local({
                                 y=cellbreaks(x$yrow, x$ystep),
                                 z=t(x$v)),
                  W=xbox,
+                 workaround=workaround,
+                 ##
+                 list(axes=FALSE, xlab="",ylab=""), 
                  dotargs,
                  list(useRaster=useRaster, add=add, show.all=show.all),
                  colourinfo,
-                 list(xlab = "", ylab = ""),
-                 list(asp = 1, main = main, axes=FALSE))
+                 list(zlim=vrange),
+                 list(asp = 1, main = main))
 ##      if(add && show.all)
 ##        fakemaintitle(x, main, dotargs)
 
@@ -489,6 +611,8 @@ plot.im <- local({
     bb.all <- boundingbox(bb.rib, bb)
 
     attr(output.colmap, "bbox") <- bb.all
+    attr(output.colmap, "bbox.legend") <- bb.rib
+    attr(output.colmap, "side.legend") <- rib.iside
     if(!do.plot)
       return(output.colmap)
 
@@ -520,11 +644,13 @@ plot.im <- local({
                               y=cellbreaks(x$yrow, x$ystep),
                               z=t(x$v)),
                W=xbox,
+               workaround=workaround,
                list(add=TRUE, show.all=show.all),
+               list(axes=FALSE, xlab="", ylab=""),
                dotargs,
                list(useRaster=useRaster),
                colourinfo,
-               list(xlab = "", ylab = ""),
+               list(zlim=vrange),
                list(asp = 1, main = main))
 
 ##    if(add && show.all)
@@ -561,11 +687,12 @@ plot.im <- local({
                               y=rib.ycoords,
                               z=t(rib.z)),
                W=bb.rib,
+               workaround=workaround,
                list(add=TRUE,
                     show.all=show.all),
                ribargs,
                list(useRaster=rib.useRaster),
-               list(main="", sub=""),
+               list(main="", sub="", xlab="", ylab=""),
                dotargs,
                colourinfo)
     # box around ribbon?
@@ -575,7 +702,15 @@ plot.im <- local({
     # scale axis for ribbon image
     ribaxis <- !(identical(resol$axes, FALSE) || identical(resol$ann, FALSE))
     if(ribaxis) {
-      axisargs <- list(side=rib.iside, labels=ribbonlabels)
+      ribaxis.iside <- rib.iside
+      ## check for user-supplied xlim, ylim with reverse order
+      ll <- resolve.defaults(ribargs, dotargs, list(xlim=NULL, ylim=NULL))
+      xlimflip <- is.numeric(ll$xlim) && (diff(ll$xlim) < 0)
+      ylimflip <- is.numeric(ll$ylim) && (diff(ll$ylim) < 0)
+      if(xlimflip) ribaxis.iside <- c(1, 4, 3, 2)[ribaxis.iside] 
+      if(ylimflip) ribaxis.iside <- c(3, 2, 1, 4)[ribaxis.iside]
+      ##
+      axisargs <- list(side=ribaxis.iside, labels=ribbonlabels)
       switch(ribside,
              right={
                scal <- diff(bb.rib$yrange)/diff(ribbonrange)
@@ -605,11 +740,14 @@ plot.im <- local({
                posargs <- list(pos=bb.rib$yrange[1],
                                xaxp=c(bb.rib$xrange, length(ribbonticks)))
              })
-      do.call.plotfun(axis,
-                      resolve.defaults(ribargs,
-                                       axisargs, dotargs,
-                                       posargs),
+      do.call.plotfun(graphics::axis,
+                      resolve.defaults(axisargs, ribargs, dotargs, posargs),
                       extrargs=graphicsPars("axis"))
+    }
+    if(!is.null(riblab)) {
+      riblabel <- if(is.list(riblab)) riblab else list(text=riblab)
+      riblabel$side <- rib.iside
+      do.call(mtext, riblabel)
     }
     #
     return(invisible(output.colmap))
@@ -671,14 +809,18 @@ contour.im <- function (x, ..., main, axes=FALSE, add=FALSE,
                         clipwin=NULL, show.all=!add, do.plot=TRUE)
 {
   defaultmain <- deparse(substitute(x))
+  dotargs <- list(...)
+  bb <- Frame(x)
   ## return value
-  z <- as.rectangle(x)
-  attr(z, "bbox") <- z
-  if(!do.plot) return(z)
-  ## 
+  result <- bb
+  attr(result, "bbox") <- bb
+  if(!do.plot) return(result)
+  ## main title
   sop <- spatstat.options("par.contour")
   if(missing(main)) 
     main <- resolve.1.default(list(main=defaultmain), sop)
+  pt <- prepareTitle(main)
+  ## plotting parameters
   if(missing(add)) {
     force(add) ## use default in formal arguments, unless overridden
     add <- resolve.1.default(list(add=add), sop)
@@ -687,30 +829,49 @@ contour.im <- function (x, ..., main, axes=FALSE, add=FALSE,
     force(axes)
     axes <- resolve.1.default(list(axes=axes), sop)
   }
+  axes <- axes && !add
+  col0 <- if(inherits(col, "colourmap")) par("fg") else col
+  ## clip to subset
   if(!is.null(clipwin))
     x <- x[clipwin, drop=FALSE]
-  if(show.all) {
-    col0 <- if(inherits(col, "colourmap")) par("fg") else col
-    if(axes) # with axes
+  #' start plotting
+  if(!add) {
+    ## new plot - establish coordinate system
+    if(axes && show.all) {
+      #' standard plot initialisation in base graphics
       do.call.plotfun(plot.default,
                       resolve.defaults(
                                        list(x = range(x$xcol),
                                             y = range(x$yrow),
-                                            type = "n", add=add),
+                                            type = "n"),
                                        list(...),
                                        list(asp = 1,
                                             xlab = "x",
                                             ylab = "y",
                                             col = col0,
                                             main = main)))
-    else { # box without axes
-      rec <- owin(x$xrange, x$yrange)
-      do.call.matched(plot.owin,
-                      resolve.defaults(list(x=rec, add=add, show.all=TRUE),
-                                       list(...),
-                                       list(col=col0, main=main)))
+    } else {
+      #' plot invisible bounding box
+      do.call.plotfun(plot.owin,
+                      resolve.defaults(list(x=bb,
+                                            type="n",
+                                            main=pt$blank),
+                                       dotargs),
+                      extrargs=graphicsPars("owin"))
     }
+  } 
+  if(show.all && !axes) {
+    ## plot title centred over contour region
+    do.call.plotfun(plot.owin,
+                    resolve.defaults(list(x=bb,
+                                          main=main,
+                                          add=TRUE,
+                                          show.all=TRUE),
+                                     dotargs,
+                                     list(col.main=col0)),
+                    extrargs=graphicsPars("owin"))
   }
+  #' plot contour lines
   if(!inherits(col, "colourmap")) {
     do.call.plotfun(contour.default,
                     resolve.defaults(list(x=x$xcol, y=x$yrow, z=t(x$v)),
@@ -731,6 +892,6 @@ contour.im <- function (x, ..., main, axes=FALSE, add=FALSE,
       do.call.matched(lines.default, argi, extrargs=linpar)
     }
   }
-  return(invisible(z))
+  return(invisible(result))
 }
 

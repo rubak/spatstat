@@ -64,7 +64,7 @@ linearKcross(X, i, j, r=NULL, \dots, correction="Ang")
   Multitype point process analysis of spines on the
   dendrite network of a neuron.
   \emph{Applied Statistics} (Journal of the Royal Statistical
-   Society, Series C), In press.
+   Society, Series C), \bold{63}, 673--694.
 }
 \section{Warnings}{
   The arguments \code{i} and \code{j} are interpreted as
@@ -80,9 +80,9 @@ linearKcross(X, i, j, r=NULL, \dots, correction="Ang")
    data(chicago)
    K <- linearKcross(chicago, "assault", "robbery")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+\author{\adrian
+  
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

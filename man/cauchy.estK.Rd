@@ -55,9 +55,9 @@ cauchy.estK(X, startpar=c(kappa=1,scale=1), lambda=NULL,
 
   The algorithm fits the Neyman-Scott cluster point process
   with Cauchy kernel to \code{X},
-  by finding the parameters of the Matern Cluster model
+  by finding the parameters of the \Matern Cluster model
   which give the closest match between the
-  theoretical \eqn{K} function of the Matern Cluster process
+  theoretical \eqn{K} function of the \Matern Cluster process
   and the observed \eqn{K} function.
   For a more detailed explanation of the Method of Minimum Contrast,
   see \code{\link{mincontrast}}.
@@ -65,20 +65,20 @@ cauchy.estK(X, startpar=c(kappa=1,scale=1), lambda=NULL,
   The model is described in Jalilian et al (2013).
   It is a cluster process formed by taking a 
   pattern of parent points, generated according to a Poisson process
-  with intensity \eqn{\kappa}{kappa}, and around each parent point,
+  with intensity \eqn{\kappa}{\kappa}, and around each parent point,
   generating a random number of offspring points, such that the
   number of offspring of each parent is a Poisson random variable with mean
-  \eqn{\mu}{mu}, and the locations of the offspring points of one parent
+  \eqn{\mu}{\mu}, and the locations of the offspring points of one parent
   follow a common distribution described in Jalilian et al (2013).
 
   If the argument \code{lambda} is provided, then this is used
-  as the value of the point process intensity \eqn{\lambda}{lambda}.
+  as the value of the point process intensity \eqn{\lambda}{\lambda}.
   Otherwise, if \code{X} is a
-  point pattern, then  \eqn{\lambda}{lambda}
+  point pattern, then  \eqn{\lambda}{\lambda}
   will be estimated from \code{X}. 
   If \code{X} is a summary statistic and \code{lambda} is missing,
-  then the intensity \eqn{\lambda}{lambda} cannot be estimated, and
-  the parameter \eqn{\mu}{mu} will be returned as \code{NA}.
+  then the intensity \eqn{\lambda}{\lambda} cannot be estimated, and
+  the parameter \eqn{\mu}{\mu} will be returned as \code{NA}.
 
   The remaining arguments \code{rmin,rmax,q,p} control the
   method of minimum contrast; see \code{\link{mincontrast}}.
@@ -127,9 +127,9 @@ cauchy.estK(X, startpar=c(kappa=1,scale=1), lambda=NULL,
   \emph{Biometrics} \bold{63}, 252--258.
 }
 \author{Abdollah Jalilian and Rasmus Waagepetersen.
-  Adapted for \pkg{spatstat} by Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  Adapted for \pkg{spatstat} by \adrian
+  
+  
 }
 \seealso{
   \code{\link{kppm}},

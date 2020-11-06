@@ -33,6 +33,7 @@
     A character vector containing any selection of the
     options \code{"isotropic"}, \code{"Ripley"} or \code{"translate"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{\dots}{
     Ignored.
@@ -169,7 +170,7 @@
 
     # (2) simulated data with independent marks
     X <- rpoispp(100)
-    X <- X \%mark\% runif(X$n)
+    X <- X \%mark\% runif(npoints(X))
     Xc <- Kmark(X)
     plot(Xc)
     
@@ -180,11 +181,11 @@
                          correction="translate")
     plot(M)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

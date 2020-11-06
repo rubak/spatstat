@@ -3,7 +3,7 @@
 #
 #	Pseudoscore residual for unnormalised G (saturation process)
 #
-#	$Revision: 1.8 $	$Date: 2015/02/22 03:00:48 $
+#	$Revision: 1.10 $	$Date: 2018/10/19 03:29:29 $
 #
 ################################################################################
 #
@@ -13,11 +13,11 @@ psstG <- function(object, r=NULL, breaks=NULL, ...,
                   trend=~1, interaction=Poisson(),
                   rbord=reach(interaction),
                   truecoef=NULL, hi.res=NULL) {
-  if(inherits(object, "ppm")) 
+  if(is.ppm(object))
     fit <- object
-  else if(inherits(object, "ppp") || inherits(object, "quad")) {
+  else if(is.ppp(object) || is.quad(object)) {
     # convert to quadscheme
-    if(inherits(object, "ppp"))
+    if(is.ppp(object))
       object <- quadscheme(object, ...)
     # fit model
     if(!is.null(model))
@@ -152,7 +152,7 @@ psstG <- function(object, r=NULL, breaks=NULL, ...,
   else
     okE <- okI
   RSD <- Kwtsum(dIJ[okE], nn1J[okE], wcIJ[okE],
-                  nn1, rep.int(1, length(nn1)), breaks)
+                  nn1, rep.int(1, length(nn1)), breaks, fatal=FALSE)
   Cint <- RSD$numerator
   #
   Cres <- Bres + Csum - Cint

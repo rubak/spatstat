@@ -102,6 +102,7 @@ MultiStrauss <- local({
        parnames = c("possible types", "interaction distances"),
        pardesc  = c("vector of possible types",
                     "matrix of hardcore distances"),
+       hasInf   = FALSE,
        selfstart = function(X, self) {
          if(!is.null(self$par$types)) return(self)
          types <- levels(marks(X))
@@ -116,7 +117,7 @@ MultiStrauss <- local({
            if(length(types) == 0)
              stop(paste("The", sQuote("types"),"argument should be",
                         "either NULL or a vector of all possible types"))
-           if(any(is.na(types)))
+           if(anyNA(types))
              stop("NA's not allowed in types")
            if(is.factor(types)) {
              types <- levels(types)

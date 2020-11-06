@@ -4,7 +4,7 @@
 #	Class 'quad' to define quadrature schemes
 #	in (rectangular) windows in two dimensions.
 #
-#	$Revision: 4.24 $	$Date: 2014/10/24 00:22:30 $
+#	$Revision: 4.28 $	$Date: 2019/01/14 06:44:41 $
 #
 # An object of class 'quad' contains the following entries:
 #
@@ -80,6 +80,10 @@ quad <- function(data, dummy, w, param=NULL) {
   invisible(Q)
 }
 
+is.quad <- function(x) {
+  inherits(x, "quad")
+}
+
 # ------------------ extractor functions ----------------------
 
 x.quad <- function(Q) {
@@ -90,6 +94,11 @@ x.quad <- function(Q) {
 y.quad <- function(Q) {
   verifyclass(Q, "quad")
   c(Q$data$y, Q$dummy$y)
+}
+
+coords.quad <- function(x, ...) {
+  data.frame(x=x.quad(x),
+             y=y.quad(x))
 }
 
 w.quad <- function(Q) {
@@ -130,7 +139,7 @@ is.marked.quad <- function(X, na.action="warn", ...) {
   marx <- marks(X, ...)
   if(is.null(marx))
     return(FALSE)
-  if(any(is.na(marx)))
+  if(anyNA(marx))
     switch(na.action,
            warn = {
              warning(paste("some mark values are NA in the point pattern",
@@ -148,7 +157,7 @@ is.multitype.quad <- function(X, na.action="warn", ...) {
   marx <- marks(X, ...)
   if(is.null(marx))
     return(FALSE)
-  if(any(is.na(marx)))
+  if(anyNA(marx))
     switch(na.action,
            warn = {
              warning(paste("some mark values are NA in the point pattern",
@@ -231,8 +240,9 @@ plot.quad <- function(x, ..., main, add=FALSE, dum=list(), tiles=FALSE) {
                  tt <- dirichlet(U)
                } else {
                  win <- as.mask(as.owin(U))
-                 tileid <- image(exactdt(U)$i,
-                                 win$xcol, win$yrow, win$xrange, win$yrange)
+                 tileid <- im(exactdt(U)$i,
+                              win$xcol, win$yrow,
+                              win$xrange, win$yrange)
                  tt <- tess(image=tileid[win, drop=FALSE])
                }
              },
@@ -246,11 +256,11 @@ plot.quad <- function(x, ..., main, add=FALSE, dum=list(), tiles=FALSE) {
                                if(!pixeltiles) list(col="grey") else NULL)
   if(!is.marked(data)) {
     if(!is.null(tt)) {
-      do.call("plot", tileargs)
+      do.call(plot, tileargs)
       add <- TRUE
     }
     plot(data, main=main, add=add, ...)
-    do.call("plot", append(list(x=dummy), dum))
+    do.call(plot, append(list(x=dummy), dum))
   } else if(is.multitype(data) && !add) {
     oldpar <- par(ask = interactive() &&
                   (.Device %in% c("X11", "GTK", "windows", "Macintosh")))
@@ -261,21 +271,21 @@ plot.quad <- function(x, ..., main, add=FALSE, dum=list(), tiles=FALSE) {
     for(k in types) {
       add <- FALSE
       if(!is.null(tt)) {
-        do.call("plot", tileargs)
+        do.call(plot, tileargs)
         add <- TRUE
       }
       maink <- paste(main, "\n mark = ", k, sep="")
       plot(unmark(data[data.marks == k]), main=maink, add=add, ...)
-      do.call("plot", append(list(x=unmark(dummy[dummy.marks == k])),
+      do.call(plot, append(list(x=unmark(dummy[dummy.marks == k])),
                              dum))
     }
   } else {
     if(!is.null(tt)) {
-      do.call("plot", tileargs)
+      do.call(plot, tileargs)
       add <- TRUE
     }
     plot(data, ..., main=main, add=add)
-    do.call("plot", append(list(x=dummy), dum))
+    do.call(plot, append(list(x=dummy), dum))
   }
   invisible(NULL)
 }

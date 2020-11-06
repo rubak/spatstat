@@ -110,7 +110,10 @@
 
   To construct particular tessellations, see
   \code{\link{quadrats}}, \code{\link{hextess}}, 
-  \code{\link{dirichlet}}, \code{\link{delaunay}}
+  \code{\link{dirichlet}}, \code{\link{delaunay}},
+  \code{\link{venn.tess}},
+  \code{\link{polartess}},
+  \code{\link{quantess}}
   and \code{\link{rpoislinetess}}.
 }
 \value{
@@ -127,34 +130,38 @@
   \code{\link{cut.ppp}},
   \code{\link{by.ppp}},
   \code{\link{bdist.tiles}},
-  \code{\link{tile.areas}}.
+  \code{\link{tile.areas}},
+  \code{\link{as.function.tess}}.
 
   To construct particular tessellations, see
   \code{\link{quadrats}}, \code{\link{hextess}},
-  \code{\link{dirichlet}}, \code{\link{delaunay}}
+  \code{\link{venn.tess}},
+  \code{\link{polartess}},
+  \code{\link{dirichlet}}, \code{\link{delaunay}}, \code{\link{quantess}}
   and \code{\link{rpoislinetess}}.
 
   To divide space into pieces containing equal
   amounts of stuff, use \code{\link{quantess}}.
+
+  To convert a tessellation to a function, for use as a spatial covariate
+  (associating a numerical value with each tile of the tessellation) use
+  \code{\link{as.function.tess}}.
 }
 \examples{
   A <- tess(xgrid=0:4,ygrid=0:4)
   A
+  plot(A)
   B <- A[c(1, 2, 5, 7, 9)]
   B
   v <- as.im(function(x,y){factor(round(5 * (x^2 + y^2)))}, W=owin())
   levels(v) <- letters[seq(length(levels(v)))]
   E <- tess(image=v)
-  E
+  plot(E)
+  G <- tess(image=v, marks=toupper(levels(v)), unitname="km")
+  G
 }
 \author{
-Adrian Baddeley
-\email{Adrian.Baddeley@uwa.edu.au}
-\url{http://www.maths.uwa.edu.au/~adrian/}
-Rolf Turner
-\email{r.turner@auckland.ac.nz}
-and Ege Rubak
-\email{rubak@math.aau.dk}
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{datagen}

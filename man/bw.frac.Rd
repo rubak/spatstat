@@ -32,7 +32,7 @@
   for the kernel estimator of point process intensity
   computed by \code{\link{density.ppp}}.
 
-  The bandwidth \eqn{\sigma}{sigma} is computed as a 
+  The bandwidth \eqn{\sigma}{\sigma} is computed as a 
   quantile of the distance between two independent random points
   in the window. The default is the lower quartile of this
   distribution.
@@ -55,24 +55,25 @@
   and the selected quantile.
 }
 \seealso{
+  For estimating point process intensity, see
   \code{\link{density.ppp}},
   \code{\link{bw.diggle}},
   \code{\link{bw.ppl}},
-  \code{\link{bw.relrisk}},
   \code{\link{bw.scott}},
+  \code{\link{bw.CvL}}.
+
+  For other smoothing purposes, see
+  \code{\link{bw.stoyan}},
   \code{\link{bw.smoothppp}},
-  \code{\link{bw.stoyan}}
+  \code{\link{bw.relrisk}}.
 }
 \examples{
   h <- bw.frac(letterR)
   h
   plot(h, main="bw.frac(letterR)")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{methods}

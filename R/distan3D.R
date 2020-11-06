@@ -1,7 +1,7 @@
 #
 #      distan3D.R
 #
-#      $Revision: 1.12 $     $Date: 2014/11/10 11:01:39 $
+#      $Revision: 1.13 $     $Date: 2017/06/05 10:31:58 $
 #
 #      Interpoint distances for 3D points
 #
@@ -20,8 +20,8 @@ pairdist.pp3 <- function(X, ..., periodic=FALSE, squared=FALSE) {
   # special cases
   if(n == 0)
     return(matrix(numeric(0), nrow=0, ncol=0))
-  else if(n == 1)
-    return(matrix(0,nrow=1,ncol=1))
+  else if(n == 1L)
+    return(matrix(0,nrow=1L,ncol=1L))
   #
   if(!periodic) {
     Cout <- .C("D3pairdist",
@@ -30,7 +30,8 @@ pairdist.pp3 <- function(X, ..., periodic=FALSE, squared=FALSE) {
                y = as.double(y),
                z = as.double(z),
                squared = as.integer(squared),
-               d = as.double(numeric(n*n)))
+               d = as.double(numeric(n*n)),
+               PACKAGE = "spatstat")
   } else {
     b <- as.box3(X)
     wide <- diff(b$xrange)
@@ -45,13 +46,14 @@ pairdist.pp3 <- function(X, ..., periodic=FALSE, squared=FALSE) {
                yheight=as.double(high),
                zdepth=as.double(deep),
                squared = as.integer(squared),
-               d= as.double(numeric(n*n)))
+               d= as.double(numeric(n*n)),
+               PACKAGE = "spatstat")
   }
   dout <- matrix(Cout$d, nrow=n, ncol=n)
   return(dout)
 }
 
-nndist.pp3 <- function(X, ..., k=1) {
+nndist.pp3 <- function(X, ..., k=1, by=NULL) {
   verifyclass(X, "pp3")
 
   if((narg <- length(list(...))) > 0) 
@@ -59,6 +61,9 @@ nndist.pp3 <- function(X, ..., k=1) {
                   ngettext(narg, "argument was", "arguments were"),
                   "ignored"))
 
+  if(!is.null(by)) 
+    return(genericNNdistBy(X, by, k=k))
+  
   # extract point coordinates
   xyz <- coords(X)
   n <- nrow(xyz)
@@ -69,7 +74,7 @@ nndist.pp3 <- function(X, ..., k=1) {
   # k can be a single integer or an integer vector
   if(length(k) == 0)
     stop("k is an empty vector")
-  else if(length(k) == 1) {
+  else if(length(k) == 1L) {
     if(k != round(k) || k <= 0)
       stop("k is not a positive integer")
   } else {
@@ -81,7 +86,7 @@ nndist.pp3 <- function(X, ..., k=1) {
   kmax <- max(k)
 
   # trivial cases
-  if(n <= 1) {
+  if(n <= 1L) {
     # empty pattern => return numeric(0)
     # or pattern with only 1 point => return Inf
     nnd <- matrix(Inf, nrow=n, ncol=kmax)
@@ -90,11 +95,11 @@ nndist.pp3 <- function(X, ..., k=1) {
   }
   
   # number of neighbours that are well-defined
-  kmaxcalc <- min(n-1, kmax)
+  kmaxcalc <- min(n-1L, kmax)
 
   # calculate k-nn distances for k <= kmaxcalc
   
-  if(kmaxcalc == 1) {
+  if(kmaxcalc == 1L) {
     # calculate nearest neighbour distance only
     nnd<-numeric(n)
     o <- fave.order(z)
@@ -105,8 +110,9 @@ nndist.pp3 <- function(X, ..., k=1) {
                y= as.double(y[o]),
                z= as.double(z[o]),
                nnd= as.double(nnd),
-               nnwhich = as.integer(integer(1)),
-               huge=as.double(big))
+               nnwhich = as.integer(integer(1L)),
+               huge=as.double(big),
+               PACKAGE = "spatstat")
     nnd[o] <- Cout$nnd
   } else {
     # case kmaxcalc > 1
@@ -120,8 +126,9 @@ nndist.pp3 <- function(X, ..., k=1) {
                y    = as.double(y[o]),
                z    = as.double(z[o]),
                nnd  = as.double(nnd),
-               nnwhich = as.integer(integer(1)),
-               huge = as.double(big))
+               nnwhich = as.integer(integer(1L)),
+               huge = as.double(big),
+               PACKAGE = "spatstat")
     nnd <- matrix(nnd, nrow=n, ncol=kmaxcalc)
     nnd[o, ] <- matrix(Cout$nnd, nrow=n, ncol=kmaxcalc, byrow=TRUE)
   }
@@ -151,7 +158,7 @@ nnwhich.pp3 <- function(X, ..., k=1) {
   # k can be a single integer or an integer vector
   if(length(k) == 0)
     stop("k is an empty vector")
-  else if(length(k) == 1) {
+  else if(length(k) == 1L) {
     if(k != round(k) || k <= 0)
       stop("k is not a positive integer")
   } else {
@@ -170,7 +177,7 @@ nnwhich.pp3 <- function(X, ..., k=1) {
   z <- xyz$z
   
   # special cases
-  if(n <= 1) {
+  if(n <= 1L) {
     # empty pattern => return integer(0)
     # or pattern with only 1 point => return NA
     nnw <- matrix(as.integer(NA), nrow=n, ncol=kmax)
@@ -179,11 +186,11 @@ nnwhich.pp3 <- function(X, ..., k=1) {
   }
 
   # number of neighbours that are well-defined
-  kmaxcalc <- min(n-1, kmax)
+  kmaxcalc <- min(n-1L, kmax)
 
   # identify k-nn for k <= kmaxcalc
 
-  if(kmaxcalc == 1) {
+  if(kmaxcalc == 1L) {
     # identify nearest neighbour only
     nnw <- integer(n)
     o <- fave.order(z)
@@ -193,9 +200,10 @@ nnwhich.pp3 <- function(X, ..., k=1) {
                x = as.double(x[o]),
                y = as.double(y[o]),
                z = as.double(z[o]),
-               nnd = as.double(numeric(1)),
+               nnd = as.double(numeric(1L)),
                nnwhich = as.integer(nnw),
-               huge = as.double(big))
+               huge = as.double(big),
+               PACKAGE = "spatstat")
     # [sic] Conversion from C to R indexing is done in C code.
     witch <- Cout$nnwhich
     if(any(witch <= 0))
@@ -214,9 +222,10 @@ nnwhich.pp3 <- function(X, ..., k=1) {
                x = as.double(x[o]),
                y = as.double(y[o]),
                z = as.double(z[o]),
-               nnd = as.double(numeric(1)),
+               nnd = as.double(numeric(1L)),
                nnwhich = as.integer(nnw),
-               huge = as.double(big))
+               huge = as.double(big),
+               PACKAGE = "spatstat")
     # [sic] Conversion from C to R indexing is done in C code.
     witch <- Cout$nnwhich 
     witch <- matrix(witch, nrow=n, ncol=kmaxcalc, byrow=TRUE)
@@ -265,7 +274,8 @@ crossdist.pp3 <- function(X, Y, ..., periodic=FALSE, squared=FALSE) {
                yto = as.double(cY$y),
                zto = as.double(cY$z),
                squared = as.integer(squared),
-               d = as.double(matrix(0, nrow=nX, ncol=nY)))
+               d = as.double(matrix(0, nrow=nX, ncol=nY)),
+               PACKAGE = "spatstat")
   } else {
     b <- as.box3(X)
     wide <- diff(b$xrange)
@@ -284,7 +294,8 @@ crossdist.pp3 <- function(X, Y, ..., periodic=FALSE, squared=FALSE) {
                yheight = as.double(high),
                zheight = as.double(deep),
                squared = as.integer(squared),
-               d = as.double(matrix(0, nrow=nX, ncol=nY)))
+               d = as.double(matrix(0, nrow=nX, ncol=nY)),
+               PACKAGE = "spatstat")
   }
   return(matrix(Cout$d, nrow=nX, ncol=nY))
 }

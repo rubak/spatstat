@@ -25,10 +25,10 @@ which can then be fitted to point pattern data.
   \deqn{
     e(d) = \sin^2\left(\frac{\pi d}{2\rho}\right)
   }{
-    e(d) = sin^2((pi * d)/(2 * rho))
+    e(d) = sin^2((\pi * d)/(2 * \rho))
   }
-  for \eqn{d < \rho}{d < rho}, and \eqn{e(d)} is equal to 1
-  for \eqn{d \ge \rho}{d >= rho}.
+  for \eqn{d < \rho}{d < \rho}, and \eqn{e(d)} is equal to 1
+  for \eqn{d \ge \rho}{d \ge \rho}.
 
   The function \code{\link{ppm}()}, which fits point process models to 
   point pattern data, requires an argument 
@@ -42,7 +42,7 @@ which can then be fitted to point pattern data.
   Note that this model does not have any regular parameters
   (as explained in the section on Interaction Parameters
   in the help file for \code{\link{ppm}}).
-  The parameter \eqn{rho} is not estimated by \code{\link{ppm}}.
+  The parameter \eqn{\rho} is not estimated by \code{\link{ppm}}.
 }
 \seealso{
   \code{\link{ppm}},
@@ -70,22 +70,17 @@ which can then be fitted to point pattern data.
    DiggleGatesStibbard(0.02)
    # prints a sensible description of itself
 
-   data(cells)
-
    \dontrun{
-   ppm(cells, ~1, DiggleGatesStibbard(0.05))
+   ppm(cells ~1, DiggleGatesStibbard(0.05))
    # fit the stationary D-G-S process to `cells'
    }
 
-   ppm(cells, ~ polynom(x,y,3), DiggleGatesStibbard(0.05))
+   ppm(cells ~ polynom(x,y,3), DiggleGatesStibbard(0.05))
    # fit a nonstationary D-G-S process
    # with log-cubic polynomial trend
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors
 }
 \keyword{spatial}
 \keyword{models}

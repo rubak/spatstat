@@ -3,7 +3,7 @@
 #
 #    nearest or k-th nearest neighbour of each pixel
 #
-#  $Revision: 1.7 $  $Date: 2014/10/24 00:22:30 $
+#  $Revision: 1.10 $  $Date: 2018/02/11 06:33:09 $
 #
 
 nnmap <- function(X, k=1, what = c("dist", "which"), ...,
@@ -13,8 +13,8 @@ nnmap <- function(X, k=1, what = c("dist", "which"), ...,
   stopifnot(is.ppp(X))
   sortby <- match.arg(sortby)
   outputarray <- resolve.1.default("outputarray", ..., outputarray=FALSE)
-  
-  W <- as.owin(W)
+
+  W <- as.owin(W %orifnull% X)
   huge <- 1.1 * diameter(boundingbox(as.rectangle(X), as.rectangle(W)))
   
   what   <- match.arg(what, choices=c("dist", "which"), several.ok=TRUE)
@@ -43,7 +43,7 @@ nnmap <- function(X, k=1, what = c("dist", "which"), ...,
   isrect <- is.rectangle(rescue.rectangle(W))
 
   # set up pixel array
-  M <- do.call.matched("as.mask",
+  M <- do.call.matched(as.mask,
                        resolve.defaults(list(...), list(w=W)))
   Mdim <- M$dim
   nxcol <- Mdim[2]
@@ -82,6 +82,8 @@ nnmap <- function(X, k=1, what = c("dist", "which"), ...,
       W <- flipxy(W)
       M <- flipxy(M)
       Mdim <- M$dim
+      nxcol <- Mdim[2]
+      nyrow <- Mdim[1]
     }
     xx <- X$x
     yy <- X$y
@@ -116,7 +118,8 @@ nnmap <- function(X, k=1, what = c("dist", "which"), ...,
                wantwhich = as.integer(want.which),
                nnd = as.double(nndv),
                nnwhich = as.integer(nnwh),
-               huge = as.double(huge))
+               huge = as.double(huge),
+               PACKAGE = "spatstat")
     } else {
       zz <- .C("knnGinterface",
                nx = as.integer(nxcol),
@@ -133,7 +136,8 @@ nnmap <- function(X, k=1, what = c("dist", "which"), ...,
                wantwhich = as.integer(want.which),
                nnd = as.double(nndv),
                nnwhich = as.integer(nnwh),
-               huge = as.double(huge))
+               huge = as.double(huge),
+               PACKAGE = "spatstat")
     }
     
     # extract results

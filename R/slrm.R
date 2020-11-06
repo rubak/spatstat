@@ -3,7 +3,7 @@
 #
 #  Spatial Logistic Regression
 #
-#  $Revision: 1.25 $   $Date: 2015/07/11 08:19:26 $
+#  $Revision: 1.29 $   $Date: 2018/05/12 16:19:22 $
 #
 
 slrm <- function(formula, ..., data=NULL, offset=TRUE, link="logit",
@@ -124,14 +124,13 @@ slr.prepare <- function(CallInfo, envir, data,
   if(ncov == 0) {
     isim <- isowin <- ismask <- isfun <- isnum <- isspatial <- israster <- logical(0)
   } else {
-    isim  <- unlist(lapply(covlist, is.im))
-    isowin  <- unlist(lapply(covlist, is.owin))
-    ismask  <- unlist(lapply(covlist, is.mask))
-    isfun  <- unlist(lapply(covlist, is.function))
+    isim  <- sapply(covlist, is.im)
+    isowin  <- sapply(covlist, is.owin)
+    ismask  <- sapply(covlist, is.mask)
+    isfun  <- sapply(covlist, is.function)
     isspatial <- isim | isowin | isfun
     israster <- isim | ismask
-    isnum <- unlist(lapply(covlist,
-                           function(x) { is.numeric(x) && length(x) == 1} ))
+    isnum <- sapply(covlist, is.numeric) & (lengths(covlist) == 1)
   }
   if(!all(ok <- (isspatial | isnum))) {
     n <- sum(!ok)
@@ -182,15 +181,15 @@ slr.prepare <- function(CallInfo, envir, data,
     } else {
       # Window extent is union of domains of data
       domains <- lapply(append(spatiallist, list(Y)), as.owin)
-      D <- do.call("union.owin", domains)
+      D <- do.call(union.owin, domains)
     }
     # Create template mask
-    W <- do.call("as.mask", append(list(D), dotargs))
+    W <- do.call(as.mask, append(list(D), dotargs))
     # Convert all spatial objects to this resolution
     spatiallist <- lapply(spatiallist, convert, W=W)
   } else {
     # Pixel resolution is determined implicitly by covariate data
-    W <- do.call("commonGrid", rasterlist)
+    W <- do.call(commonGrid, rasterlist)
     if(clip) {
       # Restrict data to spatial extent of response point pattern
       W <- intersect.owin(W, as.owin(Y))
@@ -238,7 +237,7 @@ slr.prepare <- function(CallInfo, envir, data,
   }
   
   # tack on any numeric values
-  df <- do.call("cbind", append(list(df), numlist))
+  df <- do.call(cbind, append(list(df), numlist))
   
   ### RETURN ALL 
   Data <- list(response=Y,
@@ -444,7 +443,7 @@ predict.slrm <- function(object, ..., type="intensity",
 plot.slrm <- function(x, ..., type="intensity") {
   xname <- short.deparse(substitute(x))
   y <- predict(x, type=type)
-  do.call("plot.im", resolve.defaults(list(x=y), list(...), list(main=xname)))
+  do.call(plot.im, resolve.defaults(list(x=y), list(...), list(main=xname)))
 }
 
 formula.slrm <- function(x, ...) {
@@ -537,13 +536,21 @@ update.slrm <- function(object, ..., evaluate=TRUE, env=parent.frame()) {
   return(e)
 }
 
-anova.slrm <- function(object, ..., test=NULL) {
-  objex <- append(list(object), list(...))
-  if(!all(unlist(lapply(objex, is.slrm))))
-    stop("Some arguments are not of class slrm")
-  fitz <- lapply(objex, function(z){z$Fit$FIT})
-  do.call("anova", append(fitz, list(test=test)))
-}
+anova.slrm <- local({
+
+  anova.slrm <- function(object, ..., test=NULL) {
+    objex <- append(list(object), list(...))
+    if(!all(unlist(lapply(objex, is.slrm))))
+      stop("Some arguments are not of class slrm")
+    fitz <- lapply(objex, getFIT)
+    do.call(anova, append(fitz, list(test=test)))
+  }
+
+  getFIT <- function(z) {z$Fit$FIT}
+
+  anova.slrm
+})
+
 
 vcov.slrm <- function(object, ..., what=c("vcov", "corr", "fisher", "Fisher")) {
   stopifnot(is.slrm(object))
@@ -616,14 +623,8 @@ simulate.slrm <- function(object, nsim=1, seed=NULL, ...,
     out[[i]] <- rpoispp(lambda, lmax=lmax)
     if(verbose) pstate <- progressreport(i, nsim, state=pstate)
   }
-  # pack up
-  if(nsim == 1 && drop) {
-    out <- out[[1]]
-  } else {
-    out <- as.solist(out)
-    if(nsim > 0)
-      names(out) <- paste("Simulation", 1:nsim)
-  }
+  #' pack up
+  out <- simulationresult(out, nsim, drop)
   out <- timed(out, starttime=starttime)
   attr(out, "seed") <- RNGstate
   return(out)

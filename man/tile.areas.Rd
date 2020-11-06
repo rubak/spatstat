@@ -25,7 +25,9 @@ tile.areas(x)
 }
 \seealso{
   \code{\link{tess}},
-  \code{\link{tiles}}
+  \code{\link{tiles}},
+  \code{\link{tilenames}},
+  \code{\link{tiles.empty}}
 }
 \examples{
   A <- tess(xgrid=0:2,ygrid=0:2)
@@ -34,11 +36,11 @@ tile.areas(x)
   E <- tess(image=v)
   tile.areas(E)
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 \keyword{manip}

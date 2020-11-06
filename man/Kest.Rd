@@ -35,6 +35,7 @@ from a point pattern in a window of arbitrary shape.
     \code{"translation"}, \code{"rigid"},
     \code{"none"}, \code{"good"} or \code{"best"}.
     It specifies the edge correction(s) to be applied.
+    Alternatively \code{correction="all"} selects all options.
   }
   \item{nlarge}{
     Optional. Efficiency threshold.
@@ -284,16 +285,23 @@ Baddeley, A.J. Spatial sampling and censoring.
   John Wiley and Sons.
 } 
 \section{Warnings}{
-  The estimator of \eqn{K(r)} is approximately unbiased for each fixed \eqn{r}.
+  The estimator of \eqn{K(r)} is approximately unbiased for each fixed
+  \eqn{r}, for point processes which do not have very strong
+  interaction. (For point processes with a strong clustering interaction,
+  the estimator is negatively biased; for point processes with a strong
+  inhibitive interaction, the estimator is positively biased.)
+
   Bias increases with \eqn{r} and depends on the window geometry.
   For a rectangular window it is prudent to restrict the \eqn{r} values to
-  a maximum of \eqn{1/4} of the smaller side length of the rectangle.
+  a maximum of \eqn{1/4} of the smaller side length of the rectangle
+  (Ripley, 1977, 1988; Diggle, 1983).
   Bias may become appreciable for point patterns consisting of 
   fewer than 15 points.
  
   While \eqn{K(r)} is always a non-decreasing function, the estimator 
   of \eqn{K} is not guaranteed to be non-decreasing. This is rarely 
-  a problem in practice.
+  a problem in practice, except for the border correction estimators
+  when the number of points is small.
 }
 \seealso{
   \code{\link{localK}} to extract individual summands in the \eqn{K}
@@ -316,9 +324,8 @@ Baddeley, A.J. Spatial sampling and censoring.
   estimators.
 }
 \examples{
- pp <- runifpoint(50)
- K <- Kest(pp)
- data(cells)
+ X <- runifpoint(50)
+ K <- Kest(X)
  K <- Kest(cells, correction="isotropic")
  plot(K)
  plot(K, main="K function for cells")
@@ -326,11 +333,8 @@ Baddeley, A.J. Spatial sampling and censoring.
  plot(K, sqrt(iso/pi) ~ r)
  plot(K, sqrt(./pi) ~ r, ylab="L(r)", main="L function for cells")
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{\adrian
+  and \rolf
 }
 \keyword{spatial}
 \keyword{nonparametric}

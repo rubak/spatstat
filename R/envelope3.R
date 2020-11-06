@@ -3,18 +3,19 @@
 #
 #   simulation envelopes for pp3 
 #
-#   $Revision: 1.10 $  $Date: 2015/10/02 03:43:59 $
+#   $Revision: 1.13 $  $Date: 2016/04/25 02:34:40 $
 #
 
 envelope.pp3 <-
-  function(Y, fun=K3est, nsim=99, nrank=1, ..., 
+  function(Y, fun=K3est, nsim=99, nrank=1, ...,
+           funargs=list(), funYargs=funargs,
            simulate=NULL, verbose=TRUE, 
            transform=NULL, global=FALSE, ginterval=NULL, use.theory=NULL,
            alternative=c("two.sided", "less", "greater"),
            scale=NULL, clamp=FALSE,
            savefuns=FALSE, savepatterns=FALSE, nsim2=nsim,
            VARIANCE=FALSE, nSD=2,
-           Yname=NULL, maxnerr=nsim,
+           Yname=NULL, maxnerr=nsim, rejectNA=FALSE, silent=FALSE,
            do.pwrong=FALSE, envir.simul=NULL) {
   cl <- short.deparse(sys.call())
   if(is.null(Yname)) Yname <- short.deparse(substitute(Y))
@@ -45,6 +46,8 @@ envelope.pp3 <-
       } else {
         stop("Sorry, simulation of marked 3D point patterns is not yet implemented")
       }
+    # suppress warnings from code checkers
+    dont.complain.about(Yintens, Ydomain)
     # evaluate in THIS environment
     simrecipe <- simulrecipe(type = "csr",
                              expr = simexpr,
@@ -59,14 +62,17 @@ envelope.pp3 <-
     X <- Y
   }
   envelopeEngine(X=X, fun=fun, simul=simrecipe,
-                 nsim=nsim, nrank=nrank, ..., 
+                 nsim=nsim, nrank=nrank, ...,
+                 funargs=funargs, funYargs=funYargs,
                  verbose=verbose, clipdata=FALSE,
                  transform=transform,
                  global=global, ginterval=ginterval, use.theory=use.theory,
                  alternative=alternative, scale=scale, clamp=clamp,
                  savefuns=savefuns, savepatterns=savepatterns, nsim2=nsim2,
                  VARIANCE=VARIANCE, nSD=nSD,
-                 Yname=Yname, maxnerr=maxnerr, cl=cl,
+                 Yname=Yname,
+                 maxnerr=maxnerr, rejectNA=rejectNA, silent=silent,
+                 cl=cl,
                  envir.user=envir.user,
                  expected.arg=c("rmax", "nrval"),
                  do.pwrong=do.pwrong)

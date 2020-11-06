@@ -6,6 +6,25 @@
 
 ##################  base ################################
 
+safevalue <- function(x, default=0) {
+  ## ensure x is finite and acceptable to C routines
+  ifelse(is.finite(x),
+         pmin(.Machine$double.xmax,
+              pmax(.Machine$double.eps,
+                   x)),
+         default)
+}
+
+bigvaluerule <- function(objfun, objargs, startpar, ...) {
+  ## evaluate objective at starting parameter vector
+  startval <- do.call(objfun,  list(par=startpar, objargs=objargs, ...))
+  ## determine suitable large number to replace Inf values of objective
+  bigvalue <- min(max(1, 10 * abs(startval)),
+                  with(.Machine, sqrt(double.xmax) * double.eps))
+  return(bigvalue)
+}
+
+
 mincontrast <- local({
 
   ## objective function (in a format that is re-usable by other code)
@@ -16,9 +35,35 @@ mincontrast <- local({
         stop("theoretical function did not return a numeric vector")
       if(length(theo) != nrvals)
         stop("theoretical function did not return the correct number of values")
+      ## experimental
+      if(!is.null(adjustment)) {
+        theo <- adjustment$fun(theo=theo, par=par,
+                               auxdata=adjustment$auxdata, ...)
+        if(!is.vector(theo) || !is.numeric(theo))
+	  stop("adjustment did not return a numeric vector")
+        if(length(theo) != nrvals)
+          stop("adjustment did not return the correct number of values")
+      }
+      ## integrand of discrepancy 
       discrep <- (abs(theo^qq - obsq))^pp
-      value <- mean(discrep)
-      value <- min(value, .Machine$double.xmax)
+      ## protect C code from weird values
+      bigvalue <- BIGVALUE + sqrt(sum(par^2))
+      discrep <- safevalue(discrep, default=bigvalue)
+      ## rescaled integral of discrepancy
+      value <- mean(discrep) 
+      if(is.function(whiu)) value <- whiu(par, value, -1)
+      ## debugger activated by spatstat.options(mincon.trace)
+      if(isTRUE(TRACE)) {
+        cat("Parameters:", fill=TRUE)
+        print(par)
+        splat("Discrepancy value:", value)
+      }
+      if(is.environment(saveplace)) {
+        h <- get("h", envir=saveplace)
+        hplus <- as.data.frame(append(par, list(value=value)))
+        h <- rbind(h, hplus)
+        assign("h", h, envir=saveplace)
+      }
       return(value)
     })
   }
@@ -28,8 +73,13 @@ mincontrast <- local({
                           ctrl=list(q = 1/4, p = 2, rmin=NULL, rmax=NULL),
                           fvlab=list(label=NULL, desc="minimum contrast fit"),
                           explain=list(dataname=NULL,
-                            modelname=NULL, fname=NULL)) {
+                                       modelname=NULL, fname=NULL),
+                          action.bad.values=c("warn", "stop", "silent"),
+			  adjustment=NULL,
+                          pint=NULL) {
     verifyclass(observed, "fv")
+    action.bad.values <- match.arg(action.bad.values)
+    
     stopifnot(is.function(theoretical))
     if(!any("par" %in% names(formals(theoretical))))
       stop(paste("Theoretical function does not include an argument called",
@@ -53,8 +103,12 @@ mincontrast <- local({
       stopifnot(rmin < rmax && rmin >= 0)
     else {
       alim <- attr(observed, "alim") %orifnull% range(rvals)
-      if(is.null(rmin)) rmin <- alim[1]
       if(is.null(rmax)) rmax <- alim[2]
+      if(is.null(rmin)) {
+        rmin <- alim[1]
+        if(rmin == 0 && identical(explain$fname,"g"))
+          rmin <- rmax/1e3 # avoid artefacts at zero in pcf
+      }
     }
     ## extract vector of observed values of statistic
     valu <- fvnames(observed, ".y")
@@ -63,30 +117,47 @@ mincontrast <- local({
     if(max(rvals) < rmax)
       stop(paste("rmax=", signif(rmax,4),
                  "exceeds the range of available data",
-                 "= [", signif(min(rvals),4), ",", signif(max(rvals),4), "]"))
+                 "= [", signif(min(rvals),4), ",", signif(max(rvals),4), "]"),
+           call.=FALSE)
     sub <- (rvals >= rmin) & (rvals <= rmax)
     rvals <- rvals[sub]
     obs <- obs[sub]
     ## sanity clause
     if(!all(ok <- is.finite(obs))) {
-      whinge <- paste("Some values of the empirical function",
+      doomed <- !any(ok)
+      whinge <- paste(if(doomed) "All" else "Some",
+                      "values of the empirical function",
                       sQuote(explain$fname),
-                      "were infinite or NA.")
+                      "were infinite, NA or NaN.")
+      if(doomed || action.bad.values == "stop")
+        stop(whinge, call.=FALSE)
+      ## trim each end of domain
       iMAX <- max(which(ok))
       iMIN <- min(which(!ok)) + 1
       if(iMAX > iMIN && all(ok[iMIN:iMAX])) {
+        ## success - accept trimmed domain
         rmin <- rvals[iMIN]
         rmax <- rvals[iMAX]
         obs   <- obs[iMIN:iMAX]
         rvals <- rvals[iMIN:iMAX]
         sub[sub] <- ok
-        warning(paste(whinge,
-                      "Range of r values was reset to",
-                      prange(c(rmin, rmax))),
-                call.=FALSE)
-      } else stop(paste(whinge, "Please choose a narrower range [rmin, rmax]"),
+        if(action.bad.values == "warn") {
+          warning(paste(whinge,
+                        "Range of r values was reset to",
+                        prange(c(rmin, rmax))),
+                  call.=FALSE)
+        }
+      } else stop(paste(whinge,
+                        "Unable to recover.",
+                        "Please choose a narrower range [rmin, rmax]"),
                   call.=FALSE)
     }
+    ## debugging
+    TRACE <- pint$trace %orifnull% spatstat.options("mincon.trace")
+    if(SAVE <- isTRUE(pint$save)) {
+      saveplace <- new.env()
+      assign("h", NULL, envir=saveplace)
+    } else saveplace <- NULL
     ## pack data into a list
     objargs <- list(theoretical = theoretical,
                     rvals       = rvals,
@@ -95,7 +166,16 @@ mincontrast <- local({
                     qq          = ctrl$q,
                     pp          = ctrl$p,
                     rmin        = rmin,
-                    rmax        = rmax)
+                    rmax        = rmax,
+		    adjustment  = adjustment,
+                    whiu        = pint$whiu,
+                    saveplace   = saveplace,
+                    TRACE       = TRACE,
+                    BIGVALUE    = 1)
+    ## determine a suitable large number to replace Inf values of objective
+    objargs$BIGVALUE <- bigvaluerule(contrast.objective,
+                                     objargs,
+                                     startpar, ...)
     ## go
     minimum <- optim(startpar, fn=contrast.objective, objargs=objargs, ...)
     ## if convergence failed, issue a warning 
@@ -103,13 +183,20 @@ mincontrast <- local({
     ## evaluate the fitted theoretical curve
     fittheo <- theoretical(minimum$par, rvals, ...)
     ## pack it up as an `fv' object
-    label <- fvlab$label
+    label <- fvlab$label %orifnull% "%s[fit](r)"
     desc  <- fvlab$desc
-    if(is.null(label))
-      label <- paste("fit(", argu, ")", collapse="")
     fitfv <- bind.fv(observed[sub, ],
                      data.frame(fit=fittheo),
                      label, desc)
+    if(!is.null(adjustment)) {
+      adjtheo <- adjustment$fun(theo=fittheo,
+      	                        par=minimum$par,
+				auxdata=adjustment$auxdata, ...)
+      fitfv <- bind.fv(fitfv,
+                       data.frame(adjfit=adjtheo),
+		       "%s[adjfit](r)",
+		       paste("adjusted", desc))
+    }				
     result <- list(par      = minimum$par,
                    fit      = fitfv,
                    opt      = minimum,
@@ -120,6 +207,7 @@ mincontrast <- local({
                    objargs  = objargs,
                    dotargs  = list(...))
     class(result) <- c("minconfit", class(result))
+    if(SAVE) attr(result, "h") <- get("h", envir=saveplace)
     return(result)
   }
 
@@ -189,13 +277,15 @@ print.minconfit <- function(x, ...) {
       print(mp)
     }
   }
-  if(!is.null(mu <- x$mu)) {
+  if(length(mu <- x$mu)) {
     if(isPCP) {
       splat("Mean cluster size: ",
-            if(!is.im(mu)) paste(signif(mu, digits), "points") else "[pixel image]")
+            if(is.numeric(mu)) paste(signif(mu, digits), "points") else
+            if(is.im(mu)) "[pixel image]" else "[unknown]")
     } else {
-      splat("Fitted mean of log of random intensity:",
-            if(!is.im(mu)) signif(mu, digits) else "[pixel image]")
+      splat("Fitted mean of log of random intensity: ",
+            if(is.numeric(mu)) signif(mu, digits) else
+            if(is.im(mu)) "[pixel image]" else "[unknown]")
     }
   }
   if(waxlyrical('space', terselevel))
@@ -225,7 +315,7 @@ print.minconfit <- function(x, ...) {
 
 plot.minconfit <- function(x, ...) {
   xname <- short.deparse(substitute(x))
-  do.call("plot.fv",
+  do.call(plot.fv,
           resolve.defaults(list(x$fit),
                            list(...),
                            list(main=xname)))
@@ -243,6 +333,8 @@ unitname.minconfit <- function(x) {
 as.fv.minconfit <- function(x) x$fit
 
 ######  convergence status of 'optim' object
+
+optimConverged <- function(x) { x$convergence == 0 }
 
 optimStatus <- function(x, call=NULL) {
   cgce <- x$convergence
@@ -275,7 +367,10 @@ optimStatus <- function(x, call=NULL) {
          )
 }
 
+#' general code for collecting status reports
+
 signalStatus <- function(x, errors.only=FALSE) {
+  if(is.null(x)) return(invisible(NULL))
   stopifnot(inherits(x, "condition"))
   if(inherits(x, "error")) stop(x)
   if(inherits(x, "warning")) warning(x) 
@@ -284,6 +379,7 @@ signalStatus <- function(x, errors.only=FALSE) {
 }
 
 printStatus <- function(x, errors.only=FALSE) {
+  if(is.null(x)) return(invisible(NULL))
   prefix <-
     if(inherits(x, "error")) "error: " else 
     if(inherits(x, "warning")) "warning: " else NULL
@@ -293,21 +389,18 @@ printStatus <- function(x, errors.only=FALSE) {
 }
 
 accumulateStatus <- function(x, stats=NULL) {
-  if(is.null(stats))
-    stats <- list(values=list(), frequencies=integer(0))
-  if(!inherits(x, c("error", "warning", "message")))
-    return(stats)
-  with(stats,
-       {
-         same <- unlist(lapply(values, identical, y=x))
-         if(any(same)) {
-           i <- min(which(same))
-           frequencies[i] <- frequencies[i] + 1
-         } else {
-           values <- append(values, list(x))
-           frequencies <- c(frequencies, 1)
-         }
-       })
+  values      <- stats$values      %orifnull% list()
+  frequencies <- stats$frequencies %orifnull% integer(0)
+  if(inherits(x, c("error", "warning", "message"))) {
+    same <- unlist(lapply(values, identical, y=x))
+    if(any(same)) {
+      i <- min(which(same))
+      frequencies[i] <- frequencies[i] + 1L
+    } else {
+      values <- append(values, list(x))
+      frequencies <- c(frequencies, 1L)
+    }
+  }
   stats <- list(values=values, frequencies=frequencies)
   return(stats)
 }
@@ -316,8 +409,9 @@ printStatusList <- function(stats) {
   with(stats,
        {
          for(i in seq_along(values)) {
-           printStatus(values[i])
-           cat(paste("\t", paren(paste(frequencies[i], "times")), "\n"))
+           printStatus(values[[i]])
+           fi <- frequencies[i]
+           splat("\t", paren(paste(fi, ngettext(fi, "time", "times"))))
          }
        }
        )
@@ -483,7 +577,7 @@ thomas.estpcf <- function(X, startpar=c(kappa=1,scale=1),
     if(!identical(attr(g, "fname")[1], "g"))
       warning("Argument X does not appear to be a pair correlation function")
   } else if(inherits(X, "ppp")) {
-    g <- do.call("pcf.ppp", append(list(X), pcfargs))
+    g <- do.call(pcf.ppp, append(list(X), pcfargs))
     dataname <- paste("pcf(", dataname, ")", sep="")
     if(is.null(lambda))
       lambda <- summary(X)$intensity
@@ -533,7 +627,7 @@ matclust.estpcf <- function(X, startpar=c(kappa=1,scale=1),
     if(!identical(attr(g, "fname")[1], "g"))
       warning("Argument X does not appear to be a pair correlation function")
   } else if(inherits(X, "ppp")) {
-    g <- do.call("pcf.ppp", append(list(X), pcfargs))
+    g <- do.call(pcf.ppp, append(list(X), pcfargs))
     dataname <- paste("pcf(", dataname, ")", sep="")
     if(is.null(lambda))
       lambda <- summary(X)$intensity
@@ -585,7 +679,7 @@ lgcp.estpcf <- function(X, startpar=c(var=1,scale=1),
     if(!identical(attr(g, "fname")[1], "g"))
       warning("Argument X does not appear to be a pair correlation function")
   } else if(inherits(X, "ppp")) {
-    g <- do.call("pcf.ppp", append(list(X), pcfargs))
+    g <- do.call(pcf.ppp, append(list(X), pcfargs))
     dataname <- paste("pcf(", dataname, ")", sep="")
     if(is.null(lambda))
       lambda <- summary(X)$intensity
@@ -688,7 +782,7 @@ cauchy.estpcf <- function(X, startpar=c(kappa=1,scale=1),
     if(!identical(attr(g, "fname")[1], "g"))
       warning("Argument X does not appear to be a pair correlation function")
   } else if(inherits(X, "ppp")) {
-    g <- do.call("pcf.ppp", append(list(X), pcfargs))
+    g <- do.call(pcf.ppp, append(list(X), pcfargs))
     dataname <- paste("pcf(", dataname, ")", sep="")
     if(is.null(lambda))
       lambda <- summary(X)$intensity
@@ -830,7 +924,7 @@ vargamma.estpcf <- function(X, startpar=c(kappa=1,scale=1), nu=-1/4,
     if(!identical(attr(g, "fname")[1], "g"))
       warning("Argument X does not appear to be a pair correlation function")
   } else if(inherits(X, "ppp")) {
-    g <- do.call("pcf.ppp", append(list(X), pcfargs))
+    g <- do.call(pcf.ppp, append(list(X), pcfargs))
     dataname <- paste("pcf(", dataname, ")", sep="")
     if(is.null(lambda))
       lambda <- summary(X)$intensity

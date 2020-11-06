@@ -2,7 +2,7 @@
 #
 #    strausshard.S
 #
-#    $Revision: 2.20 $	$Date: 2014/10/24 00:22:30 $
+#    $Revision: 2.37 $	$Date: 2018/05/02 09:38:36 $
 #
 #    The Strauss/hard core process
 #
@@ -21,13 +21,14 @@ StraussHard <- local({
          creator = "StraussHard",
          family  = "pairwise.family",  # evaluated later
          pot    = function(d, par) {
-           v <- 1 * (d <= par$r)
+           v <- (d <= par$r)
            v[ d <= par$hc ] <-  (-Inf)
            v
          },
          par    = list(r = NULL, hc = NULL), # filled in later
          parnames = c("interaction distance",
                       "hard core distance"), 
+         hasInf = TRUE, 
          selfstart = function(X, self) {
            # self starter for StraussHard
            nX <- npoints(X)
@@ -89,7 +90,7 @@ StraussHard <- local({
          irange = function(self, coeffs=NA, epsilon=0, ...) {
            r <- self$par$r
            hc <- self$par$hc
-           if(any(is.na(coeffs)))
+           if(anyNA(coeffs))
              return(r)
            loggamma <- coeffs[1]
            if(abs(loggamma) <= epsilon)
@@ -102,27 +103,96 @@ StraussHard <- local({
        can.do.fast=function(X,correction,par) {
          return(all(correction %in% c("border", "none")))
        },
-       fasteval=function(X,U,EqualPairs,pairpot,potpars,correction, ...) {
-         # fast evaluator for StraussHard interaction
-         if(!all(correction %in% c("border", "none")))
-           return(NULL)
-         if(spatstat.options("fasteval") == "test")
-           message("Using fast eval for StraussHard")
-         r <- potpars$r
-         hc <- potpars$hc
-         hclose <- strausscounts(U, X, hc, EqualPairs)
-         rclose <- strausscounts(U, X, r,  EqualPairs)
-         answer <- ifelseXB(hclose == 0, rclose, -Inf)
-         return(matrix(answer, ncol=1))
-       },
+      fasteval=function(X,U,EqualPairs,pairpot,potpars,correction,
+                        splitInf=FALSE, ...) {
+        #' fast evaluator for StraussHard interaction
+        if(!all(correction %in% c("border", "none")))
+          return(NULL)
+        if(spatstat.options("fasteval") == "test")
+          message("Using fast eval for StraussHard")
+        r <- potpars$r
+        hc <- potpars$hc
+        hclose <- (strausscounts(U, X, hc, EqualPairs) != 0)
+        rclose <- strausscounts(U, X, r,  EqualPairs)
+        if(!splitInf) {
+          answer <- ifelseAX(hclose, -Inf, rclose)
+          answer <- matrix(answer, ncol=1)
+        } else {
+          answer <- ifelseAX(hclose, 0, rclose)
+          answer <- matrix(answer, ncol=1)
+          attr(answer, "-Inf") <- hclose
+        }
+        return(answer)
+      },
        Mayer=function(coeffs, self) {
          # second Mayer cluster integral
          gamma <- exp(as.numeric(coeffs[1]))
          r <- self$par$r
          hc <- self$par$hc
          return(pi * (hc^2 + (1-gamma) * (r^2 - hc^2)))
+       },
+       delta2 = function(X, inte, correction, ..., sparseOK=FALSE) {
+         r  <- inte$par$r
+         hc <- inte$par$hc
+         #' positive part
+         U <- as.ppp(X)
+         nU <- npoints(U)
+         cl <- weightedclosepairs(U, r, correction=correction, what="indices")
+
+         if(is.null(cl)) # can't handle edge correction
+           return(NULL)
+         
+         v <- sparseMatrix(i=cl$i, j=cl$j, x=cl$weight,
+                           dims=c(nU, nU))
+         
+         #' hard core part
+         hcl <- closepairs(U, hc, what="indices")
+         ihit <- hcl$i
+         jhit <- hcl$j
+         vh <- NULL
+
+         if(is.ppp(X)) {
+           #' count conflicts between data points
+           nhit <- as.integer(table(factor(jhit, levels=seq_len(nU))))
+           #' for a conflicting pair X[i], X[j],
+           #' status of X[j] will change when X[i] is deleted
+           #' iff X[j] is only in conflict with X[i]
+           changes <- (nhit == 1)
+           if(any(changes)) {
+             changesJ <- changes[jhit]
+             vh <- sparseMatrix(i=ihit[changesJ], j=jhit[changesJ], x=TRUE,
+                                dims=c(nU, nU))
+           }
+         } else if(is.quad(X)) {
+           #' count conflicts with existing data points
+           izdat <- is.data(X)
+           hitdata <- izdat[ihit]
+           nhitdata <- as.integer(table(factor(jhit[hitdata],
+                                               levels=seq_len(nU))))
+           #' for a conflicting pair U[i], U[j],
+           #' status of U[j] will change when U[i] is added/deleted
+           #' iff EITHER
+           #'     U[i] = X[i] is a data point and
+           #'     U[j] is only in conflict with X[i],
+           #' OR
+           #'     U[i] is a dummy point,
+           #'     U[j] has no conflicts with X.
+           changesJ <- (hitdata & (nhitdata[jhit] == 1)) |
+                       (!hitdata & (nhitdata[jhit] == 0))
+           if(any(changesJ)) 
+             vh <- sparseMatrix(i=ihit[changesJ], j=jhit[changesJ], x=TRUE,
+                                dims=c(nU, nU))
+         } else stop("X should be a ppp or quad object")
+
+         # pack up
+         if(!sparseOK) {
+           v <- as.matrix(v)
+           if(!is.null(vh)) vh <- as.matrix(vh)
+         }
+         attr(v, "deltaInf") <- vh
+         return(v)
        }
-         )
+    )
   class(BlankStraussHard) <- "interact"
   
   StraussHard <- function(r, hc=NA) {

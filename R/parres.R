@@ -3,7 +3,7 @@
 #
 # code to plot transformation diagnostic
 #
-#   $Revision: 1.4 $  $Date: 2014/11/10 11:02:35 $
+#   $Revision: 1.15 $  $Date: 2020/02/21 08:47:50 $
 #
 
 parres <- function(model, covariate, ...,
@@ -13,11 +13,21 @@ parres <- function(model, covariate, ...,
                    bw.restrict = FALSE,
                    covname) {  
 
+  callstring <- paste(deparse(sys.call()), collapse = "")
   modelname <- deparse(substitute(model))
+
+  stopifnot(is.ppm(model))
+  
+  if(missing(covariate)) {
+    mc <- model.covariates(model)
+    if(length(mc) == 1) covariate <- mc else stop("covariate must be provided")
+  }
   if(missing(covname)) 
     covname <- sensiblevarname(deparse(substitute(covariate)), "X")
-  callstring <- paste(deparse(sys.call()), collapse = "")
 
+  if(is.marked(model))
+    stop("Sorry, this is not yet implemented for marked models")
+      
   if(!is.null(subregion)) 
     stopifnot(is.owin(subregion))
   
@@ -26,7 +36,6 @@ parres <- function(model, covariate, ...,
   bw.input <- match.arg(bw.input)
   
   # validate model
-  stopifnot(is.ppm(model))
   modelcall <- model$callstring
   if(is.null(modelcall))
     modelcall <- model$call
@@ -155,59 +164,43 @@ parres <- function(model, covariate, ...,
     dmat <- model.depends(model)
     if(!(covname %in% colnames(dmat)))
       stop("Internal error: cannot match covariate names")
-    othercov <- (colnames(dmat) != covname)
     relevant <- dmat[, covname]
     if(any(relevant)) {
       # original covariate determines one or more canonical covariates
       mediator <- "canonical"
-      # check whether covariate is separable
-      if(any(conflict <- dmat[relevant, othercov, drop=FALSE])) {
-        ## identify entangled covariates
-        entangled <- colnames(conflict)[apply(conflict, 2, any)]
-        ## not problematic if constant
-        ok <- unlist(isconstant[entangled])
-        conflict[ , ok] <- FALSE
-        ## re-test
-        if(any(conflict)) {
-          conflictterms <- apply(conflict, 1, any)
-          conflictcovs  <- apply(conflict, 2, any)
-          stop(paste("The covariate", sQuote(covname),
-                     "cannot be separated from the",
-                     ngettext(sum(conflictcovs), "covariate", "covariates"),
-                     commasep(sQuote(colnames(conflict)[conflictcovs])),
-                     "in the model",
-                     ngettext(sum(conflictterms), "term", "terms"),
-                     commasep(sQuote(rownames(conflict)[conflictterms]))
-                     ))
-        }
-      }
-      # 
+      ## check whether covariate is separable
+      check.separable(dmat, covname, isconstant)
+      ## Extract information about relevant model terms
       termnames <- rownames(dmat)[relevant]
       isoffset <- rep.int(FALSE, length(termnames))
       names(isoffset) <- termnames
-      # Extract relevant canonical covariates
+      ## Extract relevant canonical covariates
       mm <-  model.matrix(model)
       termvalues <- mm[, relevant, drop=FALSE]
-      # extract corresponding coefficients
+      ## extract corresponding coefficients
       termbetas <- coef(model)[relevant]
-      # evaluate model effect
+      ## evaluate model effect
       effect <- as.numeric(termvalues %*% termbetas)
-      # check length
+      ## check length
       if(length(effect) != npoints(quadpoints))
         stop(paste("Internal error: number of values of fitted effect =",
                    length(effect), "!=", npoints(quadpoints),
                    "= number of quadrature points"))
-      # Trap loglinear case
+      ## Trap loglinear case
       if(length(termnames) == 1 && identical(termnames, covname)) {
         covtype <- "canonical"
         beta <- termbetas
       }
-      # construct the corresponding function
+      ## construct the corresponding function
       gd <- getglmdata(model)
       goodrow <- min(which(complete.cases(gd)))
       defaultdata <- gd[goodrow, , drop=FALSE]
+      #' set interaction terms to zero
+      if(length(Vnames <- model$internal$Vnames))
+        defaultdata[,Vnames] <- 0
+      gf <- getglmfit(model)
       effectfundata.can <- list(covname=covname,
-                            fmla = formula(model),
+                            fmla = rhs.of.formula(formula(gf)),
                             termbetas = termbetas,
                             defaultdata = defaultdata,
                             relevant = relevant,
@@ -230,37 +223,18 @@ parres <- function(model, covariate, ...,
     }
     if(!is.null(offmat <- attr(dmat, "offset")) &&
        any(relevant <- offmat[, covname])) {
-      # covariate appears in a model offset term
+      ## covariate appears in a model offset term
       mediator <- c(mediator, "offset")
-      # check whether covariate is separable
-      if(any(conflict<- offmat[relevant, othercov, drop=FALSE])) {
-        ## identify entangled covariates
-        entangled <- colnames(conflict)[apply(conflict, 2, any)]
-        ## not problematic if constant
-        ok <- unlist(isconstant[entangled])
-        conflict[ , ok] <- FALSE
-        ## re-test
-        if(any(conflict)) {
-          conflictterms <- apply(conflict, 1, any)
-          conflictcovs  <- apply(conflict, 2, any)
-          stop(paste("The covariate", sQuote(covname),
-                     "cannot be separated from the",
-                     ngettext(sum(conflictcovs), "covariate", "covariates"),
-                     commasep(sQuote(colnames(conflict)[conflictcovs])),
-                     "in the model",
-                     ngettext(sum(conflictterms), "term", "terms"),
-                     commasep(sQuote(rownames(conflict)[conflictterms]))
-                     ))
-        }
-      }
-      # collect information about relevant offset 
+      ## check whether covariate is separable
+      check.separable(offmat, covname, isconstant)
+      ## collect information about relevant offset 
       offnames <- rownames(offmat)[relevant]
       termnames <- c(termnames, offnames)
       noff <- length(offnames)
       termbetas <- c(termbetas, rep.int(1, noff))
       isoffset  <- c(isoffset, rep.int(TRUE, noff))
       names(termbetas) <- names(isoffset) <- termnames
-      # extract values of relevant offset 
+      ## extract values of relevant offset 
       mf <- model.frame(model, subset=rep.int(TRUE, n.quad(Q)))
       if(any(nbg <- !(offnames %in% colnames(mf))))
         stop(paste("Internal error:",
@@ -268,14 +242,18 @@ parres <- function(model, covariate, ...,
                    offnames[nbg],
                    "not found in model frame"))
       effex <- mf[, offnames, drop=FALSE]
-      effect <- effect + apply(effex, 1, sum)
+      effect <- effect + rowSums(effex)
       #
       # construct the corresponding function
       gd <- getglmdata(model)
       goodrow <- min(which(complete.cases(gd)))
       defaultdata <- gd[goodrow, , drop=FALSE]
+      #' set interaction terms to zero
+      if(length(Vnames <- model$internal$Vnames))
+        defaultdata[,Vnames] <- 0
+      gf <- getglmfit(model)
       effectfundata.off <- list(covname=covname,
-                                fmla = formula(model),
+                                fmla = rhs.of.formula(formula(gf)),
                                 defaultdata = defaultdata,
                                 offnames = offnames)
       effectFun.off <- function(x) {
@@ -290,7 +268,7 @@ parres <- function(model, covariate, ...,
         if(!all(d$offnames %in% colnames(mf))) 
           stop("Internal error: mismatch in term names in effectFun")
         moff <- mf[, d$offnames, drop=FALSE]
-        y <- apply(moff, 1, sum)
+        y <- rowSums(moff)
         return(y)
       }
     }
@@ -353,16 +331,22 @@ parres <- function(model, covariate, ...,
   
   nbg <- nbg.cov | nbg.eff
   ok <- !nbg & operative
-  
-  Q           <- Q[ok]
-  covvalues   <- covvalues[ok]
-  quadpoints  <- quadpoints[ok]
-  resid       <- resid[ok]
-  lam         <- lam[ok]
-  effect      <- effect[ok]
-  insubregion <- insubregion[ok]
-  Z           <- Z[ok]
-  wts         <- wts[ok]
+
+  if(sum(ok) < 2) {
+    warning("Not enough data; returning NULL")
+    return(NULL)
+  }
+  if(!all(ok)) {
+    Q           <- Q[ok]
+    covvalues   <- covvalues[ok]
+    quadpoints  <- quadpoints[ok]
+    resid       <- resid[ok]
+    lam         <- lam[ok]
+    effect      <- effect[ok]
+    insubregion <- insubregion[ok]
+    Z           <- Z[ok]
+    wts         <- wts[ok]
+  }
 
   ####################################################
   # assemble data for smoothing 
@@ -406,6 +390,10 @@ parres <- function(model, covariate, ...,
   if(!is.null(subregion) && !bw.restrict) {
     # Bandwidth was computed on all data
     # Restrict to subregion and recompute numerator
+    if(sum(insubregion) < 2) {
+      warning("Not enough useable data in subregion; returning NULL")
+      return(NULL)
+    }
     x   <- x[insubregion]
     y   <- y[insubregion]
     w   <- w[insubregion]
@@ -428,10 +416,13 @@ parres <- function(model, covariate, ...,
   
   ####################################################
   # Determine recommended plot range
-
-  xr <- range(x[Z], finite=TRUE)
-  alim <- xr + 0.1 * diff(xr) * c(-1,1)
-  alim <- intersect.ranges(alim, c(from, to))
+  alim <- c(from, to)
+  nZ <- sum(Z)
+  if(nZ > 5) {
+    xr <- range(as.vector(x[Z]), finite=TRUE)
+    alimx <- xr + 0.1 * diff(xr) * c(-1,1)
+    alim <- intersect.ranges(alim, alimx)
+  } 
   
   ####################################################
   # Compute terms 
@@ -456,12 +447,14 @@ parres <- function(model, covariate, ...,
   varestxxx <- varnumfun(xxx)/(2 * sigma * sqrt(pi) * denfun(xxx)^2)
   sd <- sqrt(varestxxx)
   # alternative estimate of variance using data points only
-  varXnumer <- unnormdensity(x[Z], weights=1/lam[Z]^2,
-                             bw=tau, adjust=1,
-                             n=n,from=from,to=to, ...)
-  varXnumfun <- interpolate(varXnumer)
-  varXestxxx <- varXnumfun(xxx)/(2 * sigma * sqrt(pi) * denfun(xxx)^2)
-  sdX <- sqrt(varXestxxx)
+  if(nZ > 1) {
+    varXnumer <- unnormdensity(x[Z], weights=1/lam[Z]^2,
+                               bw=tau, adjust=1,
+                               n=n,from=from,to=to, ...)
+    varXnumfun <- interpolate(varXnumer)
+    varXestxxx <- varXnumfun(xxx)/(2 * sigma * sqrt(pi) * denfun(xxx)^2)
+    sdX <- sqrt(varXestxxx)
+  } else sdX <- rep(NA, length(xxx))
   # fitted effect
   effxxx <- effectFun(xxx)
   
@@ -543,23 +536,21 @@ print.parres <- function(x, ...) {
            isoffset <- s$isoffset
            if(is.null(isoffset)) isoffset <- rep.int(FALSE, length(cancovs))
            ncc <- length(cancovs)
+           nfitted <- sum(!isoffset)
            noff <- sum(isoffset)
-           nother <- sum(!isoffset)
-           explain <-
-             paste(ngettext(ncc, "Fitted effect:", "Fitted effect: sum of"),
-                   if(noff == 0) {
-                     paste(paste(med, collapse=" and "),
-                           ngettext(ncc, "term", "terms"),
-                           commasep(dQuote(cancovs)))
-                   } else {
-                     paste(paste(med[med != "offset"], collapse=" and "),
-                           ngettext(nother, "term", "terms"),
-                           commasep(dQuote(cancovs[!isoffset])),
-                           "and offset",
-                           ngettext(noff, "term", "terms"),
-                           commasep(dQuote(cancovs[isoffset])))
-                   })
-           cat(paste(explain, "\n"))
+           explainfitted <- explainoff <- character(0)
+           if(noff > 0) 
+             explainoff <- paste("offset",
+                                 ngettext(noff, "term", "terms"),
+                                 commasep(dQuote(cancovs[isoffset])))
+           if(nfitted > 0)
+             explainfitted <- paste(
+               paste(med[med != "offset"], collapse=" and "),
+               ngettext(nfitted, "term", "terms"),
+               commasep(dQuote(cancovs[!isoffset])))
+           splat("Fitted effect: ",
+                 if(ncc > 1) "sum of" else NULL,
+                 paste(c(explainfitted, explainoff), collapse=" and "))
          },
          external={
            cat("Note: effect estimate not justified by delta method\n")
@@ -583,7 +574,7 @@ print.parres <- function(x, ...) {
 
 plot.parres <- function(x, ...) {
   xname <- deparse(substitute(x))
-  do.call("plot.fv", resolve.defaults(list(x), list(...),
+  do.call(plot.fv, resolve.defaults(list(x), list(...),
                                       list(main=xname, shade=c("hi", "lo"))))
 }
 

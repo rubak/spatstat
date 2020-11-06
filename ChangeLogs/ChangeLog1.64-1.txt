@@ -1,0 +1,466 @@
+Change log from 1.64-0 to 1.64-1
+================================
+
+28 apr 2020
+
+   tests/EveryStart.R [New file]
+        Get environment variable 'SPATSTAT_TEST' controlling test options.
+	This will be included at the head of every concatenated test file.
+	
+   tests/Kfuns.R
+   tests/aucroc.R
+   tests/badwindowcheck.R
+   tests/cdf.test.R
+   tests/circular.R
+   tests/closeshave.R
+   tests/cluck.R
+   tests/colour.R
+   tests/contact.R
+   tests/contrib.R
+   tests/correctC.R
+   tests/deepeepee.R
+   tests/deltasuffstat.R
+   tests/density.R
+   tests/diagnostique.R
+   tests/discarea.R
+   tests/disconnected.R
+   tests/dominic.R
+   tests/duplicity.R
+   tests/emptymarks.R
+   tests/envelopes.R
+   tests/enveltest.R
+   tests/factorbugs.R
+   tests/fastK.R
+   tests/fastgeyer.R
+   tests/formuli.R
+   tests/func.R
+   tests/funnymarks.R
+   tests/fvproblems.R
+   tests/gcc323.R
+   tests/hobjects.R
+   tests/hyperframe.R
+   tests/hypotests.R
+   tests/imageops.R
+   tests/indices.R
+   tests/interact.R
+   tests/ippm.R
+   tests/kppm.R
+   tests/layered.R
+   tests/legacy.R
+   tests/leverinf.R
+   tests/linalgeb.R
+   tests/localpcf.R
+   tests/lppmodels.R
+	Many tests are now switched off	unless 'SPATSTAT_TEST' is defined.
+
+   tests/rmhMulti.R
+	Bug fix.
+
+   hyperframe.R
+	Fix bug in rbind.hyperframe (spotted by Maximilian Vogtland)
+
+   rshift.R
+	rshift.ppp and rshift.splitppp have argument 'nsim'
+      	(suggested by Maximilian Hesselbarth)
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Version 1.64-0.001
+	Nickname changed to 'Geostrophic'
+	Acknowledged Maximilian Vogtland and Maximilian Hesselbarth
+
+------------- passed R-4.0.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+30 apr 2020
+
+   spatstat-package.Rd
+	Acknowledged Maximilian Vogtland
+	
+   pcf3est.Rd
+   K3est.Rd
+   F3est.Rd
+   G3est.Rd
+	More cross-references.
+
+   tests/lppstuff.R
+   tests/marcelino.R
+   tests/markcor.R
+   tests/mctests.R
+   tests/morpho.R
+   tests/mppm.R
+	Many tests are now switched off	unless 'SPATSTAT_TEST' is defined.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.002
+
+------------- passed R-4.0.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/msr.R
+   tests/NAinCov.R
+   tests/nndist.R
+   tests/package.R
+   tests/percy.R
+   tests/perspim.R
+   tests/pixelgripes.R
+   tests/polygons.R
+   tests/ppmBadData.R
+   tests/ppmclass.R
+   tests/ppmgam.R
+   tests/ppmlogi.R
+   tests/ppmmarkorder.R
+   tests/ppmscope.R   
+   tests/ppmtricks.R
+   tests/ppp.R
+   tests/ppx.R
+   tests/prediction.R
+   tests/project.ppm.R
+	Many tests are now switched off unless 'SPATSTAT_TEST' is defined.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.003
+
+------------- passed R-4.0.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+01 may 2020
+
+   tests/quadschemes.R
+   tests/randoms.R
+   tests/resid.R
+   tests/rhohat.R
+   tests/rmhAux.R
+   tests/rmhBasic.R
+   tests/rmhErrors.R
+   tests/rmhExpand.R
+	Many tests are now switched off unless 'SPATSTAT_TEST' is defined.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.004
+
+------------- passed R-4.0.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/rmhmodelHybrids.R
+   tests/rmhmodel.ppm.R
+   tests/rmhMulti.R
+   tests/rmh.ppm.R
+   tests/rmhsnoopy.R
+   tests/rmhTrend.R
+   tests/rmhWeird.R
+	Many tests are now switched off unless 'SPATSTAT_TEST' is defined.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.005
+
+------------- passed R-4.0.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   tests/sdr.R
+   tests/segments.R
+   tests/sigtraceprogress.R
+   tests/simplepan.R
+   tests/slrm.R
+   tests/sparse3Darrays.R
+   tests/splitpea.R
+   tests/ssf.R
+   tests/step.R
+   tests/sumfun.R
+   tests/symbolmaps.R
+	Many tests are now switched off unless 'SPATSTAT_TEST' is defined.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.006
+
+------------- passed R-4.0.0 CMD check ---------------
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+02 may 2020
+
+   tests/tessera.R
+   tests/testaddvar.R
+   tests/testparres.R
+   tests/threedee.R
+   tests/trigraph.R
+   tests/triplets.R
+   tests/undoc.R
+   tests/updateppm.R
+   tests/vcovppm.R
+   tests/windows.R
+   tests/xysegment.R
+	Many tests are now switched off unless 'SPATSTAT_TEST' is defined.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.007
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   sparselinalg.R
+   spatstat-internal.Rd
+	'tenseur' renamed 'tensorSparse' in preparation for
+	transfer to a visible function in the new package 'spatstat.sparse'.
+
+   leverage.R
+   tests/sparse3Darrays.R
+	Consequential changes.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.008
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+04 may 2020
+
+   indices.R
+   ppp.R
+   util.R
+   sparsecommon.R
+   sparse3Darray.R
+	Moved functions to different files
+	in preparation for removal to separate package.
+	
+   sumsymouter.h
+   linalg.c
+   linalg.R
+   spatstat-internal.Rd
+	sumsymouter has new argument 'distinct'
+
+   sparselinalg.R
+   spatstat-internal.Rd
+   	sumsymouterSparse has new argument 'distinct'
+
+   sparselinalg.R
+   sparselinalg.c
+   spasumsymout.h
+	sumsymouterSparse(dbg=TRUE) now activates debug statements in C
+
+   spasumsymout.h
+	Important bug fix.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.009
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+05 may 2020
+
+   tests/sparse3Darrays.R
+	Use data example which provokes previous bug in 1.64-0
+
+   sparse3Darray.R
+	Enforce conversion of indices to integer
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.010
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+06 may 2020
+
+   sumouter.Rd
+	Mathematical correction.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.011
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+07 may 2020
+
+   solist.R
+   split.ppp.R
+	Moved 'density.ppplist' to split.ppp.R
+
+   split.ppp.R
+   density.splitppp.Rd
+	New argument 'weights'.
+
+   relrisk.R
+   relrisk.ppp.Rd
+	New argument 'weights'.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.012
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+08 may 2020
+
+   split.ppp.R
+   density.splitppp.Rd
+	density.splitppp handles more formats for 'weights'
+
+   relrisk.ppp.Rd
+	More information about 'weights'
+	
+   density.ppp.R
+	Bug fix in handling multivariate weights when SE=TRUE.
+
+   linalg.R
+   tests/linalgeb.R
+	sumouter, quadform, bilinearform, sumsymouter
+	now handle complex values.
+
+   sparselinalg.R
+	sumsymouterSparse now handles complex values.
+	
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.013
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+    tests/linalgeb.R          [REMOVED]
+    tests/sparse3Darrays.R    [REMOVED]
+        These test files are no longer included in the spatstat tests folder
+	because they are included in spatstat.sparse
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.014
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   updates.Rnw
+   bugfixes.Rnw
+	Updated to cover all the above.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.015
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   Math.im.R
+   Math.imlist.R
+   spatstat-internal.Rd
+	Ops.im and Ops.imlist are now identical (which is required
+	if we want to handle combinations of imlist and im)
+	and have been moved into Math.imlist.R
+	
+   Math.im.Rd
+   Math.imlist.Rd
+	Improved documentation about arguments
+	
+   density.ppp.R
+   relrisk.ppp.R
+	Now use Ops.imlist where possible
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.016
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+09 may 2020
+
+   density.ppp.R
+   relrisk.ppp.R
+	reverted to previous usage because of problem with Ops.imlist
+
+   Math.im.R
+   Math.imlist.R
+   spatstat-internal.Rd
+	Tweak
+
+   Math.imlist.Rd
+	Commented-out the types of usage for Ops that are not yet working.
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.017
+
+------------- passed R-4.0.0 CMD check ---------------
+            (with SPATSTAT_TEST defined and undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+   sparselinalg.R
+	Commented-out unused code.
+
+10 may 2020
+
+   linalg.R
+	Tweaked checksolve()
+
+   tests/indices.R [REMOVED]
+        This test file is no longer included in the spatstat tests folder
+	because it is included in spatstat.sparse
+
+   DESCRIPTION
+   NEWS
+	Version 1.64-0.018
+
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------
+
+............. passed 'make covercheck' ................
+............. passed 'make bookcheck' .................
+............. passed 'make crancheck' .................
+   (with environment variable SPATSTAT_TEST undefined)
+
+............. passed R-devel CMD check ................
+                (2020-05-09 r78395)
+   (with environment variable SPATSTAT_TEST undefined)
+
+   DESCRIPTION
+   NEWS
+   Nickname.txt
+	Nickname 'Help you I can, yes!'
+	Version 1.64-1
+	
+------------- passed R-4.0.0 CMD check ---------------
+(with environment variable SPATSTAT_TEST defined/undefined)
+------------- installed on laptop      ---------------
+------------- uploaded to github       ---------------

@@ -4,7 +4,7 @@
 #
 #   Random generators for MULTITYPE point processes
 #
-#   $Revision: 1.35 $   $Date: 2015/09/06 03:11:26 $
+#   $Revision: 1.39 $   $Date: 2018/05/07 04:34:35 $
 #
 #   rmpoispp()   random marked Poisson pp
 #   rmpoint()    n independent random marked points
@@ -57,8 +57,7 @@ rmpoispp <- local({
         for(i in 1:nsim)
           result[[i]] <- rmpoispp(lambda, lmax, win, types, ...,
                                   warnwin=warnwin)
-        names(result) <- paste("Simulation", 1:nsim)
-        return(as.solist(result))
+        return(simulationresult(result, nsim, drop))
       }
       
       ## Validate arguments
@@ -81,8 +80,8 @@ rmpoispp <- local({
         if(single.arg) {
           stop(paste(sQuote("types"), "must be given explicitly when",
                      sQuote("lambda"), "is a constant, a function or an image"))
-        } else if(vector.arg && !is.null(nama <- names(lambda)) &&
-                sum(nzchar(nama)) == length(lambda)) {
+        } else if(!is.null(nama <- names(lambda)) &&
+                  sum(nzchar(nama)) == length(lambda)) {
           types <- nama
         } else {
           types <- seq_along(lambda)
@@ -115,8 +114,8 @@ rmpoispp <- local({
       else maxes <- lmax
 
       ## coerce lambda to a list, to save confusion
-      lam <- if(single.arg) lapply(1:ntypes, function(x, y){y}, y=lambda)
-              else if(vector.arg) as.list(lambda) else lambda
+      lam <- if(single.arg) rep(list(lambda), ntypes) else
+             if(vector.arg) as.list(lambda) else lambda
 
       ## Simulate
       for(i in 1:ntypes) {
@@ -135,7 +134,7 @@ rmpoispp <- local({
       ## Randomly permute, just in case the order is important
       permu <- sample(X$n)
       X <- X[permu]
-      return(if(drop) X else solist(X))
+      return(simulationresult(list(X), 1, drop))
     }
 
   rmpoispp
@@ -189,8 +188,7 @@ rmpoint <- local({
       for(i in 1:nsim)
         result[[i]] <- rmpoint(n, f, fmax, win, types, ptypes, ...,
                                giveup=giveup, verbose=verbose)
-      names(result) <- paste("Simulation", 1:nsim)
-      return(as.solist(result))
+      return(simulationresult(result, nsim, drop))
     }
       
     if(sum(n) == 0) {
@@ -199,7 +197,7 @@ rmpoint <- local({
         nomarks <- factor(types[numeric(0)], levels=types)
         nopoints <- nopoints %mark% nomarks
       }
-      return(if(drop) nopoints else solist(nopoints))
+      return(simulationresult(list(nopoints), 1, drop))
     }         
     #############
   
@@ -275,8 +273,8 @@ rmpoint <- local({
     else maxes <- fmax
 
     ## coerce f to a list, to save confusion
-    flist <- if(single.arg) lapply(1:ntypes, function(i, f){f}, f=f)
-    else if(vector.arg) as.list(f) else f
+    flist <- if(single.arg) rep(list(f), ntypes) else
+             if(vector.arg) as.list(f) else f
 
     #################### START ##################################
 
@@ -284,7 +282,7 @@ rmpoint <- local({
 
     if(Model == "I" && !same.density && all(unlist(lapply(flist, is.im)))) {
       X <- rmpoint.I.allim(n, flist, types)
-      return(if(drop) X else solist(X))
+      return(simulationresult(list(X), 1, drop))
     }
 
     ## otherwise, first select types, then locations given types
@@ -334,7 +332,7 @@ rmpoint <- local({
       X <- rpoint(ntot, flist[[1]], maxes[[1]], win=win, ...,
                   giveup=giveup, verbose=verbose)
       X <- X %mark% marques
-      return(if(drop) X else solist(X))
+      return(simulationresult(list(X), 1, drop))
     }
     ## Otherwise invoke rpoint() for each type separately
     X <- ppp(numeric(ntot), numeric(ntot), window=win, marks=marques,
@@ -354,7 +352,7 @@ rmpoint <- local({
       Y <- Y %mark% factortype[i]
       X[marques == factortype[i]] <- Y
     }
-    return(if(drop) X else solist(X))
+    return(simulationresult(list(X), 1, drop))
   }
 
   rmpoint
@@ -420,8 +418,7 @@ rpoint.multi <- function (n, f, fmax=NULL, marks = NULL,
     result <- vector(mode="list", length=nsim)
     for(i in 1:nsim)
       result[[i]] <- rpoint.multi(n, f, fmax, marks, win, giveup, verbose)
-    names(result) <- paste("Simulation", 1:nsim)
-    return(as.solist(result))
+    return(simulationresult(result, nsim, drop))
   }
   
   no.marks <- is.null(marks) ||
@@ -438,7 +435,7 @@ rpoint.multi <- function (n, f, fmax=NULL, marks = NULL,
     } else {
       rpoint(n, f, fmax, giveup=giveup, verbose=verbose)
     }
-    return(if(drop) X else solist(X))
+    return(simulationresult(list(X), 1, drop))
   }
   ## multitype case
   if(length(marks) != n)
@@ -467,7 +464,7 @@ rpoint.multi <- function (n, f, fmax=NULL, marks = NULL,
       Y$marks[to] <- ty
     }
   }
-  return(if(drop) Y else solist(Y))
+  return(simulationresult(list(Y), 1, drop))
 }
 
 

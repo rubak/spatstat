@@ -3,7 +3,7 @@
 #
 #	Utilities for computing quadrature weights
 #
-#	$Revision: 4.38 $	$Date: 2015/05/16 05:16:46 $
+#	$Revision: 4.40 $	$Date: 2020/01/10 06:54:23 $
 #
 #
 # Main functions:
@@ -59,7 +59,7 @@ countingweights <- function(id, areas, check=TRUE) {
       lostfrac <- 1 - sum(w)/sum(areas)
       lostpc <- round(100 * lostfrac, 1)
       if(lostpc >= 1) 
-        warning(paste("some times with positive area",
+        warning(paste("some tiles with positive area",
                       "do not contain any quadrature points:",
                       "relative error =",
                       paste0(lostpc, "%")))
@@ -230,10 +230,10 @@ gridweights <- function(X, ntile=NULL, ..., window=NULL, verbose=FALSE,
 }
 
 
-dirichlet.weights <- function(...) {
-  .Deprecated("dirichletWeights", package="spatstat")
-  dirichletWeights(...)
-}
+# dirichlet.weights <- function(...) {
+#   .Deprecated("dirichletWeights", package="spatstat")
+#   dirichletWeights(...)
+# }
 
 dirichletWeights <- function(X, window = NULL, exact=TRUE, ...) {
   #'

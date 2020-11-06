@@ -1,7 +1,7 @@
 #
 #	Kinhom.S	Estimation of K function for inhomogeneous patterns
 #
-#	$Revision: 1.86 $	$Date: 2015/03/20 07:56:43 $
+#	$Revision: 1.99 $	$Date: 2019/10/16 03:26:26 $
 #
 #	Kinhom()	compute estimate of K_inhom
 #
@@ -44,8 +44,9 @@
 #
 # ------------------------------------------------------------------------
 
-"Linhom" <- function(...) {
-  K <- Kinhom(...)
+"Linhom" <- function(X, ..., correction) {
+  if(missing(correction)) correction <- NULL
+  K <- Kinhom(X, ..., correction=correction)
   L <- eval.fv(sqrt(pmax.int(K,0)/pi))
   # relabel the fv object
   L <- rebadge.fv(L, quote(L[inhom](r)), c("L", "inhom"),
@@ -66,7 +67,9 @@
             nlarge = 1000, 
             lambda2=NULL,
             reciplambda=NULL, reciplambda2=NULL,
-            sigma=NULL, varcov=NULL)
+	    diagonal=TRUE,
+            sigma=NULL, varcov=NULL,
+	    ratio=FALSE)
 {
     verifyclass(X, "ppp")
     nlarge.given <- !missing(nlarge)
@@ -86,6 +89,9 @@
 
     # match corrections
     correction.given <- !missing(correction) && !is.null(correction)
+    if(is.null(correction))
+      correction <- c("border", "bord.modif", "isotropic", "translate")
+
     correction <- pickoption("correction", correction,
                              c(none="none",
                                border="border",
@@ -120,17 +126,21 @@
     
     # Use matrix of weights if it was provided and if it is sufficient
     if(lambda2.suffices && lambda2.given) {
-      if(!is.null(reciplambda2)) 
+      if(!is.null(reciplambda2)) {
         check.nmatrix(reciplambda2, npts)
-      else {
+        validate.weights(reciplambda2, recip=TRUE)
+      } else {
         check.nmatrix(lambda2, npts)
+        validate.weights(lambda2)
         reciplambda2 <- 1/lambda2
       }
       # renormalise
       if(renormalise) {
         check.1.real(normpower)
         stopifnot(normpower %in% 1:2)
-        renorm.factor <- (areaW^2/sum(reciplambda2))^(normpower/2)
+	rlam2 <- reciplambda2
+	if(!diagonal) diag(rlam2) <- 0
+	renorm.factor <- (areaW^2/sum(rlam2))^(normpower/2)
       } 
     } else {
       # Vector lambda or reciplambda is required
@@ -141,6 +151,7 @@
         lambda <- density(X, ..., sigma=sigma, varcov=varcov,
                             at="points", leaveoneout=leaveoneout)
         lambda <- as.numeric(lambda)
+        validate.weights(lambda, how="density estimation")
         reciplambda <- 1/lambda
       } else if(!is.null(reciplambda)) {
         # 1/lambda values provided
@@ -152,6 +163,7 @@
           check.nvector(reciplambda, npts)
         else stop(paste(sQuote("reciplambda"),
                         "should be a vector, a pixel image, or a function"))
+        validate.weights(reciplambda, recip=TRUE)
       } else {
         # lambda values provided
         if(is.im(lambda)) 
@@ -160,18 +172,15 @@
           model <- lambda
           if(!update) {
             ## just use intensity of fitted model
-            lambda <- predict(lambda, locations=X, type="trend")
+            lambda <- predict(model, locations=X, type="trend")
           } else {
             ## re-fit model to data X
             if(is.ppm(model)) {
               model <- update(model, Q=X)
               lambda <- fitted(model, dataonly=TRUE, leaveoneout=leaveoneout)
-            } else if(is.kppm(model)) {
-              model <- update(model, X=X)
-              lambda <- fitted(model, dataonly=TRUE, leaveoneout=leaveoneout)
             } else {
               model <- update(model, X=X)
-              lambda <- fitted(model, dataonly=TRUE)
+              lambda <- fitted(model, dataonly=TRUE, leaveoneout=leaveoneout)
             }
             danger <- FALSE
             if(miss.update) 
@@ -186,6 +195,7 @@
           check.nvector(lambda, npts)
         else stop(paste(sQuote("lambda"),
                           "should be a vector, a pixel image, or a function"))
+        validate.weights(lambda)
         # evaluate reciprocal
         reciplambda <- 1/lambda
       }
@@ -193,11 +203,14 @@
       if(renormalise) {
         check.1.real(normpower)
         stopifnot(normpower %in% 1:2)
-        renorm.factor <- (areaW/sum(reciplambda))^normpower
+        if(!diagonal && normpower == 2) {
+	  renorm.factor <- (areaW^2)/(sum(reciplambda)^2 - sum(reciplambda^2))
+	} else {
+          renorm.factor <- (areaW/sum(reciplambda))^normpower
+        }
       } 
     }
 
-    
     # recommended range of r values
     alim <- c(0, min(rmax, rmaxdefault))
         
@@ -243,25 +256,28 @@
       ## border method
       if(bord) {
         Kb <- Kborder.engine(X, max(r), length(r), correction,
-                             weights=reciplambda)
+                             weights=reciplambda, ratio=ratio)
         if(renormalise) {
           ynames <- setdiff(fvnames(Kb, "*"), "theo")
-          Kb[,ynames] <- renorm.factor * as.data.frame(Kb)[,ynames]
+	  Kb <- adjust.ratfv(Kb, ynames, denfactor=1/renorm.factor)
         }
-        Kb <- tweak.fv.entry(Kb, "border", new.labl="{hat(%s)[%s]^{bord}} (r)")
-        Kb <- tweak.fv.entry(Kb, "bord.modif", new.labl="{hat(%s)[%s]^{bordm}} (r)")
+        Kb <- tweak.ratfv.entry(Kb, "border", new.labl="{hat(%s)[%s]^{bord}} (r)")
+        Kb <- tweak.ratfv.entry(Kb, "bord.modif", new.labl="{hat(%s)[%s]^{bordm}} (r)")
       }
       ## uncorrected
       if(none) {
-        Kn <- Knone.engine(X, max(r), length(r), weights=reciplambda)
+        Kn <- Knone.engine(X, max(r), length(r), weights=reciplambda,
+	                   ratio=ratio)
         if(renormalise) 
-          Kn$un <- Kn$un * renorm.factor
-        Kn <- tweak.fv.entry(Kn, "un", new.labl="{hat(%s)[%s]^{un}} (r)")
+	  Kn <- adjust.ratfv(Kn, "un", denfactor=1/renorm.factor)
+        Kn <- tweak.ratfv.entry(Kn, "un", new.labl="{hat(%s)[%s]^{un}} (r)")
       }
       K <-
         if(bord && !none) Kb else
-        if(!bord && none) Kn else 
-      cbind.fv(Kb, Kn[, names(Kn) != "theo"])
+        if(!bord && none) Kn else
+	if(!ratio) cbind.fv(Kb,  Kn[, c("r", "un")]) else 
+	bind.ratfv(Kb,  Kn[, c("r", "un")], ratio=TRUE)
+	
       ## tweak labels
       K <- rebadge.fv(K, quote(K[inhom](r)), c("K", "inhom"))
       if(danger)
@@ -275,10 +291,11 @@
 
   if(can.do.fast && is.rectangle(W) && spatstat.options("use.Krect")) {
     K <-  Krect.engine(X, rmax, length(r), correction,
-                        weights=reciplambda, fname=c("K", "inhom"))
+                        weights=reciplambda,
+			ratio=ratio, fname=c("K", "inhom"))
     if(renormalise) {
       allfun <- setdiff(fvnames(K, "*"), "theo")
-      K[, allfun] <- renorm.factor * as.data.frame(K)[, allfun]
+      K <- adjust.ratfv(K, allfun, denfactor=1/renorm.factor)
     }
     K <- rebadge.fv(K, quote(K[inhom](r)), c("K", "inhom"))
     attr(K, "alim") <- alim
@@ -295,9 +312,17 @@
     # this will be the output data frame
     K <- data.frame(r=r, theo= pi * r^2)
     desc <- c("distance argument r", "theoretical Poisson %s")
-    K <- fv(K, "r", quote(K[inhom](r)),
-            "theo", , alim, c("r","{%s[%s]^{pois}}(r)"), desc,
-            fname=c("K", "inhom"))
+    denom <- if(renormalise) (areaW / renorm.factor) else areaW
+    K <- ratfv(K, NULL, denom,
+               argu="r",
+	       ylab=quote(K[inhom](r)),
+               valu="theo",
+	       fmla=NULL,
+	       alim=alim,
+	       labl=c("r","{%s[%s]^{pois}}(r)"),
+	       desc=desc,
+               fname=c("K", "inhom"),
+	       ratio=ratio)
 
     # identify all close pairs
     rmax <- max(r)
@@ -325,17 +350,27 @@
       RS <- Kwtsum(dIJ, bI, wIJ, b, w=reciplambda, breaks)
       if(any(correction == "border")) {
         Kb <- RS$ratio
-        if(renormalise) Kb <- Kb * renorm.factor
-        K <- bind.fv(K, data.frame(border=Kb), "{hat(%s)[%s]^{bord}}(r)",
-                     "border-corrected estimate of %s",
-                     "border")
+        if(renormalise)
+          Kb <- Kb * renorm.factor
+        K <- bind.ratfv(K,
+	                quotient = data.frame(border=Kb),
+			denominator = denom,
+	                labl = "{hat(%s)[%s]^{bord}}(r)",
+                        desc = "border-corrected estimate of %s",
+                        preferred = "border",
+		        ratio=ratio)
       }
       if(any(correction == "bord.modif")) {
         Kbm <- RS$numerator/eroded.areas(W, r)
-        if(renormalise) Kbm <- Kbm * renorm.factor
-        K <- bind.fv(K, data.frame(bord.modif=Kbm), "{hat(%s)[%s]^{bordm}}(r)",
-                     "modified border-corrected estimate of %s",
-                     "bord.modif")
+        if(renormalise)
+          Kbm <- Kbm * renorm.factor
+    	K <- bind.ratfv(K,
+	                quotient = data.frame(bord.modif=Kbm),
+			denominator = denom,
+			labl = "{hat(%s)[%s]^{bordm}}(r)",
+                        desc = "modified border-corrected estimate of %s",
+                        preferred = "bord.modif",
+			ratio=ratio)
       }
     }
     if(any(correction == "translate")) {
@@ -344,12 +379,17 @@
       allweight <- edgewt * wIJ
       wh <- whist(dIJ, breaks$val, allweight)
       Ktrans <- cumsum(wh)/areaW
-      if(renormalise) Ktrans <- Ktrans * renorm.factor
+      if(renormalise)
+        Ktrans <- Ktrans * renorm.factor
       rmax <- diamW/2
       Ktrans[r >= rmax] <- NA
-      K <- bind.fv(K, data.frame(trans=Ktrans), "{hat(%s)[%s]^{trans}}(r)",
-                   "translation-correction estimate of %s",
-                   "trans")
+      K <- bind.ratfv(K,
+                      quotient = data.frame(trans=Ktrans),
+		      denominator = denom,
+		      labl ="{hat(%s)[%s]^{trans}}(r)",
+                      desc = "translation-correction estimate of %s",
+                      preferred = "trans",
+		      ratio=ratio)
     }
     if(any(correction == "isotropic" | correction == "Ripley")) {
       # Ripley isotropic correction
@@ -357,12 +397,17 @@
       allweight <- edgewt * wIJ
       wh <- whist(dIJ, breaks$val, allweight)
       Kiso <- cumsum(wh)/areaW
-      if(renormalise) Kiso <- Kiso * renorm.factor
+      if(renormalise)
+        Kiso <- Kiso * renorm.factor
       rmax <- diamW/2
       Kiso[r >= rmax] <- NA
-      K <- bind.fv(K, data.frame(iso=Kiso), "{hat(%s)[%s]^{iso}}(r)",
-                   "Ripley isotropic correction estimate of %s",
-                   "iso")
+      K <- bind.ratfv(K,
+                      quotient = data.frame(iso=Kiso),
+		      denominator = denom,
+		      labl = "{hat(%s)[%s]^{iso}}(r)",
+                      desc = "Ripley isotropic correction estimate of %s",
+                      preferred = "iso",
+		      ratio=ratio)
     }
 
     # default is to display them all
@@ -374,7 +419,7 @@
 }
 
 
-Kwtsum <- function(dIJ, bI, wIJ, b, w, breaks) {
+Kwtsum <- function(dIJ, bI, wIJ, b, w, breaks, fatal=TRUE) {
   #
   # "internal" routine to compute border-correction estimates of Kinhom
   #
@@ -392,11 +437,31 @@ Kwtsum <- function(dIJ, bI, wIJ, b, w, breaks) {
   stopifnot(length(bI) == length(wIJ))
   stopifnot(length(w) == length(b))
 
-  if(!is.finite(sum(w, wIJ)))
-    stop("Weights in K-function were infinite or NA")
-
-  bkval <- breaks$val
+  if(!is.finite(sum(w, wIJ))) {
+    if(fatal)
+      stop("Weights in K-function were infinite or NA", call.=FALSE)
+    #' set non-finite weights to zero
+    if(any(bad <- !is.finite(w))) {
+      warning(paste(sum(bad), "out of", length(bad),
+                    paren(percentage(bad)), 
+                    "of the boundary weights",
+                    "in the K-function were NA or NaN or Inf",
+                    "and were reset to zero"),
+              call.=FALSE)
+      w[bad] <- 0
+    }
+    if(any(bad <- !is.finite(wIJ))) {
+      warning(paste(sum(bad), "out of", length(bad),
+                    paren(percentage(bad)),
+                    "of the weights for pairwise distances",
+                    "in the K-function were NA or NaN or Inf",
+                    "and were reset to zero"),
+              call.=FALSE)
+      wIJ[bad] <- 0
+    }
+  }
   
+  bkval <- breaks$val
   # determine which distances d_{ij} were observed without censoring
   uncen <- (dIJ <= bI)
   #
@@ -421,4 +486,58 @@ Kwtsum <- function(dIJ, bI, wIJ, b, w, breaks) {
     stop("internal error: length(denom.count) != breaks$ncells")
   return(list(numerator=numerator, denominator=denominator, ratio=ratio))
 }
-	
+
+validate.weights <- function(x, recip=FALSE, how = NULL,
+                             allowzero = recip,
+                             allowinf  = !recip) {
+  xname <- deparse(substitute(x))
+  ra <- range(x)
+  offence <-
+    if(!allowinf && !all(is.finite(ra)))  "infinite" else
+    if(ra[1] < 0)                         "negative" else
+    if(!allowzero && ra[1] == 0)          "zero" else NULL
+  if(!is.null(offence)) {
+    offenders <- paste(offence, "values of", sQuote(xname))
+    if(is.null(how))
+      stop(paste(offenders, "are not allowed"), call.=FALSE)
+    stop(paste(how, "yielded", offenders), call.=FALSE)
+  }
+  return(TRUE)
+}
+
+resolve.lambda <- function(X, lambda=NULL, ...,
+                           sigma=NULL, varcov=varcov,
+                           leaveoneout=TRUE, update=TRUE) {
+  dangerous <- "lambda"
+  danger <- TRUE
+  if(is.null(lambda)) {
+    ## No intensity data provided
+    ## Estimate density by leave-one-out kernel smoothing
+    lambda <- density(X, ..., sigma=sigma, varcov=varcov,
+                      at="points", leaveoneout=leaveoneout)
+    lambda <- as.numeric(lambda)
+    danger <- FALSE
+  } else if(is.im(lambda)) {
+    lambda <- safelookup(lambda, X)
+  } else if(is.function(lambda)) {
+    lambda <- lambda(X$x, X$y)
+  } else if(is.numeric(lambda) && is.vector(as.numeric(lambda))) {
+    check.nvector(lambda, npoints(X))
+  } else if(is.ppm(lambda) || is.kppm(lambda) || is.dppm(lambda)) {
+    model <- lambda
+    if(!update) {
+      ## use intensity of model
+      lambda <- predict(model, locations=X, type="trend")
+    } else {
+      ## re-fit model to data X
+      model <- if(is.ppm(model)) update(model, Q=X) else update(model, X=X)
+      lambda <- fitted(model, dataonly=TRUE, leaveoneout=leaveoneout)
+      danger <- FALSE
+    }
+  } else stop(paste(sQuote("lambda"),
+                    "should be a vector, a pixel image,",
+                    "a fitted model, or a function"))
+  return(list(lambda=lambda,
+              danger=danger,
+              dangerous=if(danger) dangerous else NULL))
+}

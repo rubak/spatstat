@@ -62,7 +62,7 @@ in any of several formats, into an object of class \code{"owin"}.
 
  \method{as.owin}{layered}(W, \dots, fatal=TRUE)
 
- \method{as.owin}{data.frame}(W, \dots, fatal=TRUE)
+ \method{as.owin}{data.frame}(W, \dots, step, fatal=TRUE)
 
  \method{as.owin}{distfun}(W, \dots, fatal=TRUE)
 
@@ -81,14 +81,22 @@ in any of several formats, into an object of class \code{"owin"}.
  \method{as.owin}{default}(W, \dots, fatal=TRUE)
 }
 \arguments{
-  \item{W}{Data specifying an observation window, in any of several formats
-    described under \emph{Details} below.}
-  \item{fatal}{Logical flag determining what to do
+  \item{W}{
+    Data specifying an observation window, in any of several formats
+    described under \emph{Details} below.
+  }
+  \item{fatal}{
+    Logical value determining what to do
     if the data cannot be converted to an observation window.
     See Details.
   }
   \item{\dots}{Ignored.}
   \item{from}{Character string. See Details.}
+  \item{step}{
+    Optional. A single number, or numeric vector of length 2,
+    giving the grid step lengths
+    in the \eqn{x} and \eqn{y} directions.
+  }
 }
 \value{
   An object of class \code{"owin"} (see \code{\link{owin.object}})
@@ -98,7 +106,7 @@ in any of several formats, into an object of class \code{"owin"}.
   The class \code{"owin"} is a way of specifying the observation window
   for a point pattern. See \code{\link{owin.object}} for an overview.
  
-  This function converts data in any of several formats 
+  The function \code{as.owin} converts data in any of several formats 
   into an object of class \code{"owin"} for use by the \pkg{spatstat}
   package. The function \code{as.owin} is generic, with methods
   for different classes of objects, and a default method.
@@ -111,16 +119,22 @@ in any of several formats, into an object of class \code{"owin"}.
     a structure with entries \code{xrange}, \code{yrange} specifying the 
     \eqn{x} and \eqn{y} dimensions of a rectangle
     \item
-    a four-element vector
-    (interpreted as \code{(xmin, xmax, ymin, ymax)})
+    a structure with entries named \code{xmin}, \code{xmax}, \code{ymin},
+    \code{ymax} (in any order) 
+    specifying the \eqn{x} and \eqn{y} dimensions of a rectangle.
+    This will accept objects of class \code{bbox} in the \code{sf} package.
+    \item
+    a numeric vector of length 4
+    (interpreted as \code{(xmin, xmax, ymin, ymax)} in that order)
     specifying the \eqn{x} and \eqn{y} dimensions of a rectangle
     \item
-    a structure with entries \code{xl}, \code{xu}, \code{yl}, \code{yu}
+    a structure with entries named \code{xl}, \code{xu}, \code{yl}, \code{yu}
+    (in any order)
     specifying the \eqn{x} and \eqn{y} dimensions of a rectangle
     as \code{(xmin, xmax) = (xl, xu)} and 
     \code{(ymin, ymax) = (yl, yu)}. This will accept objects of
     class \code{spp} used in the Venables and Ripley \pkg{spatial}
-    library.
+    package.
     \item
     an object of class \code{"ppp"} representing a point pattern.
     In this case, the object's \code{window} structure will be
@@ -192,16 +206,32 @@ in any of several formats, into an object of class \code{"owin"}.
     In this case, \code{as.owin} will be applied to each
     of the objects in the list, and the union of these windows
     will be returned.
+    \item
+    an object of class \code{"SpatialPolygon"},
+    \code{"SpatialPolygons"} or \code{"SpatialPolygonsDataFrame"}.
+    To handle these data types,
+    \bold{the package} \pkg{maptools} \bold{must be loaded},
+    because it provides the methods for \code{as.owin} for these classes.
+    For full details, see \code{vignette('shapefiles')}.
   }
   If the argument \code{W} is not in one of these formats
   and cannot be converted to a window, then an error will
   be generated (if \code{fatal=TRUE}) or a value of \code{NULL}
   will be returned (if \code{fatal=FALSE}).
 
+  When \code{W} is a data frame, the argument \code{step}
+  can be used to specify the pixel grid spacing; otherwise, the spacing
+  will be guessed from the data.
 }
 \seealso{
   \code{\link{owin.object}},
-  \code{\link{owin}}
+  \code{\link{owin}}.
+
+  Additional methods for \code{as.owin} are provided
+  in the \pkg{maptools} package:
+  \code{as.owin.SpatialPolygon},
+  \code{as.owin.SpatialPolygons},
+  \code{as.owin.SpatialPolygonsDataFrame}.
 }
 \examples{
  w <- as.owin(c(0,1,0,1))
@@ -214,18 +244,16 @@ in any of several formats, into an object of class \code{"owin"}.
  w <- as.owin(Z)
 
  # Venables & Ripley 'spatial' package
- require(spatial)
- towns <- ppinit("towns.dat")
- w <- as.owin(towns)
- detach(package:spatial)
+ spatialpath <- system.file(package="spatial")
+ if(nchar(spatialpath) > 0) {
+   require(spatial)
+   towns <- ppinit("towns.dat")
+   w <- as.owin(towns)
+   detach(package:spatial)
+ }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  Rolf Turner
-  \email{r.turner@auckland.ac.nz}
-  and Ege Rubak
-  \email{rubak@math.aau.dk}
+\author{
+  \spatstatAuthors.
 }
 \keyword{spatial}
 \keyword{manip}

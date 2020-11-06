@@ -52,6 +52,7 @@
     \item{\code{'lookup'}}{General isotropic pairwise interaction process,
       with the interaction function specified via a ``lookup table''.}
     \item{\code{'multihard'}}{Multitype hardcore process}
+    \item{\code{'penttinen'}}{The Penttinen process}
     \item{\code{'strauss'}}{The Strauss process}
     \item{\code{'straush'}}{The Strauss process with hard core}
     \item{\code{'sftcr'}}{The Softcore process}
@@ -182,6 +183,15 @@
       where \code{beta} is a vector of base intensities for each type
       of point, and \code{hradii} is a matrix of hard core radii
       between each pair of types. 
+    }
+    \item{penttinen:}{
+      (Penttinen process.) A \bold{named} list with components
+      \code{beta,gamma,r} which are respectively the ``base''
+      intensity, the pairwise interaction parameter, and the disc radius.
+      Note that \code{gamma} must be less than or equal to 1.
+      See \code{\link{Penttinen}} for explanation.
+      (Note that there is also an algorithm for perfect simulation
+      of the Penttinen process, \code{\link{rPenttinen}})
     }
     \item{strauss:}{
       (Strauss process.) A \bold{named} list with components
@@ -376,7 +386,7 @@
   Baddeley, A., Turner, R., Mateu, J. and Bevan, A. (2013)
   Hybrids of Gibbs point process models and their implementation.
   \emph{Journal of Statistical Software} \bold{55}:11, 1--43.
-  \url{http://www.jstatsoft.org/v55/i11/}
+  \url{https://www.jstatsoft.org/v55/i11/}
 
    Diggle, P. J. (2003) \emph{Statistical Analysis of Spatial Point
    Patterns} (2nd ed.) Arnold, London.
@@ -429,28 +439,13 @@ otherwise an error is given.
   \code{\link{rmhcontrol}},
   \code{\link{rmhstart}},
   \code{\link{ppm}},
-  \code{\link{AreaInter}},
-  \code{\link{BadGey}},
-  \code{\link{DiggleGatesStibbard}},
-  \code{\link{DiggleGratton}},
-  \code{\link{Fiksel}},
-  \code{\link{Geyer}},
-  \code{\link{Hardcore}},
-  \code{\link{LennardJones}},
-  \code{\link{MultiHard}},
-  \code{\link{MultiStrauss}},
-  \code{\link{MultiStraussHard}},
-  \code{\link{PairPiece}},
-  \code{\link{Poisson}},
-  \code{\link{Softcore}},
-  \code{\link{Strauss}},
-  \code{\link{StraussHard}},
-  \code{\link{Triplets}}
+  \rmhInteractionsList.
 }
 \examples{
    # Strauss process:
    mod01 <- rmhmodel(cif="strauss",par=list(beta=2,gamma=0.2,r=0.7),
                  w=c(0,10,0,10))
+   mod01
    # The above could also be simulated using 'rStrauss'
 
    # Strauss with hardcore:
@@ -467,6 +462,10 @@ otherwise an error is given.
                      par=list(beta=0.8,sigma=0.1,kappa=0.5),
                      w=w)
    
+   # Penttinen process:
+   modpen <- rmhmodel(cif="penttinen",par=list(beta=2,gamma=0.6,r=1),
+                 w=c(0,10,0,10))
+
    # Area-interaction process:
    mod42 <- rmhmodel(cif="areaint",par=list(beta=2,eta=1.6,r=0.7),
                  w=c(0,10,0,10))
@@ -528,12 +527,12 @@ otherwise an error is given.
                     par=list(list(beta=100,gamma=0.5,r=0.05),
                              list(beta=1, gamma=0.7,r=0.1, sat=2)),
                     w=square(1))
+  modhy
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \adrian
+  and
+  \rolf
 }
 \keyword{spatial}
 \keyword{datagen}

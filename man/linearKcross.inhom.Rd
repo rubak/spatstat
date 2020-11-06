@@ -93,7 +93,7 @@ linearKcross.inhom(X, i, j, lambdaI, lambdaJ,
   Multitype point process analysis of spines on the
   dendrite network of a neuron.
   \emph{Applied Statistics} (Journal of the Royal Statistical
-   Society, Series C), In press.
+   Society, Series C), \bold{63}, 673--694.
 }
 \section{Warnings}{
   The arguments \code{i} and \code{j} are interpreted as
@@ -117,9 +117,9 @@ linearKcross.inhom(X, i, j, lambdaI, lambdaJ,
      linearKcross.inhom(chicago, "assault", "robbery", fit, fit)
    }
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+\author{\adrian
+  
+  
 }
 \keyword{spatial}
 \keyword{nonparametric}

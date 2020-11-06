@@ -1,4 +1,4 @@
-\name{crossdist.psp} %DontDeclareMethods
+\name{crossdist.psp} 
 \alias{crossdist.psp}
 \title{Pairwise distances between two different line segment patterns}
 \description{
@@ -70,11 +70,11 @@
    S <- crossdist(L1, L2, type="sep")
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+  \adrian
+  
+  
+  and \rolf
+  
 }
 \keyword{spatial}
 

@@ -1,21 +1,14 @@
-is.dppm <- function#Recognise Fitted Determinantal Point Process Models
-### Check that an object inherits the class dppm
-(x
- ### Any object.
- ){
-    inherits(x, "dppm")
-    ### A single logical value.
+#' Methods and support for class dppm
+#'
+#' $Revision: 1.5 $ $Date: 2019/10/18 03:41:43 $
 
-    ##keyword<< spatial
-    ##keyword<< manip
-    ##keyword<< models
-}
+is.dppm <- function(x) { inherits(x, "dppm") }
 
 plot.dppm <- function (x, ..., what = c("intensity", "statistic")){
     objectname <- short.deparse(substitute(x))
     if(missing(what) && is.stationary(x))
         what <- "statistic"
-    plot.kppm(x, ..., objectname = objectname, what = what)
+    plot.kppm(x, ..., xname = objectname, what = what)
 }
 
 Kmodel.dppm <- function (model, ...){
@@ -33,3 +26,20 @@ intensity.dppm <- function (X, ...){
 reach.dppm <- function(x, ...){
     reach(x$fitted, ...)
 }
+
+repul <- function(model, ...) {
+  UseMethod("repul")
+}
+
+repul.dppm <- function(model, ...) {
+  g <- pcfmodel(model)
+  f <- function(x) { 2 * pi * x * (1 - g(x)) }
+  rmax <- reach(model)
+  h <- integrate(f, 0, rmax)$value
+  lam <- intensity(model)
+  ans <- h * lam
+  return(ans)
+}
+
+#' print.dppm is identical to print.kppm and defined in kppm.R
+#' summary.dppm is defined in summary.dppm.R

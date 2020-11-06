@@ -90,9 +90,7 @@ clarkevans.test(X, ...,
   Cambridge University Press, pp 91--95.
 }
 \author{
-  Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
+  \adrian
 }
 \seealso{
   \code{\link{clarkevans}},
@@ -102,6 +100,7 @@ clarkevans.test(X, ...,
   # Redwood data - clustered
   clarkevans.test(redwood)
   clarkevans.test(redwood, alternative="clustered")
+  clarkevans.test(redwood, correction="cdf", nsim=39)
 }
 \keyword{spatial}
 \keyword{nonparametric}

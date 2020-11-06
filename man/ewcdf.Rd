@@ -6,12 +6,22 @@
   empirical cumulative distribution function.
 }
 \usage{
-ewcdf(x, weights = rep(1/length(x), length(x)))
+ewcdf(x, weights = NULL, normalise=TRUE, adjust=1)
 }
 \arguments{
   \item{x}{Numeric vector of observations.}
-  \item{weights}{Numeric vector of non-negative weights
-    for \code{x}.}
+  \item{weights}{
+    Optional. Numeric vector of non-negative weights for \code{x}.
+    Defaults to equal weight 1 for each entry of \code{x}.
+  }
+  \item{normalise}{
+    Logical value indicating whether the weights should be rescaled
+    so that they sum to 1.
+  }
+  \item{adjust}{
+    Numeric value. Adjustment factor.
+    The weights will be multiplied by \code{adjust}.
+  }
 }
 \details{
   This is a modification of the standard function \code{\link{ecdf}}
@@ -33,20 +43,18 @@ ewcdf(x, weights = rep(1/length(x), length(x)))
   \code{ecdf(x)} except for the class membership.
 
   The result of \code{ewcdf} is a function, of class \code{"ewcdf"},
-  inheriting from the classes \code{"ecdf"} and \code{"stepfun"}.
+  inheriting from the classes \code{"ecdf"} (if \code{normalise=TRUE})
+  and \code{"stepfun"}.
   The class \code{ewcdf} has methods for \code{print} and \code{quantile}.
-  The inherited class \code{ecdf}
-  has methods for \code{plot} and \code{summary}.
+  The inherited classes \code{ecdf} and \code{stepfun}
+  have methods for \code{plot} and \code{summary}.
 }
 \value{
   A function, of class \code{"ewcdf"}, inheriting from 
-  \code{"ecdf"} and \code{"stepfun"}. 
+  \code{"ecdf"} (if \code{normalise=TRUE}) and \code{"stepfun"}. 
 }
-\author{Adrian Baddeley
-  \email{Adrian.Baddeley@uwa.edu.au}
-  \url{http://www.maths.uwa.edu.au/~adrian/}
-  and Rolf Turner
-  \email{r.turner@auckland.ac.nz}
+\author{
+  \spatstatAuthors.
 }
 \seealso{
   \code{\link{ecdf}}.
@@ -56,7 +64,8 @@ ewcdf(x, weights = rep(1/length(x), length(x)))
 \examples{
    x <- rnorm(100)
    w <- runif(100)
-   plot(ewcdf(x,w))
+   plot(e <- ewcdf(x,w))
+   e
 }
 \keyword{nonparametric}
 \keyword{univar}
